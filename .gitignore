@@ -4,4 +4,6 @@
 /html/
 /toolchains/installed/
 /device-info*.txt
+/DEPLOYMENT.local.md
+/site.local.py
 __pycache__/

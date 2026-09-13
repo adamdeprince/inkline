@@ -36,6 +36,18 @@ The launcher temporarily switches from `xochitl` to Inkline and restores it when
 Inkline stops. A small keyboard shortcut service starts at boot; the terminal itself opens only
 on request, and the usual notebook interface remains the default.
 
+## Optional utilities
+
+The [utility catalog](https://inkline.goblinreactor.com/utilities.html) offers
+Goblin Mosh, Mosh, Emacs, GoblinView, Goblin Purrfect, Git, and Python 3.15.0rc2
+for this tablet. Follow the separate
+[utility installation instructions](https://inkline.goblinreactor.com/install.html#utilities).
+Build recipes, pinned inputs, and device checks are documented in
+[`scripts/utilities/README.md`](scripts/utilities/README.md).
+
+A compact TeX Live installer for Purrfect PDF export is still being validated.
+The full collection is optional and too large to recommend for internal storage.
+
 ## What works in this preview
 
 - A local interactive shell with a controlling PTY, resizing, scrollback and

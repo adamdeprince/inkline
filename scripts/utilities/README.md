@@ -1,0 +1,126 @@
+# Inkline utility bundles
+
+These packages target **reMarkable 2, ARMv7 hard float, firmware 3.27.3.0**.
+They install under `/home/root/.local/share/inkline-utilities`, with command
+links in `/home/root/.local/bin`. Each package includes its own required
+runtime libraries and UTF-8 locale. Stock system libraries are not replaced.
+
+The public [catalog](https://inkline.goblinreactor.com/utilities.html),
+[installation procedure](https://inkline.goblinreactor.com/install.html#utilities),
+and [matching sources](https://inkline.goblinreactor.com/source.html) describe
+the September 13, 2026 preview release.
+
+| Package | Input |
+| --- | --- |
+| Goblin Mosh | `e4e8afbb694aea23155f42eddea13c5280b57827` from `adamdeprince/mosh` |
+| Mosh | Debian Bookworm ARM, 1.4.0 |
+| Emacs | Debian Bookworm ARM, 28.2, terminal build |
+| Git | Debian Bookworm ARM, 2.39.5 |
+| GoblinView | Dated source snapshot, including input-method dictionaries |
+| Goblin Purrfect | Dated 0.1.0 source snapshot, vendored Rust crates, redistributable fonts |
+| Python | CPython 3.15.0rc2, Astral ARM build `20260901` |
+| TeX Live | Official 2026 network installer with private Perl |
+
+The seven program bundles are published. The compact TeX installer remains in
+validation until installation and Purrfect PDF export pass on the tablet.
+
+`inputs.lock.json` pins source archives, the matching protobuf compiler,
+WebP, Python, and the TeX installer. `debian.lock.json` records exact Debian
+binary versions, SHA-256 hashes, and their corresponding source files. Debian
+maintainer scripts are never run. The tablet does not need apt or dpkg.
+
+## Rebuild
+
+The cross-build was performed on Apple Silicon macOS with Zig 0.16.0,
+Rust 1.98.1, Python 3.14, CMake, Ninja, Autoconf, Automake, and pkg-config.
+Prepare the official 5.7.119 SDK sysroot using the instructions in
+[`toolchains/README.md`](../../toolchains/README.md). Keep the SDK outside
+version control.
+
+```sh
+rustup toolchain install 1.98.1 --profile minimal --component llvm-tools \
+  --target armv7-unknown-linux-gnueabihf
+scripts/build-utilities.sh
+```
+
+The build downloads and verifies locked inputs, extracts isolated source
+trees under `.cache/utilities/src`, and stages packages under
+`build/utilities/packages`. It does not modify the original project
+checkouts. The GoblinView and Purrfect source snapshots can also be downloaded
+from the public source page; their hashes are in `inputs.lock.json`.
+
+`RUSTC`, `CARGO`, and `LLVM_OBJCOPY` may select equivalent installed tools.
+`prepare-inputs.py` preserves a prepared tree while its input marker matches
+the lock. Delete that generated tree to start again from the pinned archive.
+
+The Debian resolver uses the checked-in lock by default. To deliberately
+update its versions, run `python3 scripts/utilities/debian.py --refresh-lock`
+and repeat the device compatibility checks before publishing new artifacts.
+
+## Packaging choices
+
+- Goblin Mosh links WebP statically and uses the firmware's GNU C++ runtime,
+  protobuf, PNG, Zstandard, OpenSSL, and terminal libraries. The launcher adds
+  `--no-downloads`; an explicit command-line option can change that policy.
+  librsync, utempter, and RaptorQ are excluded. The fork's
+  `packaging/check-prebuilt-fec.sh` passes against the actual ARM executable.
+- All packages include private locale data. Mosh and the tools needing Perl
+  use a private interpreter. Firmware libc, libgcc, libstdc++, zlib, and
+  OpenSSL remain system dependencies.
+- Purrfect defaults `WP51_KITTY_MEDIUM=inline`. Its document writes and
+  backups remain normal file operations. LuaLaTeX supplies PDF export;
+  Poppler and Aspell are optional external dependencies, not bundled here.
+- Emacs paths and its portable dump point into the bundle. Deferred native
+  compilation is disabled by the launcher.
+- Python retains the complete standard library and pip. Common terminfo
+  descriptions replace case-only aliases that cannot be extracted reliably
+  on a default macOS filesystem. `python-sitecustomize.py` selects the stock
+  certificate bundle unless explicit certificate settings already exist;
+  this also applies inside virtual environments. Python 3.15.0rc2 is a
+  release candidate, not a final release.
+- TeX Live is an installer package. By default, `texlive-install` installs
+  `scheme-basic`, LuaLaTeX, and Purrfect’s required packages, without local
+  documentation/source copies. Its package files total 145,854,464 bytes;
+  budget roughly 300–500 MiB including Perl and generated formats. The TeX
+  tree requires at least 384 MiB free. `--full` selects the full collection:
+  4,630,646,784 bytes before generated formats, with a 5 GiB free-space check.
+  `--full --with-docs` includes documentation and sources, totaling
+  10,336,935,936 bytes with an 11 GiB check. `--prefix` selects a dedicated
+  directory on a larger mounted filesystem. The repository year
+  is checked before installation; `--repository` can select a 2026 archive
+  after the rolling mirror changes releases.
+
+## Verification and release
+
+After checking a bundle's outer checksum, run its `install-device.sh --check`
+from a private directory under `/tmp` on the tablet. This verifies the payload
+and runs compatibility checks before copying anything to persistent storage.
+Installation refuses conflicting commands and unrelated installation trees.
+It stages and verifies a release before switching the command links.
+
+The device validation covered:
+
+- Local Goblin Mosh and upstream Mosh sessions with input and output, and
+  Goblin Mosh's prebuilt FEC policy.
+- All six GoblinView unit suites and `regress/skeleton.sh` session lifecycle.
+- Purrfect document creation, round-trip verification, and LaTeX export.
+- Emacs Unicode editing and loading Org, TRAMP, and TeX mode.
+- Git init, commit, local clone, and an HTTPS remote with certificate checks.
+- Python native modules, trust roots, SQLite, ctypes, venv, and pip, including
+  certificate lookup from a new virtual environment.
+- TeX installer architecture/storage preflight, LuaTeX 1.24.0, and kpathsea
+  6.4.2. The full collection was not installed on the tablet.
+- GoblinView installation, repeated installation, command resolution, and
+  removal, with the existing Inkline session remaining active.
+
+Create archives only after the corresponding checks pass:
+
+```sh
+python3 scripts/package-utilities.py --archive
+```
+
+Outputs go to `build/dist/utilities/2026-09-13`, with adjacent SHA-256 files.
+Publish matching source archives and license information alongside binaries.
+Keep published versioned artifacts immutable; choose a new release directory
+for subsequent changes. Website sources and local deployment notes are
+excluded from Git.

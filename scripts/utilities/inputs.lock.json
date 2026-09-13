@@ -1,0 +1,76 @@
+{
+  "release": "2026-09-13",
+  "target": "armv7-hard-float / reMarkable 2 / firmware 3.27.3.0",
+  "goblin_mosh_commit": "e4e8afbb694aea23155f42eddea13c5280b57827",
+  "python_upstream_build": {
+    "name": "cpython-3.15.0rc2+20260901-armv7-unknown-linux-gnueabihf-lto-full.tar.zst",
+    "size": 233954964,
+    "digest": "sha256:4bd417c8ff56a50e5c2ba778d4b45d15ca6ea05974bda86943c582a035c92215",
+    "browser_download_url": "https://github.com/astral-sh/python-build-standalone/releases/download/20260901/cpython-3.15.0rc2%2B20260901-armv7-unknown-linux-gnueabihf-lto-full.tar.zst"
+  },
+  "inputs": {
+    "goblin-mosh": {
+      "filename": "goblin-mosh-e4e8afbb.tar.gz",
+      "url": "https://inkline.goblinreactor.com/downloads/utilities/2026-09-13/sources/goblin-mosh-e4e8afbb.tar.gz",
+      "sha256": "846509e60724ca15da747ebcf580614d4a25259dd2514e7bcb4dc8dc549722a5",
+      "size": 593789,
+      "kind": "project-source"
+    },
+    "goblin-purrfect": {
+      "filename": "goblin-purrfect-20260913.tar.gz",
+      "url": "https://inkline.goblinreactor.com/downloads/utilities/2026-09-13/sources/goblin-purrfect-20260913.tar.gz",
+      "sha256": "cc8ef1d59ccf750fb3de2dceaf979907c387397a29f3b0da16cc2271aff47a79",
+      "size": 41463552,
+      "kind": "project-source"
+    },
+    "goblin-view": {
+      "filename": "goblin-view-20260913.tar.gz",
+      "url": "https://inkline.goblinreactor.com/downloads/utilities/2026-09-13/sources/goblin-view-20260913.tar.gz",
+      "sha256": "665d499e4095ea71744c6f8a20a21703487379008270d0adb525b27fb0b6f89b",
+      "size": 4207525,
+      "kind": "project-source"
+    },
+    "webp": {
+      "filename": "libwebp-1.6.0.tar.gz",
+      "url": "https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-1.6.0.tar.gz",
+      "sha256": "e4ab7009bf0629fd11982d4c2aa83964cf244cffba7347ecd39019a9e38c4564",
+      "size": 4296070,
+      "kind": "source"
+    },
+    "protoc": {
+      "filename": "protoc-25.8-osx-aarch_64.zip",
+      "url": "https://github.com/protocolbuffers/protobuf/releases/download/v25.8/protoc-25.8-osx-aarch_64.zip",
+      "sha256": "508204ee82624f4d4c41417cd573721f3a995a4cea4f3083fb0629ec69366712",
+      "size": 2213431,
+      "kind": "build-tool"
+    },
+    "python": {
+      "filename": "python-3.15.0rc2-armv7.tar.gz",
+      "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20260901/cpython-3.15.0rc2%2B20260901-armv7-unknown-linux-gnueabihf-install_only_stripped.tar.gz",
+      "sha256": "0b33ac50287eb91e2ba252f3ce834bdbed10949cd3a67ba65dd5f692136c83cb",
+      "size": 27706174,
+      "kind": "runtime"
+    },
+    "python-build-metadata": {
+      "filename": "python-build-metadata-20260901.tar.gz",
+      "url": "https://inkline.goblinreactor.com/downloads/utilities/2026-09-13/sources/python-build-metadata-20260901.tar.gz",
+      "sha256": "aa73e99b77b925c5d085b5482c32af54caa58bcfb056d6f77c7930b21b128448",
+      "size": 41145,
+      "kind": "licenses"
+    },
+    "python-build-recipes": {
+      "filename": "python-build-standalone-20260901.tar.gz",
+      "url": "https://codeload.github.com/astral-sh/python-build-standalone/tar.gz/4bb01f09aaf362c71e891be4a41cb6d6ddf830b3",
+      "sha256": "6f1a6b630d82cbd2fd49d7aab5636ec352f9b515f23bda74004e8fd3a33ac0b4",
+      "size": 442043,
+      "kind": "source"
+    },
+    "texlive": {
+      "filename": "install-tl-unx.tar.gz",
+      "url": "https://inkline.goblinreactor.com/downloads/utilities/2026-09-13/sources/install-tl-unx.tar.gz",
+      "sha256": "0b20019d33c38d0f3de9d5c3d03a8977e5e45bc5b17264bd51f0642bf4151611",
+      "size": 5260722,
+      "kind": "installer"
+    }
+  }
+}
