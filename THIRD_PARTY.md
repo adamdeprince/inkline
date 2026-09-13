@@ -10,7 +10,7 @@
   Wuffs no-libc stubs do not override the application's allocator. The source
   bundle includes the patched Ghostty tree, its dependency lockfile, and the
   cached dependency source archives with their original notices and licenses.
-- **Sixel decoder**, GPL-3.0-or-later, adapted from the user's local Goblin Mosh
+- **Sixel decoder**, GPL-3.0-or-later, adapted from the local Goblin Mosh
   development tree, `/Users/adam/dev/mosh/src/terminal/sixel.cc`. The decoder was
   extracted into `src/sixel.cpp`; its mosh-specific state/encoder dependencies
   were removed, image limits were reduced for the tablet, and input is viewed
