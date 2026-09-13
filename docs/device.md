@@ -1,0 +1,64 @@
+# Inkline device validation — 2026-09-13
+
+The read-only probe succeeded over the user's SSH alias `remarkable`. The SSH
+host key changed after the upgrade; the user approved the new fingerprint before
+the connection was made. The full local report is `device-info.txt` and is ignored
+by version control.
+
+| Property | Observed value |
+| --- | --- |
+| Model | reMarkable 2.0 |
+| Firmware | 3.27.3.0 |
+| OS release | Codex Linux 5.7.126, scarthgap |
+| Kernel | 5.4.70-v1.6.3-rm11x, armv7l |
+| RAM reported by kernel | 1,027,664 KiB, about 1 GiB |
+| Swap | 0 KiB |
+| `/tmp`, `/dev/shm` | tmpfs |
+| Qt Core | 6.8.2 |
+| libpng runtime | 1.6.41 |
+| GNU C++ runtime | libstdc++.so.6.0.32 |
+| E-paper plugins | `/usr/lib/plugins/platforms/libepaper.so`, `/usr/lib/plugins/scenegraph/libqsgepaper.so` |
+| Main tablet UI | xochitl active |
+| Type Folio | `rM_Keyboard`, bus 0019, vendor 2edd, product 0001 |
+| External USB keyboard | Not present in this probe |
+
+The Folio happened to be `/dev/input/event3`; this is an observation, not a fixed
+device path for the application. Inkline uses Qt's device discovery so input
+event numbering is not hardcoded. Physical typing and external USB hotplug
+remain manual acceptance checks.
+
+The framebuffer reports 260 × 23936 at 32 bpp. These are not ordinary screen-sized
+bitmap dimensions. Use the installed Qt e-paper integration as described in the
+[manufacturer's guide](https://developer.remarkable.com/documentation/qt_epaper).
+
+The SDK is 5.7.119 and the tablet OS is 5.7.126. Both use Qt 6.8.2; the SDK's PNG
+headers report 1.6.42, while the tablet library is 1.6.41. All five ARM suites
+passed using those stock libraries; no device libraries have been replaced.
+
+USB SSH is working again. The device runner uploaded all five suites into a
+fresh tmpfs directory, ran them, and removed the test files. Core graphics,
+sixel decoding, stream framing, PTY behavior, and Qt renderer/keyboard encoding
+all passed. The graphics suite measured zero process `write_bytes` throughout
+its image tests, including 1,000 replacements.
+
+Two startup defects found by ARM testing are fixed reproducibly: the allocator
+bridge uses logarithmic alignment, and the Linux static build must link libc
+to avoid Wuffs' weak `calloc`/`free` placeholders overriding glibc.
+
+The reusable installer passed its read-only preflight and installed into
+`/home/root/.local/share/inkline` with a `/home/root/inkline` launcher. A ten-second
+demo launched using the stock epaper platform/backend, exited with status 0,
+and automatically restored active `xochitl`. The uninstall procedure then
+removed the application directory, launcher and temporary service link and
+verified that `xochitl` was active.
+
+The application's offscreen render and graphics pixel checks pass. Physical
+display appearance, Type Folio typing, external USB keyboard hotplug, sustained
+graphics memory use, and the user's mosh workflow still need acceptance testing.
+
+The on-device launcher is installed and enabled as `inkline-hotkey.service`.
+It uses about 1.3 MiB RSS and monitors the connected Folio without grabbing it.
+A temporary Linux uinput keyboard successfully triggered Ctrl+Alt+T, opening
+Inkline and stopping xochitl. This validates device discovery and the shortcut
+launch path; physical keyboard typing remains a manual acceptance check. The
+service is enabled for boot, though a reboot test has not been performed.

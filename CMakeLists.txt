@@ -1,0 +1,93 @@
+cmake_minimum_required(VERSION 3.24)
+project(inkline VERSION 0.1.0 LANGUAGES C CXX)
+
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+include(FetchContent)
+FetchContent_Declare(ghostty
+    GIT_REPOSITORY https://github.com/ghostty-org/ghostty.git
+    GIT_TAG 448062571c5edf010b7490d06869b88b5ebf8f80
+    # Fetch only. Our wrapper keeps host and ARM outputs in separate build dirs.
+    SOURCE_SUBDIR _rmt_fetch_only
+)
+FetchContent_MakeAvailable(ghostty)
+include(cmake/ApplyGhosttyPatch.cmake)
+include(cmake/Ghostty.cmake)
+
+find_package(PNG REQUIRED)
+find_package(Threads REQUIRED)
+add_library(rmt_core STATIC src/core.c)
+target_include_directories(rmt_core PUBLIC include)
+target_link_libraries(rmt_core PUBLIC ghostty-vt-static PRIVATE PNG::PNG Threads::Threads)
+target_compile_options(rmt_core PRIVATE -Wall -Wextra -Werror)
+
+add_library(rmt_sixel STATIC src/sixel.cpp)
+target_include_directories(rmt_sixel PUBLIC include)
+target_compile_options(rmt_sixel PRIVATE -Wall -Wextra -Werror)
+
+add_library(rmt_stream STATIC src/stream.cpp)
+target_link_libraries(rmt_stream PUBLIC rmt_core rmt_sixel)
+target_compile_options(rmt_stream PRIVATE -Wall -Wextra -Werror)
+
+add_library(rmt_pty STATIC src/pty.cpp)
+target_include_directories(rmt_pty PUBLIC include)
+target_compile_options(rmt_pty PRIVATE -Wall -Wextra -Werror)
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    target_link_libraries(rmt_pty PRIVATE util)
+endif()
+
+option(INKLINE_BUILD_APP "Build the Qt Quick tablet application" ON)
+if(INKLINE_BUILD_APP)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(QT REQUIRED IMPORTED_TARGET Qt6Quick)
+    if(CMAKE_CROSSCOMPILING)
+        # Keep the C system headers after libstdc++ for its include_next calls.
+        # The toolchain already supplies this directory in the correct order.
+        get_target_property(_qt_includes PkgConfig::QT INTERFACE_INCLUDE_DIRECTORIES)
+        list(REMOVE_ITEM _qt_includes "${RMT_SYSROOT}/usr/include")
+        set_target_properties(PkgConfig::QT PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${_qt_includes}")
+    endif()
+    add_library(rmt_ui STATIC src/renderer.cpp src/keyboard.cpp)
+    target_link_libraries(rmt_ui PUBLIC rmt_stream PkgConfig::QT)
+    target_compile_options(rmt_ui PRIVATE -Wall -Wextra -Werror -Wno-missing-field-initializers)
+    add_executable(inkline src/main.cpp)
+    target_link_libraries(inkline PRIVATE rmt_ui rmt_pty)
+    target_compile_options(inkline PRIVATE -Wall -Wextra -Werror -Wno-missing-field-initializers)
+    target_compile_definitions(inkline PRIVATE INKLINE_VERSION="${PROJECT_VERSION}")
+    install(TARGETS inkline RUNTIME DESTINATION bin)
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+        add_executable(inkline-hotkey src/hotkey.cpp)
+        target_compile_options(inkline-hotkey PRIVATE -Wall -Wextra -Werror)
+    endif()
+endif()
+
+include(CTest)
+if(BUILD_TESTING)
+    add_executable(core_tests tests/core_tests.c)
+    target_link_libraries(core_tests PRIVATE rmt_core PNG::PNG)
+    add_test(NAME core_graphics COMMAND core_tests)
+
+    add_executable(sixel_tests tests/sixel_tests.cpp)
+    target_link_libraries(sixel_tests PRIVATE rmt_sixel)
+    add_test(NAME sixel_decoder COMMAND sixel_tests)
+
+    add_executable(stream_tests tests/stream_tests.cpp)
+    target_link_libraries(stream_tests PRIVATE rmt_stream)
+    add_test(NAME terminal_stream COMMAND stream_tests)
+
+    add_executable(pty_tests tests/pty_tests.cpp)
+    target_link_libraries(pty_tests PRIVATE rmt_pty)
+    add_test(NAME shell_pty COMMAND pty_tests)
+    if(INKLINE_BUILD_APP)
+        add_executable(ui_tests tests/ui_tests.cpp)
+        target_link_libraries(ui_tests PRIVATE rmt_ui)
+        add_test(NAME renderer_keyboard COMMAND ui_tests)
+        set_tests_properties(renderer_keyboard PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen;QT_QUICK_BACKEND=software")
+        if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+            add_executable(hotkey_probe tests/hotkey_probe.cpp)
+        endif()
+    endif()
+endif()

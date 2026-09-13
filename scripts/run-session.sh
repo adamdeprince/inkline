@@ -1,0 +1,19 @@
+#!/bin/sh
+set -eu
+ulimit -c 0
+umask 077
+# systemd owns and removes this RAM directory even after SIGKILL.
+runtime=/run/inkline
+test -d "$runtime"
+export TMPDIR="$runtime" XDG_RUNTIME_DIR="$runtime" XDG_CACHE_HOME="$runtime/cache"
+mkdir -p "$XDG_CACHE_HOME"
+export QML_DISABLE_DISK_CACHE=1 QSG_RENDER_LOOP=basic QT_QUICK_BACKEND=epaper QT_QPA_PLATFORM=epaper
+export QT_QPA_EVDEV_TOUCHSCREEN_PARAMETERS=rotate=180:invertx
+export HISTFILE=/dev/null
+export PATH="/home/root/.local/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin"
+cd /home/root
+set -- --rotate "${INKLINE_ROTATE:-90}" --font-size "${INKLINE_FONT_SIZE:-26}"
+if [ "${INKLINE_DEMO:-0}" = 1 ]; then set -- "$@" --demo; fi
+if [ "${INKLINE_QUIT_AFTER:-0}" -gt 0 ]; then set -- "$@" --quit-after "$INKLINE_QUIT_AFTER"; fi
+/usr/bin/systemd-inhibit --what=idle:sleep --mode=block --why='Inkline terminal session' \
+    /home/root/.local/share/inkline/current/inkline "$@"

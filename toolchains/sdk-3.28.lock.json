@@ -1,0 +1,16 @@
+{
+  "product": "rm2",
+  "software_version": "3.28.0.172",
+  "sdk_version": "5.8.203",
+  "host_os": "linux",
+  "host_arch": "aarch64",
+  "target_arch": "armv7",
+  "catalog_url": "https://developer.remarkable.com/links",
+  "download_url": "https://storage.googleapis.com/remarkable-codex-toolchain/3.28.0.172/remarkable-production-image-5.8.203-rm2-public-aarch64-toolchain.sh",
+  "local_path": ".cache/sdk/remarkable-production-image-5.8.203-rm2-public-aarch64-toolchain.sh",
+  "size_bytes": 408313572,
+  "sha256": "1fc03aac4abdb07be96064516cfcdf548bf5fe246ff35831566760a2a0197ea9",
+  "md5_base64": "PD17UkmWEIsQQFH2X3sKDQ==",
+  "verification": "Size and MD5 match official HTTPS download response. SHA-256 calculated locally for reproducibility.",
+  "downloaded_on": "2026-09-09"
+}

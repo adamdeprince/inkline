@@ -1,0 +1,18 @@
+[Unit]
+Description=Inkline terminal
+Conflicts=xochitl.service
+After=xochitl.service
+
+[Service]
+Type=simple
+RuntimeDirectory=inkline
+RuntimeDirectoryMode=0700
+EnvironmentFile=-/run/inkline-launch.env
+ExecStart=/home/root/.local/share/inkline/current/run-session.sh
+ExecStopPost=/usr/bin/systemctl --no-block start xochitl.service
+KillMode=control-group
+TimeoutStopSec=10
+LimitCORE=0
+StandardOutput=null
+StandardError=null
+Restart=no

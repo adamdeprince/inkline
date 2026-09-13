@@ -1,0 +1,34 @@
+// Manual on-device integration probe. Creates a temporary kernel keyboard and
+// sends Ctrl+Alt+T to exercise discovery and launching through actual evdev.
+// Intentionally not part of CTest: this switches the tablet's visible UI.
+#include <linux/uinput.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
+#include <cstdio>
+#include <cstring>
+#include <initializer_list>
+int main() {
+    int fd = open("/dev/uinput", O_WRONLY | O_CLOEXEC);
+    if (fd < 0) return 1;
+    if (ioctl(fd, UI_SET_EVBIT, EV_KEY) < 0) return 1;
+    for (int key = KEY_ESC; key <= KEY_F12; ++key) if (ioctl(fd, UI_SET_KEYBIT, key) < 0) return 1;
+    uinput_setup setup{};
+    std::strcpy(setup.name, "Inkline launcher acceptance test");
+    setup.id.bustype = BUS_USB; setup.id.vendor = 0x1; setup.id.product = 0x1;
+    if (ioctl(fd, UI_DEV_SETUP, &setup) < 0 || ioctl(fd, UI_DEV_CREATE) < 0) return 1;
+    usleep(1800000);
+    auto send = [&](unsigned short type, unsigned short code, int value) {
+        input_event event{}; event.type = type; event.code = code; event.value = value;
+        return write(fd, &event, sizeof(event)) == sizeof(event);
+    };
+    bool ok = true;
+    for (int key : {KEY_LEFTCTRL, KEY_LEFTALT, KEY_T}) ok &= send(EV_KEY, key, 1);
+    ok &= send(EV_SYN, SYN_REPORT, 0);
+    usleep(150000);
+    for (int key : {KEY_T, KEY_LEFTALT, KEY_LEFTCTRL}) ok &= send(EV_KEY, key, 0);
+    ok &= send(EV_SYN, SYN_REPORT, 0);
+    usleep(2000000);
+    ioctl(fd, UI_DEV_DESTROY); close(fd);
+    return ok ? 0 : 1;
+}

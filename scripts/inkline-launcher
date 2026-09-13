@@ -1,0 +1,54 @@
+#!/bin/sh
+# Inkline managed launcher
+set -eu
+bundle=/home/root/.local/share/inkline
+case "${1:-help}" in
+    start|demo)
+        action=$1; shift
+        rotation=90; font_size=26; seconds=0
+        while [ "$#" -gt 0 ]; do
+            case "$1" in
+                --rotate) test "$#" -ge 2; rotation=$2; shift 2 ;;
+                --font-size) test "$#" -ge 2; font_size=$2; shift 2 ;;
+                --quit-after) test "$#" -ge 2; seconds=$2; shift 2 ;;
+                *) echo "Unknown Inkline option: $1" >&2; exit 2 ;;
+            esac
+        done
+        case "$rotation" in 0|90|270) ;; *) echo 'Rotation must be 0, 90 or 270.' >&2; exit 2 ;; esac
+        case "$font_size:$seconds" in *[!0-9:]*|:*|*:) exit 2 ;; esac
+        test "$font_size" -ge 16 && test "$font_size" -le 48
+        test "$seconds" -ge 0 && test "$seconds" -le 60
+        test -f "$bundle/.inkline-managed"
+        test -x "$bundle/current/inkline"
+        exec 9>/run/inkline-manage.lock
+        flock -x 9
+        if systemctl is-active --quiet inkline.service; then
+            echo 'Inkline is already running.'; exit 0
+        fi
+        umask 077
+        {
+            printf 'INKLINE_ROTATE=%s\nINKLINE_FONT_SIZE=%s\nINKLINE_QUIT_AFTER=%s\n' "$rotation" "$font_size" "$seconds"
+            if [ "$action" = demo ]; then echo 'INKLINE_DEMO=1'; else echo 'INKLINE_DEMO=0'; fi
+        } > /run/inkline-launch.env
+        systemctl link --runtime "$bundle/current/inkline.service"
+        systemctl daemon-reload
+        systemctl reset-failed inkline.service 2>/dev/null || :
+        systemctl start inkline.service
+        echo 'Inkline started. Tap Quit or press Ctrl+Shift+Q to return to notebooks.'
+        ;;
+    stop)
+        systemctl stop inkline.service
+        systemctl start xochitl.service
+        ;;
+    status)
+        systemctl status inkline.service --no-pager
+        ;;
+    uninstall)
+        exec "$bundle/current/uninstall-device.sh"
+        ;;
+    help|--help|-h)
+        echo 'Usage: ~/inkline start|demo [--rotate 0|90|270] [--font-size 16..48] [--quit-after 1..60]'
+        echo '       ~/inkline stop|status|uninstall'
+        ;;
+    *) echo 'Run ~/inkline --help for usage.' >&2; exit 2 ;;
+esac

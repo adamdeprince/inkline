@@ -1,0 +1,28 @@
+diff --git a/src/lib/TinyIo.zig b/src/lib/TinyIo.zig
+index ddabe99..85fc106 100644
+--- a/src/lib/TinyIo.zig
++++ b/src/lib/TinyIo.zig
+@@ -470,7 +470,10 @@ fn operate(
+ 
+ fn fileSeekBy(_: ?*anyopaque, file: File, offset: i64) File.SeekError!void {
+     while (true) {
+-        const rc = lseek_sym(file.handle, offset, posix.SEEK.CUR);
++        const rc = if (comptime builtin.os.tag == .linux and !builtin.link_libc and @sizeOf(usize) == 4) blk: {
++            var result: u64 = undefined;
++            break :blk posix.system.llseek(file.handle, @bitCast(offset), &result, posix.SEEK.CUR);
++        } else lseek_sym(file.handle, offset, posix.SEEK.CUR);
+         switch (posix.errno(rc)) {
+             .SUCCESS => return,
+             .INTR => continue,
+@@ -485,7 +488,10 @@ fn fileSeekBy(_: ?*anyopaque, file: File, offset: i64) File.SeekError!void {
+ 
+ fn fileSeekTo(_: ?*anyopaque, file: File, offset: u64) File.SeekError!void {
+     while (true) {
+-        const rc = lseek_sym(file.handle, @bitCast(offset), posix.SEEK.SET);
++        const rc = if (comptime builtin.os.tag == .linux and !builtin.link_libc and @sizeOf(usize) == 4) blk: {
++            var result: u64 = undefined;
++            break :blk posix.system.llseek(file.handle, offset, &result, posix.SEEK.SET);
++        } else lseek_sym(file.handle, @bitCast(offset), posix.SEEK.SET);
+         switch (posix.errno(rc)) {
+             .SUCCESS => return,
+             .INTR => continue,

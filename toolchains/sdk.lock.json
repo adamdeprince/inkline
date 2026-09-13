@@ -1,0 +1,18 @@
+{
+  "product": "rm2",
+  "software_version": "3.27.0.97",
+  "device_software_version": "3.27.3.0",
+  "compatibility": "Official SDK for the 3.27 line. Probe confirms device OS 5.7.126 and Qt 6.8.2; SDK Qt is also 6.8.2. Runtime ABI and display checks pending.",
+  "sdk_version": "5.7.119",
+  "host_os": "linux",
+  "host_arch": "aarch64",
+  "target_arch": "armv7",
+  "catalog_url": "https://developer.remarkable.com/links",
+  "download_url": "https://storage.googleapis.com/remarkable-codex-toolchain/3.27.0.97/rm2/remarkable-production-image-5.7.119-rm2-public-aarch64-toolchain.sh",
+  "local_path": ".cache/sdk/remarkable-production-image-5.7.119-rm2-public-aarch64-toolchain.sh",
+  "size_bytes": 401651736,
+  "sha256": "1349416c64fdc4ccd71729604b57b64acf7329a179a82dd768a3e4da2ab9a6b7",
+  "md5_base64": "IegPD/g5cJVRTBo6CnN5vw==",
+  "verification": "Size and MD5 match official HTTPS download response. SHA-256 calculated locally for reproducibility.",
+  "downloaded_on": "2026-09-09"
+}
