@@ -64,7 +64,7 @@ Sixel still needs DEC display modes, partial erasure, scrolling-region edge case
 and reflow refinements. It is therefore **not advertised in device attributes**
 yet; use a client's explicit sixel output option for the preview. Rendering tests
 exercise sixel directly and interleave it with kitty chunks; they do not establish
-end-to-end compatibility with the user's modified mosh.
+end-to-end compatibility with my Goblin Mosh workflow.
 
 Kitty's separate file-transfer protocol is not implemented. The option to read
 existing graphics files exists in the core API but is not exposed by the app.

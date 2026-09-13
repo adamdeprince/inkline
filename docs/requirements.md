@@ -13,8 +13,8 @@ These are implementation requirements. Current implementation status is in the R
 
 ## Terminal engine
 
-Use **[libghostty-vt](https://github.com/ghostty-org/ghostty)**. The user authorized
-the library choice. It provides an embeddable C API for terminal state, input
+Use **[libghostty-vt](https://github.com/ghostty-org/ghostty)**. It provides an
+embeddable C API for terminal state, input
 encoding and decoded kitty images. The local libkitty-vt project is still an
 incomplete extraction with no public C API, so it is not the initial engine.
 
@@ -54,7 +54,7 @@ Bound decoded pixels, compressed input, animation frames and total image memory.
 Handle limits without silently spilling to flash. Report unsupported kitty
 transports accurately so clients can fall back to inline data.
 
-The user's graphics-heavy programs run over a modified mosh that efficiently
+My graphics-heavy programs run over a modified mosh that efficiently
 transfers kitty images. The local `/Users/adam/dev/mosh` checkout identifies it
 as Goblin Mosh. Its image-output helpers use inline kitty chunks. Keep those
 streams compatible and audit the complete client/terminal path for automatic

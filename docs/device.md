@@ -1,7 +1,7 @@
 # Inkline device validation — 2026-09-13
 
-The read-only probe succeeded over the user's SSH alias `remarkable`. The SSH
-host key changed after the upgrade; the user approved the new fingerprint before
+The read-only probe succeeded over my SSH alias `remarkable`. The SSH
+host key changed after the upgrade; I approved the new fingerprint before
 the connection was made. The full local report is `device-info.txt` and is ignored
 by version control.
 
@@ -24,7 +24,7 @@ by version control.
 
 The Folio happened to be `/dev/input/event3`; this is an observation, not a fixed
 device path for the application. Inkline uses Qt's device discovery so input
-event numbering is not hardcoded. The user subsequently confirmed on-device
+event numbering is not hardcoded. I confirmed on-device
 launch and typing with Type Folio. External USB hotplug remains a manual
 acceptance check.
 
@@ -53,14 +53,14 @@ and automatically restored active `xochitl`. The uninstall procedure then
 removed the application directory, launcher and temporary service link and
 verified that `xochitl` was active.
 
-The application's offscreen render and graphics pixel checks pass. The user
+The application's offscreen render and graphics pixel checks pass. I
 confirmed that the terminal works on the physical tablet with Type Folio.
 Additional keyboard layouts, external USB keyboard hotplug, sustained graphics
-memory use, and the user's mosh workflow still need acceptance testing.
+memory use, and my Goblin Mosh workflow still need acceptance testing.
 
 The on-device launcher is installed and enabled as `inkline-hotkey.service`.
 It uses about 1.3 MiB RSS and monitors the connected Folio without grabbing it.
 A temporary Linux uinput keyboard successfully triggered Ctrl+Alt+T, opening
-Inkline and stopping xochitl. The user then confirmed that pressing Ctrl+Alt+T
+Inkline and stopping xochitl. I confirmed that pressing Ctrl+Alt+T
 on the physical Folio opens Inkline and that typing works. The service is enabled
 for boot, though a reboot test has not been performed.
