@@ -39,7 +39,7 @@ def main():
             "qt_abi": "6.8", "ghostty_commit": "448062571c5edf010b7490d06869b88b5ebf8f80",
         }, indent=2) + "\n")
         with tarfile.open(stage / "inkline-source.tar.gz", "w:gz") as source:
-            for name in ["CMakeLists.txt", "README.md", "LICENSE", "THIRD_PARTY.md", ".gitignore", "src", "include", "tests", "scripts", "cmake", "patches", "docs", "toolchains"]:
+            for name in ["CMakeLists.txt", "README.md", "LICENSE", "THIRD_PARTY.md", ".gitignore", ".gitattributes", "src", "include", "tests", "scripts", "cmake", "patches", "docs", "toolchains"]:
                 def source_filter(info):
                     if "__pycache__" in info.name or info.name.endswith(".pyc"):
                         return None

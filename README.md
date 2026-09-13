@@ -11,7 +11,12 @@ and firmware lines are not supported by this installer.
 
 ## Install
 
-With SSH already configured and its host key verified:
+Download the **[Inkline 0.1.0 preview](https://github.com/adamdeprince/inkline/releases/tag/v0.1.0)**
+and follow the [installation procedure](docs/install.md). The prebuilt ARM bundle
+includes the installer, launcher, uninstall script, checksums, source archives
+and licenses. No compiler, SDK or third-party package manager is needed to install it.
+
+To build your own bundle, with SSH already configured and its host key verified:
 
 ```sh
 scripts/build-tablet.sh
@@ -20,11 +25,9 @@ scripts/install.sh root@10.11.99.1 --check
 scripts/install.sh root@10.11.99.1
 ```
 
-See the [full procedure](docs/install.md) for dependencies and installing a
-prebuilt bundle. The [project website](https://inkline.goblinreactor.com/) provides
-the preview download. The package is generated at
-`build/dist/inkline-rm2.tar.gz` and includes the installer, launcher, uninstall
-script, checksums, source archives and licenses.
+See the [full procedure](docs/install.md#building-from-source) for build dependencies.
+The package is generated at `build/dist/inkline-rm2.tar.gz`. The
+[project website](https://inkline.goblinreactor.com/) also hosts the preview download.
 
 After installation, press **Ctrl+Alt+T on the tablet’s Type Folio or USB keyboard**
 to open Inkline. No second computer is needed for subsequent launches. Tap
@@ -40,7 +43,8 @@ on request, and the usual notebook interface remains the default.
 - Qt keyboard events encoded through libghostty, including Ctrl/Alt combinations,
   cursor modes and negotiated kitty key events. Touch controls provide Escape,
   history scrolling and Quit. Input uses Qt device discovery, not a fixed event
-  number. Physical keyboard layouts and USB hotplug still need user testing.
+  number. On-device launch and typing are confirmed with Type Folio. Additional
+  keyboard layouts and external USB hotplug still need user testing.
 - Kitty inline/chunked and shared-memory images, PNG decoding, normal placement,
   scaling, cropping and deletion. Graphics are composed in memory and shown in
   grayscale. File and temporary-file image transports are disabled in the app.

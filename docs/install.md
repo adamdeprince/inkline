@@ -25,32 +25,55 @@ unknown or changed host keys and never edits `known_hosts`. An SSH config alias
 can replace `root@10.11.99.1` in all commands below. The alias `remarkable` is only
 a convenience in the development setup, not an installer requirement.
 
-## 2. Build and package
+## 2. Download the preview
 
-From an Inkline source checkout, install **Zig 0.16.0**, **CMake 3.24+**, **Ninja**,
-**pkg-config**, **Git**, and **Python 3.12+**. The tablet build uses the official
-SDK's Qt, libpng and GNU C++ libraries. Host Qt is only needed for desktop tests.
-The cross build has been exercised on Apple Silicon macOS; Linux host support
-has not yet been tested. Leave several gigabytes of free space for the SDK,
-extracted headers, source and compiler caches.
+On your computer, download `inkline-rm2.tar.gz` and
+`inkline-rm2.tar.gz.sha256` from the
+[0.1.0 preview release](https://github.com/adamdeprince/inkline/releases/tag/v0.1.0).
+Use the attached Inkline bundle; GitHub's automatically generated source-code
+archives do not contain the compiled application. The bundle is about 49 MiB
+and includes the installer, uninstall script, source archives and licenses.
+Installation needs SSH and SCP on your computer, with no SDK, compiler or
+additional tablet package manager.
+
+Alternatively, download both files from a terminal on your computer:
 
 ```sh
-scripts/build-tablet.sh
-python3 scripts/package.py
+curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.1.0/inkline-rm2.tar.gz
+curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.1.0/inkline-rm2.tar.gz.sha256
 ```
 
-The build downloads the pinned SDK (about 400 MB), verifies its SHA-256, and
-extracts the target headers and libraries. It does not execute the Linux SDK
-installer. It also fetches the pinned libghostty-vt source and applies the
-included ARM/libc patches. The result is `build/dist/inkline-rm2.tar.gz`, with an
-adjacent SHA-256 file. A preview bundle and checksum are also available from the
-[Inkline website](https://inkline.goblinreactor.com/).
+The same files are mirrored under
+[`inkline.goblinreactor.com/downloads/v0.1.0/`](https://inkline.goblinreactor.com/downloads/v0.1.0/inkline-rm2.tar.gz).
+To compile the application yourself, see [building from source](#building-from-source).
 
 ## 3. Check, then install
 
+From the directory containing the two downloaded files, upload them to the
+tablet's RAM and connect:
+
 ```sh
-scripts/install.sh root@10.11.99.1 --check
-scripts/install.sh root@10.11.99.1
+scp -o StrictHostKeyChecking=yes inkline-rm2.tar.gz inkline-rm2.tar.gz.sha256 root@10.11.99.1:/tmp/
+ssh -o StrictHostKeyChecking=yes root@10.11.99.1
+```
+
+In the tablet's SSH session, run this block. It verifies the download, unpacks
+it into a fresh RAM directory, runs preflight, installs, and cleans up the
+temporary files. A failed checksum or preflight stops installation:
+
+```sh
+sh <<'INKLINE_INSTALL'
+set -eu
+cd /tmp
+sha256sum -c inkline-rm2.tar.gz.sha256
+inkline_stage=$(mktemp -d /tmp/inkline-install.XXXXXX)
+trap 'rm -rf -- "$inkline_stage"' EXIT
+trap 'exit 130' HUP INT TERM
+tar -xzf inkline-rm2.tar.gz -C "$inkline_stage"
+"$inkline_stage/inkline/install-device.sh" --check
+"$inkline_stage/inkline/install-device.sh"
+rm inkline-rm2.tar.gz inkline-rm2.tar.gz.sha256
+INKLINE_INSTALL
 ```
 
 Preflight checks the hardware, firmware, stock Qt plugins, font, available
@@ -73,21 +96,7 @@ The notebook interface remains the default application. System libraries and
 notebook files are left alone. The installer needs writable systemd configuration
 for the shortcut service; it does not remount a read-only system partition.
 
-To install an already built bundle without this checkout, copy it and its checksum
-to the tablet's `/tmp`, verify, unpack, and run its included installer:
-
-```sh
-scp inkline-rm2.tar.gz inkline-rm2.tar.gz.sha256 root@10.11.99.1:/tmp/
-ssh root@10.11.99.1
-cd /tmp
-sha256sum -c inkline-rm2.tar.gz.sha256
-work=$(mktemp -d /tmp/inkline-install.XXXXXX)
-tar -xzf inkline-rm2.tar.gz -C "$work"
-"$work/inkline/install-device.sh" --check
-"$work/inkline/install-device.sh"
-rm -rf -- "$work"
-rm /tmp/inkline-rm2.tar.gz /tmp/inkline-rm2.tar.gz.sha256
-```
+When installation succeeds, type `exit` to return to your computer's shell.
 
 ## 4. Verify and launch
 
@@ -155,3 +164,28 @@ systemctl start xochitl.service
 Firmware updates can change Qt or the display plugin ABI. After updating, run
 the installer's preflight again before launching. The current installer refuses
 firmware outside the 3.27 line rather than guessing compatibility.
+
+## Building from source
+
+From an Inkline source checkout, install **Zig 0.16.0**, **CMake 3.24+**, **Ninja**,
+**pkg-config**, **Git**, and **Python 3.12+**. The tablet build uses the official
+SDK's Qt, libpng and GNU C++ libraries. Host Qt is only needed for desktop tests.
+The cross build has been exercised on Apple Silicon macOS; Linux host support
+has not yet been tested. Leave several gigabytes of free space for the SDK,
+extracted headers, source and compiler caches.
+
+```sh
+git clone https://github.com/adamdeprince/inkline.git
+cd inkline
+scripts/build-tablet.sh
+python3 scripts/package.py
+scripts/install.sh root@10.11.99.1 --check
+scripts/install.sh root@10.11.99.1
+```
+
+The build downloads the pinned SDK (about 400 MB), verifies its SHA-256, and
+extracts the target headers and libraries. It does not execute the Linux SDK
+installer. It also fetches the pinned libghostty-vt source and applies the
+included ARM/libc patches. The result is `build/dist/inkline-rm2.tar.gz`, with an
+adjacent SHA-256 file. The host-side script uploads this bundle into a fresh RAM
+directory and uses the same included device installer as the prebuilt release.

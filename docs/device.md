@@ -24,8 +24,9 @@ by version control.
 
 The Folio happened to be `/dev/input/event3`; this is an observation, not a fixed
 device path for the application. Inkline uses Qt's device discovery so input
-event numbering is not hardcoded. Physical typing and external USB hotplug
-remain manual acceptance checks.
+event numbering is not hardcoded. The user subsequently confirmed on-device
+launch and typing with Type Folio. External USB hotplug remains a manual
+acceptance check.
 
 The framebuffer reports 260 × 23936 at 32 bpp. These are not ordinary screen-sized
 bitmap dimensions. Use the installed Qt e-paper integration as described in the
@@ -52,13 +53,14 @@ and automatically restored active `xochitl`. The uninstall procedure then
 removed the application directory, launcher and temporary service link and
 verified that `xochitl` was active.
 
-The application's offscreen render and graphics pixel checks pass. Physical
-display appearance, Type Folio typing, external USB keyboard hotplug, sustained
-graphics memory use, and the user's mosh workflow still need acceptance testing.
+The application's offscreen render and graphics pixel checks pass. The user
+confirmed that the terminal works on the physical tablet with Type Folio.
+Additional keyboard layouts, external USB keyboard hotplug, sustained graphics
+memory use, and the user's mosh workflow still need acceptance testing.
 
 The on-device launcher is installed and enabled as `inkline-hotkey.service`.
 It uses about 1.3 MiB RSS and monitors the connected Folio without grabbing it.
 A temporary Linux uinput keyboard successfully triggered Ctrl+Alt+T, opening
-Inkline and stopping xochitl. This validates device discovery and the shortcut
-launch path; physical keyboard typing remains a manual acceptance check. The
-service is enabled for boot, though a reboot test has not been performed.
+Inkline and stopping xochitl. The user then confirmed that pressing Ctrl+Alt+T
+on the physical Folio opens Inkline and that typing works. The service is enabled
+for boot, though a reboot test has not been performed.
