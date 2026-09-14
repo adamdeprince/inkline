@@ -10,7 +10,7 @@ public:
     ~Keyboard();
     Keyboard(const Keyboard &) = delete;
     Keyboard &operator=(const Keyboard &) = delete;
-    std::string encode(const QKeyEvent &event);
+    std::string encode(const QKeyEvent &event, bool caps_locked = false);
 private:
     GhosttyTerminal terminal_;
     GhosttyKeyEncoder encoder_ = nullptr;

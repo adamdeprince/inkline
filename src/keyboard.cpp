@@ -51,17 +51,23 @@ Keyboard::Keyboard(RmtCore &core) : terminal_(rmt_core_terminal(&core)) {
     }
 }
 Keyboard::~Keyboard() { ghostty_key_event_free(event_); ghostty_key_encoder_free(encoder_); }
-std::string Keyboard::encode(const QKeyEvent &input) {
+std::string Keyboard::encode(const QKeyEvent &input, bool caps_locked) {
     GhosttyMods mods = 0;
     const auto qmods = input.modifiers();
     if (qmods & Qt::ShiftModifier) mods |= GHOSTTY_MODS_SHIFT;
     if (qmods & Qt::ControlModifier) mods |= GHOSTTY_MODS_CTRL;
     if (qmods & Qt::AltModifier) mods |= GHOSTTY_MODS_ALT;
     if (qmods & Qt::MetaModifier) mods |= GHOSTTY_MODS_SUPER;
+    if (caps_locked) mods |= GHOSTTY_MODS_CAPS_LOCK;
     if (input.key() == Qt::Key_Backtab) mods |= GHOSTTY_MODS_SHIFT;
     const auto utf8 = input.text().toUtf8();
     const bool printable = !input.text().isEmpty() && input.text().at(0).unicode() >= 0x20 && input.text().at(0).unicode() != 0x7f;
-    ghostty_key_event_set_key(event_, key(input.key(), qmods & Qt::KeypadModifier));
+    auto physical = key(input.key(), qmods & Qt::KeypadModifier);
+    if ((input.key() == Qt::Key_Alt || input.key() == Qt::Key_AltGr) &&
+        (input.nativeScanCode() == 108 || input.key() == Qt::Key_AltGr)) physical = GHOSTTY_KEY_ALT_RIGHT;
+    if (input.key() == Qt::Key_Control && input.nativeScanCode() == 105) physical = GHOSTTY_KEY_CONTROL_RIGHT;
+    if (input.key() == Qt::Key_Shift && input.nativeScanCode() == 62) physical = GHOSTTY_KEY_SHIFT_RIGHT;
+    ghostty_key_event_set_key(event_, physical);
     ghostty_key_event_set_action(event_, input.type() == QEvent::KeyRelease ? GHOSTTY_KEY_ACTION_RELEASE :
                                input.isAutoRepeat() ? GHOSTTY_KEY_ACTION_REPEAT : GHOSTTY_KEY_ACTION_PRESS);
     ghostty_key_event_set_mods(event_, mods);
@@ -71,6 +77,9 @@ std::string Keyboard::encode(const QKeyEvent &input) {
     const uint32_t unshifted = input.key() >= 0x20 && input.key() < 0x10000 ? QChar(ushort(input.key())).toLower().unicode() : 0;
     ghostty_key_event_set_unshifted_codepoint(event_, unshifted);
     ghostty_key_encoder_setopt_from_terminal(encoder_, terminal_);
+    // Keep the macOS development preview consistent with the tablet's Alt key.
+    const GhosttyOptionAsAlt option_as_alt = GHOSTTY_OPTION_AS_ALT_TRUE;
+    ghostty_key_encoder_setopt(encoder_, GHOSTTY_KEY_ENCODER_OPT_MACOS_OPTION_AS_ALT, &option_as_alt);
     char bytes[1024]; size_t len = 0;
     if (ghostty_key_encoder_encode(encoder_, event_, bytes, sizeof(bytes), &len) != GHOSTTY_SUCCESS) return {};
     return {bytes, len};

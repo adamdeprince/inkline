@@ -32,10 +32,11 @@ def main():
             shutil.copy2(ROOT / "scripts" / name, stage / name)
         for name in ["README.md", "LICENSE", "THIRD_PARTY.md"]:
             shutil.copy2(ROOT / name, stage / name)
-        shutil.copy2(ROOT / "docs/install.md", stage / "INSTALL.md")
+        shutil.copytree(ROOT / "docs", stage / "docs")
+        (stage / "INSTALL.md").write_text((ROOT / "docs/install.md").read_text().replace("(keyboard.md)", "(docs/keyboard.md)"))
         (stage / "manifest.json").write_text(json.dumps({
             "name": "Inkline", "version": version, "maturity": "preview",
-            "model": "reMarkable 2", "firmware_line": "3.27", "tested_firmware": "3.27.3.0",
+            "model": "reMarkable 2", "firmware_line": "3.27", "target_firmware": "3.27.3.0",
             "qt_abi": "6.8", "ghostty_commit": "448062571c5edf010b7490d06869b88b5ebf8f80",
         }, indent=2) + "\n")
         with tarfile.open(stage / "inkline-source.tar.gz", "w:gz") as source:

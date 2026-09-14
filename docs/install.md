@@ -92,6 +92,8 @@ Installation creates:
 An unrelated file at either location makes installation stop. Reinstalling the
 same verified bundle is supported. Upgrades retain the previous release
 directory, and the `current` symlink switches only after the new files verify.
+The 0.2.0 source installer preserves an already running Inkline session; quit
+and reopen Inkline when ready to use the update.
 The notebook interface remains the default application. System libraries and
 notebook files are left alone. The installer needs writable systemd configuration
 for the shortcut service; it does not remount a read-only system partition.
@@ -135,6 +137,11 @@ Useful controls:
 - `~/inkline start --rotate 270` reverses landscape orientation; `--rotate 0` uses portrait.
 - `~/inkline start --font-size 32` increases text size (valid range: 16–48 pixels).
 - `~/inkline stop` restores notebooks from another SSH session.
+
+The 0.2.0 source build adds right Alt/Option shortcuts, six terminal slots,
+quit confirmation, a Settings button, and a saved Caps Lock/Control toggle.
+See [keyboard settings](keyboard.md) for the complete controls. The download
+links above still point to the device-validated 0.1.0 preview.
 
 Opening Inkline temporarily stops `xochitl`, the notebook interface. A service
 loaded only into `/run` restores it on normal exit and process failure. The

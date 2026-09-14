@@ -10,7 +10,7 @@ namespace {
 void check(GhosttyResult result) { if (result != GHOSTTY_SUCCESS) throw std::runtime_error("Terminal renderer allocation failed"); }
 QColor gray(GhosttyColorRgb c) { const int g = qGray(c.r, c.g, c.b); return QColor(g, g, g); }
 }
-Renderer::Renderer(RmtCore &core, int pixels) : terminal_(rmt_core_terminal(&core)) {
+Renderer::Renderer(RmtCore &core, int pixels, size_t sixel_budget) : terminal_(rmt_core_terminal(&core)), sixel_budget_(sixel_budget) {
     font_ = QFont("Noto Mono");
     font_.setStyleHint(QFont::Monospace);
     font_.setPixelSize(pixels);
@@ -51,7 +51,7 @@ void Renderer::drop_sixel() {
 }
 void Renderer::clear_sixel() { while (!sixels_.empty()) drop_sixel(); }
 void Renderer::sixel(sixel::Bitmap &&bitmap) {
-    constexpr size_t budget = 32 * 1024 * 1024;
+    const size_t budget = sixel_budget_;
     const size_t bytes = bitmap.rgba.size();
     if (!bytes || bytes > budget) return;
     while (!sixels_.empty() && (sixel_bytes_ + bytes > budget || sixels_.size() >= 128)) drop_sixel();

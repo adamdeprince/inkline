@@ -4,7 +4,9 @@ Inkline is a terminal for **reMarkable 2**, built with **libghostty-vt** and the
 stock Qt e-paper backend. It is designed for Type Folio and external USB
 keyboards, with kitty graphics and an initial sixel implementation.
 
-**Version 0.1.0 is a preview.** The main artifact is the repeatable
+**The published preview is 0.1.0; this checkout contains 0.2.0 development work.**
+The new keyboard controls and multiple terminals pass host tests and cross-build
+for ARM; their device checks are pending. The main artifact is the repeatable
 [installation procedure](docs/install.md), including preflight, launch, recovery
 and uninstall. It targets firmware **3.27**, tested on **3.27.3.0**. Other models
 and firmware lines are not supported by this installer.
@@ -32,6 +34,7 @@ The package is generated at `build/dist/inkline-rm2.tar.gz`. The
 After installation, press **Ctrl+Alt+T on the tablet’s Type Folio or USB keyboard**
 to open Inkline. No second computer is needed for subsequent launches. Tap
 **Quit**, press **Ctrl+Shift+Q**, or exit the shell to return to notebooks.
+In 0.2.0, Quit asks for confirmation and `exit` closes only the current terminal.
 The launcher temporarily switches from `xochitl` to Inkline and restores it when
 Inkline stops. A small keyboard shortcut service starts at boot; the terminal itself opens only
 on request, and the usual notebook interface remains the default.
@@ -39,22 +42,42 @@ on request, and the usual notebook interface remains the default.
 ## Optional utilities
 
 The [utility catalog](https://inkline.goblinreactor.com/utilities.html) offers
-Goblin Mosh, Mosh, Emacs, GoblinView, Goblin Purrfect, Git, and Python 3.15.0rc2
+Goblin Mosh, Mosh, Emacs, GoblinView, Goblin Purrfect, Git, Python 3.15.0rc2,
+and compact TeX Live
 for this tablet. Follow the separate
 [utility installation instructions](https://inkline.goblinreactor.com/install.html#utilities).
 Build recipes, pinned inputs, and device checks are documented in
 [`scripts/utilities/README.md`](scripts/utilities/README.md).
 
-A compact TeX Live installer for Purrfect PDF export is still being validated.
+Compact TeX Live is installed on the tablet and Purrfect PDF export passes.
 The full collection is optional and too large to recommend for internal storage.
 
-## What works in this preview
+## Keyboard controls in 0.2.0
 
-- A local interactive shell with a controlling PTY, resizing, scrollback and
+Hold the **right Alt/Option** key for these Folio and USB keyboard shortcuts:
+
+| Keys with right Alt/Option | Action |
+| --- | --- |
+| `1` through `0` | F1 through F10 |
+| Tab | Escape |
+| Up / Down | PageUp / PageDown |
+| Left / Right | Previous / next terminal, across six slots |
+| Space | Open or close Settings |
+| Backspace | Confirm quitting all terminals |
+
+**Ctrl+Shift+B** hides or shows the bottom bar. Its fifth button opens
+**Settings**, where Caps Lock can act as **Control** (the default) or normal
+**Caps Lock**. Both settings persist across launches. Each terminal has its own
+shell and scrollback; switching to an unused slot opens a shell there.
+See [keyboard and session instructions](docs/keyboard.md) for details.
+
+## Current source features
+
+- Up to six local interactive shells with controlling PTYs, resizing, scrollback and
   alternate-screen terminal state supplied by libghostty.
 - Qt keyboard events encoded through libghostty, including Ctrl/Alt combinations,
   cursor modes and negotiated kitty key events. Touch controls provide Escape,
-  history scrolling and Quit. Input uses Qt device discovery, not a fixed event
+  history scrolling, Quit and Settings. Input uses Qt device discovery, not a fixed event
   number. On-device launch and typing are confirmed with Type Folio. Additional
   keyboard layouts and external USB hotplug still need user testing.
 - Kitty inline/chunked and shared-memory images, PNG decoding, normal placement,
@@ -84,23 +107,31 @@ The broader intended scope remains in [requirements](docs/requirements.md).
 
 ## Memory and storage
 
-The core caps libghostty allocations at **128 MiB**, kitty image storage at
-**32 MiB per screen**, and scrollback at **8 MiB**. Sixel retains at most **32 MiB**
-and 128 placements, plus at most 8 MiB of encoded staging and a bounded decoded
-image. Qt display buffers and libpng scratch memory are additional allocations.
+Each open terminal caps libghostty allocations at **64 MiB**, kitty image
+storage at **16 MiB per screen**, and scrollback at **4 MiB**. Sixel retains at
+most **16 MiB** and 128 placements per terminal, plus at most 8 MiB of encoded
+staging and a bounded decoded image. Slots allocate memory only when opened.
+Qt display buffers, libpng scratch memory and programs running in the shells
+need additional RAM. These limits do not reserve memory for six large programs.
 
 There is no image-cache spill to flash. The launcher places runtime/cache files
 in a service-owned RAM directory under `/run`, disables QML disk caching and shell history persistence for that
 session, and suppresses application logs. Preflight requires tmpfs for `/tmp`
 and `/dev/shm`, RAM-backed `/run`, and zero swap. Installed binaries and sources take normal
 persistent storage; programs run inside the shell can also deliberately write
-files. The installer does not constrain those programs' own caches.
+files. Settings are written only when a preference changes, to
+`~/.config/inkline/settings.ini`. The revised Python package disables automatic
+bytecode caches; the installer does not constrain other programs' own caches.
 
 ## Validation
 
-All **five** suites pass on the development Mac and on the reMarkable 2 running
-3.27.3.0: core graphics, sixel decoding, mixed-stream parsing, shell PTY, and
-renderer/keyboard integration. The device graphics suite measured **zero Linux
+All **seven** suites pass on the development Mac: core graphics, sixel decoding,
+mixed-stream parsing, shell PTY, renderer/keyboard integration, shortcut mapping,
+and terminal sessions. The two new suites also pass with address and undefined
+behavior sanitizers. The 0.2.0 ARM build passes; its device tests are pending.
+
+The original five suites passed on reMarkable 2 running 3.27.3.0 for 0.1.0.
+The device graphics suite measured **zero Linux
 process storage-write bytes** across its image tests. This measurement applies
 to that suite, not to arbitrary programs run inside Inkline.
 

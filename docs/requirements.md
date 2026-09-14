@@ -89,6 +89,16 @@ when implementing those modes and their queries.
 - Preserve ordinary terminal input and support the negotiated
   [kitty keyboard protocol](https://sw.kovidgoyal.net/kitty/keyboard-protocol/).
 - Verify USB host operation on the actual device and adapter.
+- Right Alt/Option + 1–0 produces F1–F10; Tab produces Escape; Up/Down produces
+  PageUp/PageDown; Backspace asks to quit; Space opens Settings; Left/Right
+  switches across six terminal slots.
+- Add a fifth Settings button with a persistent Caps Lock/Control toggle.
+  Ctrl+Shift+B hides or shows the bottom bar, including with a wired USB keyboard.
+- Keep each terminal's shell, scrollback and graphics independent. Preserve
+  press/repeat/release identity across shortcut and session changes.
+
+The bundled Python must suppress automatic `.pyc`/`__pycache__` creation,
+including startup, imports, virtual environments and pip installation.
 
 ## E-paper behavior
 
@@ -114,7 +124,7 @@ when implementing those modes and their queries.
 The manufacturer's [Qt/e-paper guide](https://developer.remarkable.com/documentation/qt_epaper)
 is the first display-integration reference for current software. If a community
 display manager is needed, verify its compatibility with the actual firmware.
-Four host test suites and the ARM32 cross-build now pass. The first device probe
-confirmed the Type Folio and RAM-backed temporary/shared-memory filesystems with
-no swap. Device ABI, display and keyboard interaction tests await restored SSH
-access; see [device findings](device.md).
+Seven host test suites and the ARM32 cross-build pass. The original five suites,
+installer, display and Folio launch/typing passed on the device for 0.1.0. Device
+checks for the 0.2.0 controls and six terminals await restored SSH access; see
+[device findings](device.md).

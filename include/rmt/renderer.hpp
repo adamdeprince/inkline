@@ -11,7 +11,7 @@ namespace rmt {
 // All terminal access and drawing occur on the GUI thread. Images are RAM only.
 class Renderer {
 public:
-    explicit Renderer(RmtCore &core, int font_pixels = 26);
+    explicit Renderer(RmtCore &core, int font_pixels = 26, size_t sixel_budget = 32 * 1024 * 1024);
     ~Renderer();
     Renderer(const Renderer &) = delete;
     Renderer &operator=(const Renderer &) = delete;
@@ -36,6 +36,7 @@ private:
     uint16_t cols_ = 80, rows_ = 24;
     std::deque<Overlay> sixels_;
     size_t sixel_bytes_ = 0;
+    size_t sixel_budget_;
     void cells(QPainter &p, const GhosttyRenderStateColors &colors, bool backgrounds);
     void kitty(QPainter &p, GhosttyKittyPlacementLayer layer);
     void drop_sixel();

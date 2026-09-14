@@ -36,7 +36,7 @@ The SDK is 5.7.119 and the tablet OS is 5.7.126. Both use Qt 6.8.2; the SDK's PN
 headers report 1.6.42, while the tablet library is 1.6.41. All five ARM suites
 passed using those stock libraries; no device libraries have been replaced.
 
-USB SSH is working again. The device runner uploaded all five suites into a
+The device runner uploaded all five original suites over USB SSH into a
 fresh tmpfs directory, ran them, and removed the test files. Core graphics,
 sixel decoding, stream framing, PTY behavior, and Qt renderer/keyboard encoding
 all passed. The graphics suite measured zero process `write_bytes` throughout
@@ -64,3 +64,30 @@ A temporary Linux uinput keyboard successfully triggered Ctrl+Alt+T, opening
 Inkline and stopping xochitl. I confirmed that pressing Ctrl+Alt+T
 on the physical Folio opens Inkline and that typing works. The service is enabled
 for boot, though a reboot test has not been performed.
+
+## Utility installation
+
+All seven program bundles are installed: Goblin Mosh, Mosh, Emacs, GoblinView,
+Goblin Purrfect, Git and Python 3.15.0rc2. Their combined measured footprint is
+497.8 MiB. Compact TeX Live is also installed; Purrfect created a nonempty PDF
+using LuaLaTeX. The TeX tree takes about 187.8 MiB, with an estimated 79 MiB for
+its private installer/runtime. About 5.18 GiB remained free after installation.
+The [public catalog](https://inkline.goblinreactor.com/utilities.html) records
+individual package sizes and links separate installation instructions.
+
+The revised Python bytecode policy passes a native startup, import, virtualenv
+and pip test. The ARM startup and import checks also passed, but the final ARM
+rerun after fixing pip's compilation option was interrupted by lost USB SSH.
+The revised Python package has not yet replaced the installed/public version.
+
+## 0.2.0 keyboard and session changes
+
+All seven host suites pass, including actual independent shell PTYs, background
+output, six slot navigation, saved settings and quit confirmation. The new
+shortcut and session suites also pass with address/undefined behavior sanitizers.
+The ARM build passes, and the Settings and quit dialogs have been inspected in
+offscreen snapshots.
+
+USB SSH became unavailable before the new ARM tests and installation could run.
+The installed app remains 0.1.0. The new shortcuts, Caps Lock LED handling,
+settings touch targets, and USB hotplug still need checks on the physical tablet.

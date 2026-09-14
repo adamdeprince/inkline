@@ -7,6 +7,8 @@ cd "$project_dir"
 device_host=${1:-remarkable}
 test_binaries='core_tests sixel_tests stream_tests pty_tests'
 if [ -f build/tablet/ui_tests ]; then test_binaries="$test_binaries ui_tests"; fi
+if [ -f build/tablet/input_tests ]; then test_binaries="$test_binaries input_tests"; fi
+if [ -f build/tablet/view_tests ]; then test_binaries="$test_binaries view_tests"; fi
 for test_binary in $test_binaries; do
     test -f "build/tablet/$test_binary" || {
         printf 'Missing build/tablet/%s; run scripts/build-tablet.sh first.\n' "$test_binary" >&2
@@ -35,4 +37,6 @@ ssh -T -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=10 \
         "./$test_binary"
     done
     if [ -x ./ui_tests ]; then ./ui_tests; fi
+    if [ -x ./input_tests ]; then ./input_tests; fi
+    if [ -x ./view_tests ]; then ./view_tests; fi
 ' < build/device-tests.tar

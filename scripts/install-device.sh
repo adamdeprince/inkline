@@ -51,8 +51,10 @@ fi
 required_kb=$(du -sk "$payload" | awk '{print 2 * $1 + 10240}')
 available_kb=$(df -Pk /home/root | awk 'END {print $4}')
 test "$available_kb" -ge "$required_kb" || fail 'Insufficient space in /home for installation and rollback.'
-if systemctl is-active --quiet inkline.service; then systemctl stop inkline.service; fi
-if systemctl is-active --quiet inkline-hotkey.service; then systemctl stop inkline-hotkey.service; fi
+# Existing processes keep using their immutable release. The new current link
+# takes effect on the next launch, preserving open shells during an update.
+running=false
+if systemctl is-active --quiet inkline.service; then running=true; fi
 mkdir -p "$root/releases"
 printf 'inkline-v1\n' > "$root/.inkline-managed"
 release=$(sha256sum SHA256SUMS | cut -c1-16)
@@ -71,8 +73,10 @@ mv -Tf "$root/.current.$$" "$root/current"
 cp "$root/current/inkline-launcher" /home/root/.inkline-launcher.new
 chmod 700 /home/root/.inkline-launcher.new
 mv -f /home/root/.inkline-launcher.new /home/root/inkline
+if systemctl is-active --quiet inkline-hotkey.service; then systemctl stop inkline-hotkey.service; fi
 systemctl enable "$root/current/inkline-hotkey.service"
 systemctl daemon-reload
 systemctl start inkline-hotkey.service
 systemctl is-active --quiet inkline-hotkey.service || fail 'The keyboard launcher did not start.'
 printf 'Inkline installed on firmware %s.\nLaunch on the tablet: Ctrl+Alt+T\nSSH fallback: ~/inkline start\nRemove: ~/inkline uninstall\n' "$firmware"
+if "$running"; then printf 'Your current terminals are still running. Quit and reopen Inkline to use this update.\n'; fi
