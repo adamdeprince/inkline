@@ -1,0 +1,67 @@
+;;; preview-test.el --- Exercise the real interactive terminal renderer -*- lexical-binding: t; -*-
+(setq debug-on-error nil)
+(defvar inkline-preview-test-stage (getenv "INKLINE_PREVIEW_TEST_STAGE"))
+(defvar inkline-preview-test-source nil)
+(defvar inkline-preview-test-phase 0)
+(defvar inkline-preview-test-deadline 0)
+
+(defun inkline-preview-test-fail (err)
+  (with-temp-file (expand-file-name "failed.txt" inkline-preview-test-stage)
+    (insert (format "%S\n" err))
+    (dolist (buffer (buffer-list))
+      (when (string-match-p "\\*\\|output" (buffer-name buffer))
+        (insert "\n" (buffer-name buffer) "\n")
+        (insert (with-current-buffer buffer (buffer-string)))))))
+
+(defun inkline-preview-test-poll ()
+  (condition-case err
+      (let* ((doc (cl-find-if (lambda (buf) (with-current-buffer buf (eq major-mode 'doc-view-mode)))
+                              (buffer-list)))
+             (ready (and doc (with-current-buffer doc
+                               (and (>= (doc-view-last-page-number) 2)
+                                    (> (hash-table-count kitty-graphics--image-cache) 0))))))
+        (when (and (= inkline-preview-test-phase 0)
+                   (> (float-time) inkline-preview-test-deadline))
+          (error "Timed out waiting for DocView pages and Kitty images"))
+        (cond
+         ((and (= inkline-preview-test-phase 0) ready)
+          (setq inkline-preview-test-phase 1 inkline-preview-test-deadline (+ (float-time) 3)))
+         ((and (= inkline-preview-test-phase 1) (> (float-time) inkline-preview-test-deadline))
+          (kill-new "INKLINE-TEX-PAGE-1")
+          (with-current-buffer inkline-preview-test-source (ghostty-tex-next-page))
+          (setq inkline-preview-test-phase 2 inkline-preview-test-deadline (+ (float-time) 4)))
+         ((and (= inkline-preview-test-phase 2) (> (float-time) inkline-preview-test-deadline))
+          (unless (= (with-current-buffer doc (doc-view-current-page)) 2)
+            (error "Page navigation did not reach page 2"))
+          (kill-new "INKLINE-TEX-PAGE-2")
+          (setq inkline-preview-test-phase 3 inkline-preview-test-deadline (+ (float-time) 1)))
+         ((and (= inkline-preview-test-phase 3) (> (float-time) inkline-preview-test-deadline))
+          (when (with-current-buffer inkline-preview-test-source (buffer-modified-p))
+            (error "Terminal replies or preview actions modified the source buffer"))
+          (with-temp-file (expand-file-name "passed.txt" inkline-preview-test-stage)
+            (insert (format "Pages: %d\nImages: %d\nBuild: %s\nCache: %s\n"
+                            (with-current-buffer doc (doc-view-last-page-number))
+                            (hash-table-count kitty-graphics--image-cache)
+                            (with-current-buffer inkline-preview-test-source (inkline-ghostty-tex-build-directory))
+                            doc-view-cache-directory))
+            (insert-file-contents "/proc/self/io"))
+          (kill-new "INKLINE-TEX-PASSED")
+          (setq inkline-preview-test-phase 4)))
+        (when (< inkline-preview-test-phase 4) (run-at-time 0.5 nil #'inkline-preview-test-poll)))
+    (error (inkline-preview-test-fail err))))
+
+(run-at-time
+ 1 nil
+ (lambda ()
+   (condition-case err
+       (progn
+         (unless (and ghostty-tex-mode kitty-graphics-mode) (error "Graphics modes disabled"))
+         (find-file (expand-file-name "paper.tex" inkline-preview-test-stage))
+         (erase-buffer)
+         (setq inkline-preview-test-source (current-buffer))
+         (insert "\\documentclass{article}\n\\begin{document}\n\\section*{Inkline: page one}\nPreviewed on a reMarkable 2.\n\\[ E = mc^2 \\]\n\\newpage\n\\section*{Inkline: page two}\nRAM builds, inline Kitty graphics.\n\\[ \\int_0^1 x^2\\,dx = \\frac{1}{3} \\]\n\\end{document}\n")
+         (setq TeX-master t)
+         (setq inkline-preview-test-deadline (+ (float-time) 75))
+         (ghostty-tex-compile-and-show)
+         (run-at-time 0.5 nil #'inkline-preview-test-poll))
+     (error (inkline-preview-test-fail err)))))

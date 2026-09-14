@@ -22,6 +22,7 @@ the September 2026 preview releases.
 | Python | CPython 3.15.0rc2, Astral ARM build `20260901` |
 | TeX Live | Official 2026 network installer with private Perl |
 | Tailscale | Official 1.102.4 static Linux ARM binaries, userspace networking |
+| ghostty-tex | Unmodified 0.1.4 Lisp archive, AUCTeX 12.2, private Ghostscript and ImageMagick |
 
 The seven program bundles and compact TeX installation have been exercised on
 the tablet. Purrfect successfully exported a PDF using the compact installation.
@@ -88,6 +89,15 @@ and repeat the device compatibility checks before publishing new artifacts.
   Poppler and Aspell are optional external dependencies, not bundled here.
 - Emacs paths and its portable dump point into the bundle. Deferred native
   compilation is disabled by the launcher.
+- The optional [ghostty-tex add-on](ghostty-tex/README.txt) installs a removable
+  Emacs configuration block. It recognizes Inkline, uses inline Kitty graphics,
+  and keeps standard LaTeX builds, auxiliary files, logs, preview PNGs and caches
+  in RAM-backed `/tmp`. `M-x inkline-ghostty-tex-save-pdf` explicitly exports a
+  PDF to persistent storage. A small PTY geometry helper avoids consuming user
+  input while measuring cells. Build with `python3 scripts/package-ghostty-tex.py
+  --package-file ghostty-tex-0.1.4.tar.gz --archive`; its own Debian lock pins
+  converter, font, AUCTeX and source inputs. Emacs and compact TeX Live are
+  prerequisites. MuPDF and dvipng are not needed for PDF/DVI page previews.
 - Python retains the complete standard library and pip. Automatic bytecode
   cache writes are disabled, and pip defaults to `--no-compile`. A small
   uncompressed standard-library zip loads `encodings` with bytecode writes

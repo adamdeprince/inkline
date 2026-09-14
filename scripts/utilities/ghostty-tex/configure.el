@@ -1,0 +1,97 @@
+;;; configure.el --- Add or remove only Inkline's Emacs init blocks -*- lexical-binding: t; -*-
+
+(require 'cl-lib)
+(defconst inkline-tex-begin ";; BEGIN Inkline ghostty-tex\n")
+(defconst inkline-tex-end ";; END Inkline ghostty-tex\n")
+
+(defun inkline-tex-content (file block)
+  "Return FILE's text with just the managed block replaced by BLOCK."
+  (with-temp-buffer
+    (when (file-exists-p file) (insert-file-contents file))
+    (goto-char (point-min))
+    (let ((start (search-forward inkline-tex-begin nil t)))
+      (if start
+          (let ((beg (- start (length inkline-tex-begin)))
+                (end (search-forward inkline-tex-end nil t)))
+            (unless end (error "Unclosed Inkline block in %s" file))
+            (when (or (search-forward inkline-tex-begin nil t)
+                      (progn (goto-char end) (search-forward inkline-tex-end nil t)))
+              (error "Multiple Inkline blocks in %s" file))
+            (delete-region beg end)
+            (goto-char beg)
+            (when block (insert block)))
+        (when (search-forward inkline-tex-end nil t)
+          (error "Unmatched Inkline block in %s" file))
+        (when block
+          (goto-char (point-max))
+          (unless (bolp) (insert "\n"))
+          (insert block))))
+    (buffer-string)))
+
+(defun inkline-tex-write (file text)
+  "Atomically write TEXT, retaining the first backup of an existing FILE."
+  (let* ((target (if (file-exists-p file) (file-truename file) file))
+         (dir (file-name-directory target))
+         (old (when (file-exists-p target)
+                (with-temp-buffer (insert-file-contents target) (buffer-string)))))
+    (unless (equal old text)
+      (make-directory dir t)
+      (when (and old (not (file-exists-p (concat target ".before-inkline-ghostty-tex"))))
+        (copy-file target (concat target ".before-inkline-ghostty-tex")))
+      (let ((temp (make-temp-file (expand-file-name ".inkline-tex-" dir))))
+        (unwind-protect
+            (let ((coding-system-for-write 'utf-8-unix))
+              (write-region text nil temp nil 'silent)
+              (set-file-modes temp (or (and old (file-modes target)) #o600))
+              (rename-file temp target t))
+          (when (file-exists-p temp) (delete-file temp)))))))
+
+(defun inkline-tex-configure ()
+  (let* ((action (or (getenv "INKLINE_GHOSTTY_TEX_ACTION") "--check"))
+         (root (file-name-as-directory (or (getenv "INKLINE_GHOSTTY_TEX_ROOT")
+                                           (error "Missing package directory"))))
+         (override (getenv "INKLINE_GHOSTTY_TEX_EMACS_DIRECTORY"))
+         (user-dir (file-name-as-directory (expand-file-name (or override user-emacs-directory))))
+         (init (cond (override (expand-file-name "init.el" user-dir))
+                     ((file-exists-p "~/.emacs") (expand-file-name "~/.emacs"))
+                     ((file-exists-p "~/.emacs.el") (expand-file-name "~/.emacs.el"))
+                     (t (expand-file-name "init.el" user-dir))))
+         (early (expand-file-name "early-init.el" user-dir))
+         (state (expand-file-name "../../state/emacs-files.el" (file-truename root)))
+         (files (list early init))
+         (stable "/home/root/.local/share/inkline-utilities/ghostty-tex/current/")
+         (blocks (list
+                  (concat inkline-tex-begin
+                          (format "(load %S nil t)\n" (concat stable "early-init.el"))
+                          inkline-tex-end)
+                  (concat inkline-tex-begin
+                          (format "(load %S nil t)\n" (concat stable "inkline-ghostty-tex.el"))
+                          inkline-tex-end))))
+    (unless (member action '("--check" "--enable" "--disable"))
+      (error "Usage: ghostty-tex-configure [--check|--enable|--disable]"))
+    (when (and (equal action "--disable") (file-readable-p state))
+      (setq files (with-temp-buffer (insert-file-contents state) (read (current-buffer)))))
+    (unless (and (listp files) (cl-every (lambda (f) (and (stringp f) (file-name-absolute-p f))) files))
+      (error "Invalid configuration state"))
+    (unless (equal action "--disable")
+      (when (and (not override) (file-exists-p "~/.emacs.elc"))
+        (error "Compiled ~/.emacs.elc exists; update it before enabling this add-on"))
+      (dolist (file files)
+        (when (file-exists-p (concat file "c"))
+          (error "Compiled init exists: %sc; update it before enabling this add-on" file))))
+    ;; Validate every file before changing any of them. Existing personal init
+    ;; code is treated as text and is never evaluated by the installer.
+    (let ((changes (cl-mapcar (lambda (file block)
+                                (cons file (inkline-tex-content file block)))
+                              files (if (equal action "--disable")
+                                        (make-list (length files) nil) blocks))))
+      (unless (equal action "--check")
+        (dolist (change changes) (inkline-tex-write (car change) (cdr change)))
+        (when (equal action "--enable")
+          (make-directory (file-name-directory state) t)
+          (inkline-tex-write state (concat (prin1-to-string files) "\n"))))
+      (princ (format "ghostty-tex Emacs configuration %s.\n" action)))))
+
+(condition-case err
+    (inkline-tex-configure)
+  (error (princ (concat (error-message-string err) "\n")) (kill-emacs 1)))
