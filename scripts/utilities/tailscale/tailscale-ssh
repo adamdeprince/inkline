@@ -1,0 +1,50 @@
+#!/bin/sh
+# The tablet's SSH client over Tailscale's TCP dialer; no SSH config changes.
+set -eu
+fail() { printf 'tailscale-ssh: %s\n' "$*" >&2; exit 1; }
+destination() {
+    # Dropbear passes ProxyCommand literally, without OpenSSH's %h/%p
+    # expansion. Export separately quoted arguments to the proxy's shell.
+    INKLINE_TAILSCALE_SSH_PORT=22
+    config_only=false
+    OPTIND=1
+    while getopts ':p:l:i:o:b:c:m:L:R:W:K:I:J:tTNfqyAsgzVhvG' flag; do
+        case "$flag" in
+            p) INKLINE_TAILSCALE_SSH_PORT=$OPTARG ;;
+            o)
+                case "$OPTARG" in
+                    [Pp][Oo][Rr][Tt][=\ ]*)
+                        INKLINE_TAILSCALE_SSH_PORT=$(printf '%s' "$OPTARG" | sed 's/^[^= ]*[= ]*//') ;;
+                    [Pp][Rr][Oo][Xx][Yy][Cc][Oo][Mm][Mm][Aa][Nn][Dd]*)
+                        fail 'This wrapper supplies ProxyCommand.' ;;
+                esac ;;
+            J) fail 'This wrapper supplies the proxy command.' ;;
+            G) config_only=true ;;
+            h|V) exec /usr/bin/ssh "$@" ;;
+            :|\?) fail 'Usage: tailscale-ssh [SSH options] [user@]tailnet-host [command]' ;;
+        esac
+    done
+    shift "$((OPTIND - 1))"
+    test "$#" -gt 0 || fail 'Specify a tailnet host.'
+    case "$1" in *,*) fail 'Comma-separated Dropbear hops are not supported.' ;; esac
+    INKLINE_TAILSCALE_SSH_HOST=${1##*@}
+    case "$INKLINE_TAILSCALE_SSH_HOST" in
+        */*)
+            INKLINE_TAILSCALE_SSH_PORT=${INKLINE_TAILSCALE_SSH_HOST##*/}
+            INKLINE_TAILSCALE_SSH_HOST=${INKLINE_TAILSCALE_SSH_HOST%/*} ;;
+    esac
+    case "$INKLINE_TAILSCALE_SSH_HOST" in
+        \[*\]) INKLINE_TAILSCALE_SSH_HOST=${INKLINE_TAILSCALE_SSH_HOST#\[}; INKLINE_TAILSCALE_SSH_HOST=${INKLINE_TAILSCALE_SSH_HOST%\]} ;;
+    esac
+    case "$INKLINE_TAILSCALE_SSH_HOST" in ''|-*) fail 'Invalid host.' ;; esac
+    case "$INKLINE_TAILSCALE_SSH_PORT" in ''|*[!0-9]*) fail 'Invalid port.' ;; esac
+    test "$INKLINE_TAILSCALE_SSH_PORT" -ge 1 && test "$INKLINE_TAILSCALE_SSH_PORT" -le 65535 || fail 'Invalid port.'
+    if "$config_only"; then
+        # Also lets Git recognize this wrapper as supporting -p and -o.
+        printf 'hostname %s\nport %s\n' "$INKLINE_TAILSCALE_SSH_HOST" "$INKLINE_TAILSCALE_SSH_PORT"
+        exit 0
+    fi
+    export INKLINE_TAILSCALE_SSH_HOST INKLINE_TAILSCALE_SSH_PORT
+}
+destination "$@"
+exec /usr/bin/ssh -o 'ProxyCommand=/home/root/.local/bin/tailscale nc "$INKLINE_TAILSCALE_SSH_HOST" "$INKLINE_TAILSCALE_SSH_PORT"' "$@"

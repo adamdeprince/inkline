@@ -14,6 +14,9 @@ if [ "$name" = texlive ] && [ -f "$root/state/prefix" ]; then
 fi
 exec 9>/run/inkline-utilities.lock
 flock -x 9
+if [ -x "$payload/pre-uninstall.sh" ]; then
+    "$payload/pre-uninstall.sh"
+fi
 while IFS= read -r command; do
     case "$command" in ''|[-.]*|*[!a-zA-Z0-9._+-]*) exit 1 ;; esac
     link="/home/root/.local/bin/$command"

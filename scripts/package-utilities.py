@@ -77,7 +77,7 @@ if [ -d "$utility_root/runtime/debian" ]; then
 fi
 ''')
     metadata = {"name": name, "version": version, "model": "reMarkable 2", "architecture": "armv7-hard-float",
-                "firmware_line": "3.27", "tested_firmware": "3.27.3.0", "release": "2026-09-14" if name == "goblin-view" else "2026-09-13"}
+                "firmware_line": "3.27", "tested_firmware": "3.27.3.0", "release": "2026-09-14.1" if name == "goblin-purrfect" else "2026-09-14" if name == "goblin-view" else "2026-09-13"}
     if group:
         lock = json.loads((CACHE / "debian/lock.json").read_text())
         metadata["debian_packages"] = {p: lock["packages"][p] for p in lock["groups"][group]}
@@ -158,6 +158,21 @@ def build_goblin_view():
     finish(package, ["goblin-view"], '"$utility_root/bin/goblin-view" -h >/dev/null 2>&1 || test "$?" = 1')
 
 
+def build_goblin_purrfect():
+    package = prepare("goblin-purrfect", "0.1.0+20260914.rm2.2")
+    source = CACHE / "src/goblin-purrfect"
+    binary(ROOT / "build/utilities/purrfect/armv7-unknown-linux-gnueabihf/release/goblin-purrfect", package / "libexec/goblin-purrfect")
+    for name in ("LICENSE", "NOTICE"):
+        shutil.copy2(source / name, package / name)
+    for fonts in ("latin-modern-math", "text"):
+        for license in (source / "assets/fonts" / fonts).iterdir():
+            if license.suffix.lower() in (".txt", ".md"):
+                write(package / "licenses/fonts" / fonts / license.name, license.read_text())
+    rust_licenses(package)
+    wrapper(package, "goblin-purrfect", (ROOT / "scripts/utilities/purrfect-launch.sh").read_text())
+    finish(package, ["goblin-purrfect"], '"$utility_root/bin/goblin-purrfect" --help | grep -q "epaper: black text on white"')
+
+
 def build():
     lock = json.loads((CACHE / "debian/lock.json").read_text())
     package = prepare("goblin-mosh", "1.4.0+e4e8afbb.rm2.1", "perl")
@@ -181,18 +196,7 @@ def build():
 
     build_goblin_view()
 
-    package = prepare("goblin-purrfect", "0.1.0+20260913.rm2.1")
-    source = CACHE / "src/goblin-purrfect"
-    binary(ROOT / "build/utilities/purrfect/armv7-unknown-linux-gnueabihf/release/goblin-purrfect", package / "libexec/goblin-purrfect")
-    for name in ("LICENSE", "NOTICE"):
-        shutil.copy2(source / name, package / name)
-    for fonts in ("latin-modern-math", "text"):
-        for license in (source / "assets/fonts" / fonts).iterdir():
-            if license.suffix.lower() in (".txt", ".md"):
-                write(package / "licenses/fonts" / fonts / license.name, license.read_text())
-    rust_licenses(package)
-    wrapper(package, "goblin-purrfect", 'export WP51_KITTY_MEDIUM="${WP51_KITTY_MEDIUM:-inline}"\nexec "$utility_root/libexec/goblin-purrfect" "$@"')
-    finish(package, ["goblin-purrfect"], '"$utility_root/bin/goblin-purrfect" --help >/dev/null')
+    build_goblin_purrfect()
 
     package = prepare("emacs", lock["packages"]["emacs-nox"]["version"], "emacs")
     dump = next((package / "runtime/debian").rglob("emacs*.pdmp")).relative_to(package / "runtime/debian")

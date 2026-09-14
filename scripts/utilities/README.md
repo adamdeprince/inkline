@@ -3,7 +3,8 @@
 These packages target **reMarkable 2, ARMv7 hard float, firmware 3.27.3.0**.
 They install under `/home/root/.local/share/inkline-utilities`, with command
 links in `/home/root/.local/bin`. Each package includes its own required
-runtime libraries and UTF-8 locale. Stock system libraries are not replaced.
+runtime libraries and, where needed, a UTF-8 locale. The static Go Tailscale
+bundle needs neither a private libc nor locale data. Stock system libraries are not replaced.
 
 The public [catalog](https://inkline.goblinreactor.com/utilities.html),
 [installation procedure](https://inkline.goblinreactor.com/install.html#utilities),
@@ -20,6 +21,7 @@ the September 2026 preview releases.
 | Goblin Purrfect | Dated 0.1.0 source snapshot, vendored Rust crates, redistributable fonts |
 | Python | CPython 3.15.0rc2, Astral ARM build `20260901` |
 | TeX Live | Official 2026 network installer with private Perl |
+| Tailscale | Official 1.102.4 static Linux ARM binaries, userspace networking |
 
 The seven program bundles and compact TeX installation have been exercised on
 the tablet. Purrfect successfully exported a PDF using the compact installation.
@@ -67,7 +69,7 @@ and repeat the device compatibility checks before publishing new artifacts.
   `--no-downloads`; an explicit command-line option can change that policy.
   librsync, utempter, and RaptorQ are excluded. The fork's
   `packaging/check-prebuilt-fec.sh` passes against the actual ARM executable.
-- All packages include private locale data. Mosh and the tools needing Perl
+- The C/C++ and Rust packages include private locale data. Mosh and the tools needing Perl
   use a private interpreter. Firmware libc, libgcc, libstdc++, zlib, and
   OpenSSL remain system dependencies.
 - GoblinView `0.1.0+20260914.rm2.2` defaults to **`-m`** when `TERM_PROGRAM=inkline`.
@@ -77,7 +79,11 @@ and repeat the device compatibility checks before publishing new artifacts.
   All six upstream ARM suites and the detached client/server smoke test pass.
   `tests/goblin_view_mono.py /home/root/.local/bin/goblin-view` checks explicit
   `-m`, the Inkline default, and ordinary colour mode through real PTYs.
-- Purrfect defaults `WP51_KITTY_MEDIUM=inline`. Its document writes and
+- Purrfect `0.1.0+20260914.rm2.2` adds `--display epaper` when opening the
+  editor, including bare invocation and the single-filename shorthand. An
+  explicit later `--display` or `--theme` overrides the default. Other
+  subcommands keep their arguments. It defaults `WP51_KITTY_MEDIUM=inline`.
+  Its document writes and
   backups remain normal file operations. LuaLaTeX supplies PDF export;
   Poppler and Aspell are optional external dependencies, not bundled here.
 - Emacs paths and its portable dump point into the bundle. Deferred native
@@ -152,3 +158,59 @@ Publish matching source archives and license information alongside binaries.
 Keep published versioned artifacts immutable; choose a new release directory
 for subsequent changes. Website sources and local deployment notes are
 excluded from Git.
+
+## Tailscale userspace package
+
+This utility repackages the unmodified official Tailscale ARM binaries. The
+[BSD license](https://github.com/tailscale/tailscale/blob/v1.102.4/LICENSE)
+permits redistribution with its notices. The archive includes license texts
+for all 90 Go modules recorded in the binaries, the Go runtime and vendored
+code, embedded web dependencies, and the Inter font. Pinned downloads and
+module hashes are in `tailscale/inputs.lock.json`; no private keys or account
+state are included. Tailscale's distributed Go toolchain is a fork of Go
+1.26.6; these binaries are redistributed, not rebuilt by this recipe.
+
+```sh
+python3 scripts/package-tailscale.py
+# After the tablet compatibility check passes:
+python3 scripts/package-tailscale.py --archive --release 2026-09-14.1
+```
+
+Packaging needs Python 3.12+, curl, and Go for reading binary metadata and
+retrieving dependency sources. `--offline` validates and uses cached inputs,
+failing instead of accessing the network. No SDK is needed. The tablet needs
+only the finished archive, not these tools. See the bundled
+[tailscale/README.txt](tailscale/README.txt) for installation, sign-in, SSH/Git,
+service control, storage policy, and removal instructions.
+
+The installer starts `inkline-tailscale.service` and enables it at boot.
+SOCKS5/HTTP listen only on `127.0.0.1:1055`; the daemon uses
+`--tun=userspace-networking`. Taildrop and log uploads are disabled, logs and
+temporary buffers stay in RAM, and identity/preferences persist in the
+package's private `state/` directory. Upgrades retain this state. Sign-in,
+configuration changes, and key renewal can still write it. Removing the
+package stops the service and removes its local sign-in state.
+
+`tailscale-ssh` uses the stock Dropbear client and the Tailscale TCP dialer.
+The wrapper supplies the actual destination through quoted environment
+variables because Dropbear does not expand `%h` and `%p`. It supports command
+line SSH flags, custom ports, and IPv6 addresses; comma-separated Dropbear
+multi-hop syntax is rejected. `tests/tailscale_proxy.py` exercises the real
+Dropbear proxy shell with a recording dialer in RAM, covering host/port
+expansion, IPv6, Git’s probe, and invalid-port rejection. Stock Dropbear expects `~/.ssh/id_dropbear`,
+not an OpenSSH private-key file. The bundle README explains conversion of an
+existing key without changing its public identity. These TCP instructions do
+not carry Mosh's UDP data channel; Goblin Mosh remains unchanged.
+
+## September 14 Purrfect e-paper update
+
+The source lock now points to the September 14 snapshot from `~/dev/wp`, with
+vendored dependencies and fonts. Personal documents and recovery files are
+excluded. The new build passed 189 upstream library tests and three CLI tests;
+five upstream tests requiring extra external fixtures/tools were skipped.
+On reMarkable 2, `tests/purrfect_epaper.py` verifies the actual black/white
+palette for bare invocation, `edit FILE`, and filename shorthand, plus an
+explicit amber override, clean F7 exit, and unchanged document bytes.
+Creation, inspection, round-trip checks, LaTeX export, and PDF export also pass.
+The installed release occupies 10,244 KiB. See the public storage table for
+download sizes and the current Tailscale footprint.

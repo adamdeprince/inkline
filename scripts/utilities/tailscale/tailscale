@@ -1,0 +1,7 @@
+#!/bin/sh
+set -eu
+utility_root=$(CDPATH= cd -- "$(dirname -- "$(readlink -f -- "$0")")/.." && pwd)
+export HOME="${HOME:-/home/root}"
+export TS_NO_LOGS_NO_SUPPORT=true
+export TS_LOGS_DIR=/run/inkline-tailscale
+exec "$utility_root/libexec/tailscale" --socket=/run/inkline-tailscale/tailscaled.sock "$@"

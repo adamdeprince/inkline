@@ -30,6 +30,9 @@ if [ -e "$root" ]; then
 fi
 cd "$payload"
 sha256sum -c SHA256SUMS >/dev/null || fail 'Package checksums did not match.'
+if [ -x "$payload/pre-install.sh" ]; then
+    "$payload/pre-install.sh" || fail 'Package-specific preflight failed; nothing installed.'
+fi
 while IFS= read -r command; do
     case "$command" in ''|[-.]*|*[!a-zA-Z0-9._+-]*) fail 'Invalid command name.' ;; esac
     test -x "$payload/bin/$command" || fail "Missing command: $command"
@@ -67,5 +70,8 @@ while IFS= read -r command; do
     ln -s "$root/current/bin/$command" "$bin/.inkline-$command.$$"
     mv -Tf "$bin/.inkline-$command.$$" "$bin/$command"
 done < commands
+if [ -x "$root/current/post-install.sh" ]; then
+    "$root/current/post-install.sh" || fail "Files installed, but service setup failed. Retry $root/current/post-install.sh."
+fi
 printf '%s installed. Commands are available inside Inkline.\n' "$name"
 printf 'Remove: %s/current/uninstall-device.sh\n' "$root"

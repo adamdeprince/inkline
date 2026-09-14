@@ -17,10 +17,10 @@
       "kind": "project-source"
     },
     "goblin-purrfect": {
-      "filename": "goblin-purrfect-20260913.tar.gz",
-      "url": "https://inkline.goblinreactor.com/downloads/utilities/2026-09-13/sources/goblin-purrfect-20260913.tar.gz",
-      "sha256": "cc8ef1d59ccf750fb3de2dceaf979907c387397a29f3b0da16cc2271aff47a79",
-      "size": 41463552,
+      "filename": "goblin-purrfect-20260914.tar.gz",
+      "url": "https://inkline.goblinreactor.com/downloads/utilities/2026-09-14.1/sources/goblin-purrfect-20260914.tar.gz",
+      "sha256": "f43cc4bf29a643bd7b1140603b28566b019e47f74645c6a01356efa944854a96",
+      "size": 41502464,
       "kind": "project-source"
     },
     "goblin-view": {

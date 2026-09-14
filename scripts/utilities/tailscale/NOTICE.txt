@@ -1,0 +1,29 @@
+This is an independent Inkline utility package for reMarkable 2. It contains
+unmodified official Tailscale 1.102.4 Linux ARM binaries, plus Inkline's command
+wrappers, installer, and userspace systemd service. It is not an official
+Tailscale or reMarkable product and implies no endorsement by either company.
+
+Tailscale is Copyright (c) 2020 Tailscale Inc & AUTHORS, under BSD-3-Clause.
+The complete terms are in LICENSE. All other included code and assets retain
+their original licenses and copyright notices in licenses/.
+The separate Inkline installer and shell wrappers are GPL-3.0-or-later;
+their source is included as the installed scripts, and their license is
+in licenses/inkline/LICENSE. This does not change Tailscale's BSD license.
+
+licenses/modules.json identifies every Go module recorded in the two binaries,
+its exact version, verified Go module checksum, and included notice files.
+licenses/go/ includes Go 1.26.6 runtime and vendored notices. The official
+binaries use Tailscale's Go toolchain fork; its additional code is BSD-licensed.
+licenses/web/ includes the web client's production dependency licenses;
+licenses/Inter-LICENSE.txt covers its Inter typeface under OFL-1.1.
+The upstream license report is retained in licenses/tailscale/licenses/.
+
+Freetype-Go is used under the FreeType License alternative. This software is
+based in part on the work of the FreeType Team (https://www.freetype.org/).
+The complete FreeType terms and copyright notices are included under
+licenses/modules/github.com/golang/freetype@*/licenses/ftl.txt.
+
+Upstream source: https://github.com/tailscale/tailscale/tree/v1.102.4
+Packaging source: https://github.com/adamdeprince/inkline/tree/main/scripts/utilities/tailscale
+Redistribution retains the license texts, notices, and disclaimers supplied
+with the package. No private sign-in state or account credentials are shipped.
