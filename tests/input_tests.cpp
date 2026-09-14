@@ -1,5 +1,6 @@
 #include "rmt/input.hpp"
 #include "rmt/keyboard.hpp"
+#include "rmt/input_method.hpp"
 #include <QGuiApplication>
 #include <cstdio>
 #include <cstdlib>
@@ -48,23 +49,25 @@ int main(int argc, char **argv) {
             CHECK(map.map(event(QEvent::KeyPress, item.first, 0, Qt::AltModifier, {}, true), 0).action == InputAction::Ignore);
             CHECK(map.map(event(QEvent::KeyRelease, item.first, 0), 0).action == InputAction::Ignore);
         }
-        // Local clipboard actions fire once; zoom repeats but emits no release.
-        for (const auto &item : std::vector<std::pair<int, rmt::InputAction>>{{Qt::Key_C, rmt::InputAction::Copy}, {Qt::Key_V, rmt::InputAction::Paste}, {Qt::Key_X, rmt::InputAction::Cut}, {Qt::Key_Plus, rmt::InputAction::ZoomIn}, {Qt::Key_Minus, rmt::InputAction::ZoomOut}}) {
+        // Local clipboard actions fire once.
+        for (const auto &item : std::vector<std::pair<int, rmt::InputAction>>{{Qt::Key_C, rmt::InputAction::Copy}, {Qt::Key_V, rmt::InputAction::Paste}, {Qt::Key_X, rmt::InputAction::Cut}}) {
             CHECK(map.map(event(QEvent::KeyPress, item.first, 0, Qt::AltModifier), 0).action == item.second);
             const auto repeat = map.map(event(QEvent::KeyPress, item.first, 0, Qt::AltModifier, {}, true), 0).action;
-            CHECK(repeat == ((item.first == Qt::Key_Plus || item.first == Qt::Key_Minus) ? item.second : rmt::InputAction::Ignore));
+            CHECK(repeat == rmt::InputAction::Ignore);
             CHECK(map.map(event(QEvent::KeyRelease, item.first, 0), 0).action == rmt::InputAction::Ignore);
         }
-        // Logical zoom symbols win over conflicting physical key positions.
-        for (const auto &item : std::vector<std::pair<int, InputAction>>{
-                 {Qt::Key_Minus, InputAction::ZoomOut}, {Qt::Key_Underscore, InputAction::ZoomOut},
-                 {Qt::Key_Plus, InputAction::ZoomIn}, {Qt::Key_Equal, InputAction::ZoomIn}}) {
+        // Punctuation is no longer intercepted for zoom, including repeats.
+        for (const auto code : {Qt::Key_Minus, Qt::Key_Underscore, Qt::Key_Plus, Qt::Key_Equal}) {
             for (quint32 scan : {20u, 21u}) {
-                CHECK(map.map(event(QEvent::KeyPress, item.first, scan, Qt::AltModifier), 0).action == item.second);
-                CHECK(map.map(event(QEvent::KeyPress, item.first, scan, Qt::AltModifier, {}, true), 0).action == item.second);
-                CHECK(map.map(event(QEvent::KeyRelease, item.first, scan), 0).action == InputAction::Ignore);
+                CHECK(map.map(event(QEvent::KeyPress, code, scan, Qt::AltModifier), 0).action == InputAction::Send);
+                CHECK(map.map(event(QEvent::KeyPress, code, scan, Qt::AltModifier, {}, true), 0).action == InputAction::Send);
+                CHECK(map.map(event(QEvent::KeyRelease, code, scan), 0).action == InputAction::Send);
             }
         }
+        // Firmware 3.27's US Folio map consumes AltGr for this printable key.
+        CHECK(encode(event(QEvent::KeyPress, Qt::Key_Equal, 21, Qt::NoModifier, "=")) == "=");
+        CHECK(encode(event(QEvent::KeyPress, Qt::Key_Equal, 21, Qt::NoModifier, "=", true)) == "=");
+        (void)encode(event(QEvent::KeyRelease, Qt::Key_Equal, 21, Qt::NoModifier, "="));
         // A USB numeric keypad keeps its usual Alt+digit behavior.
         const auto keypad = event(QEvent::KeyPress, Qt::Key_1, 87, Qt::KeypadModifier | Qt::AltModifier, "1");
         CHECK(encode(keypad) == reference.encode(keypad));
@@ -75,6 +78,11 @@ int main(int argc, char **argv) {
         const auto left_bytes = encode(left_digit);
         CHECK(left_bytes == "\0331");
         (void)encode(event(QEvent::KeyRelease, Qt::Key_1, 10));
+        for (const auto code : {Qt::Key_Minus, Qt::Key_Underscore, Qt::Key_Plus, Qt::Key_Equal}) {
+            const auto down = event(QEvent::KeyPress, code, 21, Qt::AltModifier, QString(QChar(ushort(code))));
+            CHECK(encode(down) == reference.encode(down));
+            (void)encode(event(QEvent::KeyRelease, code, 21, Qt::AltModifier));
+        }
         (void)encode(alt_down);
         QKeyEvent real_alt_f1(QEvent::KeyPress, Qt::Key_F1, Qt::AltModifier);
         CHECK(encode(event(QEvent::KeyPress, Qt::Key_1, 10, Qt::AltModifier, "1")) == reference.encode(real_alt_f1));
@@ -118,6 +126,42 @@ int main(int argc, char **argv) {
         CHECK(encode(event(QEvent::KeyPress, Qt::Key_Eacute, 26, Qt::NoModifier, QString::fromUtf8("É"))) == "é");
         const auto reset = map.reset(); CHECK(!reset.empty());
         CHECK(map.map(event(QEvent::KeyRelease, Qt::Key_Eacute, 26), 0).action == InputAction::Ignore);
+    }
+    {
+        rmt::InputMapper map;
+        rmt::InputMethod im;
+        rmt::Keyboard encoder(*core);
+        auto pipeline = [&](const QKeyEvent &e) {
+            const auto input = map.map(e, 0); CHECK(input.action == InputAction::Send);
+            const auto result = im.key(input);
+            std::string bytes(result.commit.constData(), size_t(result.commit.size()));
+            if (!result.consumed) bytes += encoder.encode(input.event(), input.caps_locked);
+            return bytes;
+        };
+        auto tap = [&](int code, quint32 scan, Qt::KeyboardModifiers mods, const QString &text) {
+            auto bytes = pipeline(event(QEvent::KeyPress, code, scan, mods, text));
+            bytes += pipeline(event(QEvent::KeyRelease, code, scan, mods, text));
+            return bytes;
+        };
+        // Actual Qt events from the tablet: Shift+6 produces a combining mark.
+        auto bytes = tap(Qt::Key_C, 54, Qt::NoModifier, "c");
+        bytes += tap(Qt::Key_Dead_Circumflex, 15, Qt::ShiftModifier, QString(QChar(0x0302)));
+        bytes += tap(Qt::Key_2, 11, Qt::NoModifier, "2");
+        CHECK(bytes == "c^2" && im.method() == rmt::InputMethod::Off);
+        CHECK(tap(Qt::Key_Dead_Tilde, 51, Qt::NoModifier, QString(QChar(0x0303))) == "~");
+        CHECK(tap(Qt::Key_Dead_Diaeresis, 51, Qt::ShiftModifier, QString(QChar(0x0308))) == "\"");
+        CHECK(tap(Qt::Key_Dead_Grave, 49, Qt::NoModifier, QString(QChar(0x0300))) == "`");
+        CHECK(tap(Qt::Key_Dead_Acute, 48, Qt::NoModifier, QString(QChar(0x0301))) == "'");
+        // Normal Unicode text is not stripped of accents.
+        CHECK(tap(Qt::Key_Eacute, 26, Qt::NoModifier, QString::fromUtf8("é")) == "é");
+        CHECK(tap(Qt::Key_E, 26, Qt::NoModifier, QString::fromUtf8("e\u0302")) == "e\u0302");
+        im.set_method(rmt::InputMethod::USInternational);
+        CHECK(tap(Qt::Key_Dead_Circumflex, 15, Qt::ShiftModifier, QString(QChar(0x0302))).empty());
+        CHECK(tap(Qt::Key_A, 38, Qt::NoModifier, "a") == "â");
+        im.set_method(rmt::InputMethod::Off);
+        CHECK(pipeline(event(QEvent::KeyPress, Qt::Key_Dead_Circumflex, 15, Qt::ShiftModifier, QString(QChar(0x0302)))) == "^");
+        CHECK(pipeline(event(QEvent::KeyPress, Qt::Key_Dead_Circumflex, 15, Qt::ShiftModifier, QString(QChar(0x0302)), true)) == "^");
+        (void)pipeline(event(QEvent::KeyRelease, Qt::Key_6, 15, Qt::NoModifier, "6"));
     }
     rmt_core_free(core);
     std::puts("Input: Folio/USB function keys, navigation, modifiers, repeat/release, session routing and Caps Lock modes passed.");

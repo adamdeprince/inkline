@@ -5,7 +5,7 @@
 #include <vector>
 
 namespace rmt {
-enum class InputAction { Send, Ignore, Settings, Quit, Previous, Next, ToggleBar, HistoryUp, HistoryDown, ZoomIn, ZoomOut, Copy, Paste, Cut };
+enum class InputAction { Send, Ignore, Settings, Quit, Previous, Next, ToggleBar, HistoryUp, HistoryDown, Copy, Paste, Cut };
 struct MappedInput {
     InputAction action = InputAction::Ignore;
     QEvent::Type type = QEvent::KeyPress;

@@ -100,28 +100,33 @@ int main(int argc, char **argv) {
         alt(view, Qt::Key_Backspace, 22); CHECK(view.quit_confirmation_open());
         press(view, Qt::Key_Escape, 9); CHECK(!view.quit_confirmation_open());
         CHECK(view.terminal_count() == 6);
-        // Zoom never replaces any running terminal, and saves after key repeat pauses.
-        alt(view, Qt::Key_Equal, 21); CHECK(view.font_pixels() == 26);
-        CHECK(rmt::Preferences(settings).font_pixels() == 26); // default, no write yet
-        alt(view, Qt::Key_Equal, 21); CHECK(view.font_pixels() == 28);
-        alt(view, Qt::Key_Minus, 21); CHECK(view.font_pixels() == 26);
-        alt(view, Qt::Key_Plus, 20); CHECK(view.font_pixels() == 28);
-        CHECK(rmt::Preferences(settings).font_pixels() == 26);
-        pump(800); CHECK(rmt::Preferences(settings).font_pixels() == 28);
+        // Neither Alt key intercepts punctuation to resize the terminal.
+        for (const auto modifier : {Qt::Key_Alt, Qt::Key_AltGr}) {
+            const quint32 scan = modifier == Qt::Key_Alt ? 64 : 108;
+            key(view, QEvent::KeyPress, modifier, scan, Qt::AltModifier);
+            for (const auto symbol : {Qt::Key_Equal, Qt::Key_Plus, Qt::Key_Minus, Qt::Key_Underscore})
+                press(view, symbol, 21, Qt::AltModifier, QString(QChar(ushort(symbol))));
+            key(view, QEvent::KeyRelease, modifier, scan);
+            CHECK(view.font_pixels() == 24);
+        }
+        pump(800); CHECK(rmt::Preferences(settings).font_pixels() == 26); // default, no font write
         CHECK(view.terminal_count() == 6);
         // Pinch coordinates must work under the tablet's rotated view as well.
         view.setRotation(90);
         touch(view, QEvent::TouchBegin, {point(view, 1, S::Pressed, 400, 300)});
         touch(view, QEvent::TouchUpdate, {point(view, 1, S::Stationary, 400, 300), point(view, 2, S::Pressed, 600, 300)});
+        touch(view, QEvent::TouchUpdate, {point(view, 1, S::Updated, 390, 300), point(view, 2, S::Updated, 610, 300)});
+        CHECK(view.font_pixels() == 25); // fine adjustment by a single pixel
         touch(view, QEvent::TouchUpdate, {point(view, 1, S::Updated, 350, 300), point(view, 2, S::Updated, 650, 300)});
-        CHECK(view.font_pixels() == 42); CHECK(rmt::Preferences(settings).font_pixels() == 28);
+        CHECK(view.font_pixels() == 29); CHECK(rmt::Preferences(settings).font_pixels() == 26);
         touch(view, QEvent::TouchEnd, {point(view, 1, S::Released, 350, 300), point(view, 2, S::Released, 650, 300)});
-        CHECK(rmt::Preferences(settings).font_pixels() == 42);
+        CHECK(rmt::Preferences(settings).font_pixels() == 29);
+        CHECK(view.terminal_count() == 6); // resizing preserves all PTYs
         touch(view, QEvent::TouchBegin, {point(view, 1, S::Pressed, 400, 300), point(view, 2, S::Pressed, 600, 300)});
         touch(view, QEvent::TouchUpdate, {point(view, 1, S::Updated, 480, 300), point(view, 2, S::Updated, 520, 300)});
-        CHECK(view.font_pixels() == 10);
-        touch(view, QEvent::TouchCancel, {}); CHECK(view.font_pixels() == 42);
-        CHECK(rmt::Preferences(settings).font_pixels() == 42);
+        CHECK(view.font_pixels() == 13);
+        touch(view, QEvent::TouchCancel, {}); CHECK(view.font_pixels() == 29);
+        CHECK(rmt::Preferences(settings).font_pixels() == 29);
         view.setRotation(0);
         // Input methods are selected through Option+Space, and persist.
         alt(view, Qt::Key_Space, 65);
@@ -154,16 +159,22 @@ int main(int argc, char **argv) {
         view.setSize(QSizeF(1000, 750)); view.layout(); view.start();
         using S = QEventPoint::State;
         touch(view, QEvent::TouchBegin, {point(view, 1, S::Pressed, 400, 300), point(view, 2, S::Pressed, 600, 300)});
-        touch(view, QEvent::TouchUpdate, {point(view, 1, S::Updated, 480, 300), point(view, 2, S::Updated, 520, 300)});
+        touch(view, QEvent::TouchUpdate, {point(view, 1, S::Updated, 496, 300), point(view, 2, S::Updated, 504, 300)});
         touch(view, QEvent::TouchEnd, {});
         CHECK(view.font_pixels() == 6 && rmt::Preferences(tiny_settings).font_pixels() == 6);
         alt(view, Qt::Key_Minus, 21); CHECK(view.font_pixels() == 6);
-        alt(view, Qt::Key_Plus, 20); CHECK(view.font_pixels() == 8);
+        alt(view, Qt::Key_Plus, 20); CHECK(view.font_pixels() == 6);
         alt(view, Qt::Key_Minus, 21); CHECK(view.font_pixels() == 6);
         CHECK(!view.snapshot().isNull() && view.terminal_count() == 1);
         pump(800); CHECK(rmt::Preferences(tiny_settings).font_pixels() == 6);
         rmt::TerminalView restored(window.contentItem(), 0, true, tiny_settings);
         CHECK(restored.font_pixels() == 6);
+        for (int n = 0; n < 2; ++n) {
+            touch(view, QEvent::TouchBegin, {point(view, 1, S::Pressed, 480, 300), point(view, 2, S::Pressed, 520, 300)});
+            touch(view, QEvent::TouchUpdate, {point(view, 1, S::Updated, 100, 300), point(view, 2, S::Updated, 900, 300)});
+            touch(view, QEvent::TouchEnd, {});
+        }
+        CHECK(view.font_pixels() == 48 && rmt::Preferences(tiny_settings).font_pixels() == 48);
     }
     {
         // Two fingers drag history naturally; changing their spacing after

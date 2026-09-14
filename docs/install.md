@@ -29,7 +29,7 @@ a convenience in the development setup, not an installer requirement.
 
 On your computer, download `inkline-rm2.tar.gz` and
 `inkline-rm2.tar.gz.sha256` from the
-[0.3.1 preview release](https://github.com/adamdeprince/inkline/releases/tag/v0.3.1).
+[0.3.2 preview release](https://github.com/adamdeprince/inkline/releases/tag/v0.3.2).
 Use the attached Inkline bundle; GitHub's automatically generated source-code
 archives do not contain the compiled application. The bundle is about 79 MiB
 and includes the installer, uninstall script, source archives and licenses.
@@ -39,12 +39,12 @@ additional tablet package manager.
 Alternatively, download both files from a terminal on your computer:
 
 ```sh
-curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.3.1/inkline-rm2.tar.gz
-curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.3.1/inkline-rm2.tar.gz.sha256
+curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.3.2/inkline-rm2.tar.gz
+curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.3.2/inkline-rm2.tar.gz.sha256
 ```
 
 The same files are mirrored under
-[`inkline.goblinreactor.com/downloads/v0.3.1/`](https://inkline.goblinreactor.com/downloads/v0.3.1/inkline-rm2.tar.gz).
+[`inkline.goblinreactor.com/downloads/v0.3.2/`](https://inkline.goblinreactor.com/downloads/v0.3.2/inkline-rm2.tar.gz).
 To compile the application yourself, see [building from source](#building-from-source).
 
 ## 3. Check, then install
@@ -139,11 +139,12 @@ Useful controls:
   or right to switch terminals. One finger or the pen selects text.
 - `~/inkline start --rotate 270` reverses landscape orientation; `--rotate 0` uses portrait.
 - `~/inkline start --font-size 32` overrides the saved text size for this launch (6–48 pixels).
-- Option +/−, pinching, and Settings adjust text size inside the terminal.
+- Pinching and Settings adjust text size inside the terminal. Pinch in one-pixel
+  steps for finer control; keyboard zoom combinations have been removed.
 - Option+Space also selects Asian input methods; Option+C/V uses the RAM clipboard.
 - `~/inkline stop` restores notebooks from another SSH session.
 
-Inkline 0.3.1 includes right Alt/Option shortcuts, six terminal slots,
+Inkline 0.3.2 includes right Alt/Option shortcuts, six terminal slots,
 quit confirmation, a Settings button, and a saved Caps Lock/Control toggle.
 Each new terminal shows a brief guide and a tiny Goblin logo.
 Inkline sets `HOME=/home/root` for tablet sessions, including shells opened by

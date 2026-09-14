@@ -4,14 +4,14 @@ Inkline is a terminal for **reMarkable 2**, built with **libghostty-vt** and the
 stock Qt e-paper backend. It is designed for Type Folio and external USB
 keyboards, with kitty graphics and an initial sixel implementation.
 
-**Version 0.3.1 is a preview.** The main artifact is the repeatable
+**Version 0.3.2 is a preview.** The main artifact is the repeatable
 [installation procedure](docs/install.md), including preflight, launch, recovery
 and uninstall. It targets firmware **3.27**, tested on **3.27.3.0**. Other models
 and firmware lines are not supported by this installer.
 
 ## Install
 
-Download the **[Inkline 0.3.1 preview](https://github.com/adamdeprince/inkline/releases/tag/v0.3.1)**
+Download the **[Inkline 0.3.2 preview](https://github.com/adamdeprince/inkline/releases/tag/v0.3.2)**
 and follow the [installation procedure](docs/install.md). The prebuilt ARM bundle
 includes the installer, launcher, uninstall script, checksums, source archives
 and licenses. No compiler, SDK or third-party package manager is needed to install it.
@@ -32,7 +32,7 @@ The package is generated at `build/dist/inkline-rm2.tar.gz`. The
 After installation, press **Ctrl+Alt+T on the tablet’s Type Folio or USB keyboard**
 to open Inkline. No second computer is needed for subsequent launches. Tap
 **Quit**, press **Ctrl+Shift+Q**, or exit the shell to return to notebooks.
-In 0.3.1, Quit asks for confirmation and `exit` closes only the current terminal.
+In 0.3.2, Quit asks for confirmation and `exit` closes only the current terminal.
 The launcher temporarily switches from `xochitl` to Inkline and restores it when
 Inkline stops. A small keyboard shortcut service starts at boot; the terminal itself opens only
 on request, and the usual notebook interface remains the default.
@@ -50,7 +50,7 @@ Build recipes, pinned inputs, and device checks are documented in
 Compact TeX Live is installed on the tablet and Purrfect PDF export passes.
 The full collection is optional and too large to recommend for internal storage.
 
-## Keyboard controls in 0.3.1
+## Keyboard controls in 0.3.2
 
 Hold the **right Alt/Option** key for these Folio and USB keyboard shortcuts:
 
@@ -63,13 +63,13 @@ Hold the **right Alt/Option** key for these Folio and USB keyboard shortcuts:
 | Space | Open or close Settings |
 | Backspace | Confirm quitting all terminals |
 | C / V | Copy selected text / paste the RAM clipboard |
-| + / − | Grow / shrink text |
 
 **Ctrl+Shift+B** hides or shows the bottom bar. Its fifth button opens
 **Settings**, where Caps Lock can act as **Control** (the default) or normal
 **Caps Lock**. Active choices have a solid fill; keyboard focus has a dashed outline.
-Font size (6–48 px) can also change with a two-finger pinch and is saved after
-the gesture or a pause in key repeats. Each terminal has its own
+Pinch with two fingers to change font size (6–48 px), with slower movement and
+one-pixel steps for finer control. Settings also has minus and plus buttons.
+The size is saved after the adjustment. Each terminal has its own
 shell and scrollback; switching to an unused slot opens a shell there.
 Drag two fingers down to reveal older output, or up to return toward the prompt.
 Swipe two fingers left for the next terminal, or right for the previous one.
@@ -79,6 +79,10 @@ Caps Lock setting. The logo is displayed through inline kitty graphics in RAM.
 Settings also selects **Romaji, Pinyin, Zhuyin, Wubi**, or **US-International**
 input. A candidate strip supports typing or tapping a choice. A bundled CJK
 font makes Chinese and Japanese text readable on the stock firmware.
+
+On the US Type Folio, **right Alt/Option + the minus key immediately left of
+Backspace** types `=`. Keyboard zoom combinations have been removed. With input
+method **Off**, Shift+6 types a literal `^`, so `c^2` stays `c^2`.
 
 Drag a finger, pen, or mouse across terminal text, then use right Option+C/V.
 The 128 KiB clipboard is shared by all six terminals, supports OSC 52, and stays

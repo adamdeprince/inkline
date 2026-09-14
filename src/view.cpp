@@ -134,7 +134,8 @@ public:
             "  1-0: F1-F10   Tab: Esc   Up/Down: PgUp/PgDn\r\n"
             "  Left/Right: terminals   Space: Settings\r\n"
             "  Backspace: quit (confirm)   C/V: copy/paste\r\n"
-            "  +/- or pinch: text size   Drag finger/pen: select\r\n"
+            "Pinch: text size   Drag finger/pen: select\r\n"
+            "US Folio: right Alt + minus types =; Shift+6 types ^.\r\n"
             "Two fingers: up/down scroll, sideways switch terminals.\r\n"
             "Scrollback: 500 lines, kept in RAM.\r\n"
             "Settings also selects the input method.\r\n"
@@ -426,8 +427,6 @@ public:
         const auto mapped = input.map(event, overlay == Overlay::None ? active : -1);
         if (event.key() == Qt::Key_CapsLock || event.nativeScanCode() == 66) leds.set_locked(input.caps_locked());
         switch (mapped.action) {
-        case InputAction::ZoomIn: zoom(pixels + 2); break;
-        case InputAction::ZoomOut: zoom(pixels - 2); break;
         case InputAction::Copy:
             if (sessions[active] && overlay == Overlay::None) tell(sessions[active]->copy() ? "Copied" : "Drag across text to select it first");
             break;
@@ -548,7 +547,7 @@ public:
             const auto r = row(3); button(p, r.adjusted(0, 32, 0, -4), InputMethod::name(prefs.input_method()) + "  ›", false);
             font(p, 19);
             p.drawText(box.adjusted(22, 490, -22, -76), Qt::AlignLeft | Qt::AlignTop | Qt::TextWordWrap,
-                       "Solid fill = active setting. Dashed outline = keyboard focus.\nTab / ↑↓: focus   ←→: change   Enter: choose\nOption +/− or pinch: text size   Ctrl+Shift+B: bottom bar");
+                       "Solid fill = active setting. Dashed outline = keyboard focus.\nTab / ↑↓: focus   ←→: change   Enter: choose\nPinch: text size   Ctrl+Shift+B: bottom bar");
             button(p, close_button(), "Done", selected == 4);
         } else if (overlay == Overlay::Methods) {
             const QString names[] = {"Off — direct keyboard", "Romaji — Japanese hiragana", "US-International — accented letters", "Pinyin — Chinese", "Zhuyin — Chinese (basic layout)", "Wubi 86 — Chinese"};
@@ -665,8 +664,12 @@ public:
                         choose(active + (sideways < 0 ? 1 : -1));
                     } else if (can_scroll && travel >= 12 && travel >= std::abs(sideways)) gesture = Gesture::Scroll;
                 }
-                if (gesture == Gesture::Pinch)
-                    zoom(int(std::lround(pinch_pixels * std::clamp(distance / pinch_distance, qreal(0.25), qreal(4)) / 2)) * 2, false);
+                if (gesture == Gesture::Pinch) {
+                    // Half the proportional response, in single-pixel steps.
+                    // Square-root scaling treats opening and closing equally.
+                    const auto scale = std::sqrt(std::clamp(distance / pinch_distance, qreal(0.0625), qreal(16)));
+                    zoom(int(std::lround(pinch_pixels * scale)), false);
+                }
                 if (gesture == Gesture::Scroll && sessions[active]) {
                     scroll_remainder -= center.y() - gesture_last.y();
                     const int height = sessions[active]->cell_height();

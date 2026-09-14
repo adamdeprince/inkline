@@ -29,6 +29,22 @@ int physical_key(const QKeyEvent &e) {
     default: return e.key() == Qt::Key_Backtab ? Qt::Key_Tab : e.key();
     }
 }
+int literal_accent(const QKeyEvent &e) {
+    // The e-paper backend sends standalone combining marks for printed ASCII
+    // accents (e.g. Shift+6 is U+0302). Let Inkline's selected input method
+    // handle composition; direct input must type a caret instead of modifying
+    // the preceding cell. Text committed by an IME or pasted is not changed.
+    if (e.text().size() != 1) return 0;
+    const auto mark = e.text().at(0).unicode();
+    switch (e.key()) {
+    case Qt::Key_Dead_Grave: return mark == 0x0300 ? Qt::Key_QuoteLeft : 0;
+    case Qt::Key_Dead_Acute: return mark == 0x0301 ? Qt::Key_Apostrophe : 0;
+    case Qt::Key_Dead_Circumflex: return mark == 0x0302 ? Qt::Key_AsciiCircum : 0;
+    case Qt::Key_Dead_Tilde: return mark == 0x0303 ? Qt::Key_AsciiTilde : 0;
+    case Qt::Key_Dead_Diaeresis: return mark == 0x0308 ? Qt::Key_QuoteDbl : 0;
+    default: return 0;
+    }
+}
 }
 
 void InputMapper::set_caps_control(bool enabled) {
@@ -83,15 +99,11 @@ MappedInput InputMapper::map(const QKeyEvent &e, int terminal) {
             }
             held.consumes_alt = held.input.key != e.key() || held.input.action != InputAction::Send;
         }
-        if (held.input.action == InputAction::Send &&
-            (right_alt_ || left_alt_ || (mods & Qt::AltModifier)) &&
-            !(mods & (Qt::ControlModifier | Qt::MetaModifier))) {
-            // A layout's minus symbol must not be overridden by the physical
-            // position of the US equals key (and vice versa).
-            if (e.key() == Qt::Key_Minus || e.key() == Qt::Key_Underscore) held.input.action = InputAction::ZoomOut;
-            else if (e.key() == Qt::Key_Plus || e.key() == Qt::Key_Equal) held.input.action = InputAction::ZoomIn;
-            else if (right_alt_ && e.nativeScanCode() == 20) held.input.action = InputAction::ZoomOut;
-            else if (right_alt_ && e.nativeScanCode() == 21) held.input.action = InputAction::ZoomIn;
+        if (held.input.action == InputAction::Send && !held.consumes_alt) {
+            if (const auto accent = literal_accent(e)) {
+                held.input.key = accent;
+                held.input.text = QString(QChar(ushort(accent)));
+            }
         }
         if (held.input.action == InputAction::Send) {
             if ((mods & Qt::ControlModifier) && (mods & Qt::ShiftModifier)) {
@@ -116,13 +128,12 @@ MappedInput InputMapper::map(const QKeyEvent &e, int terminal) {
         if (!left_alt_) result.modifiers &= ~Qt::AltModifier;
     }
     if (result.action != InputAction::Send) {
-        if (release || (result.repeat && result.action != InputAction::HistoryUp && result.action != InputAction::HistoryDown &&
-                       result.action != InputAction::ZoomIn && result.action != InputAction::ZoomOut))
+        if (release || (result.repeat && result.action != InputAction::HistoryUp && result.action != InputAction::HistoryDown))
             result.action = InputAction::Ignore;
         return result;
     }
     if (!held.consumes_alt && !caps(e)) {
-        result.text = e.text();
+        result.text = held.input.text.isEmpty() ? e.text() : held.input.text;
         // Caps Lock is an application setting. Ignore the platform's lock
         // state so a Caps-as-Control press cannot leave later letters capitalized.
         if (result.text.size() == 1 && result.text.at(0).isLetter()) {

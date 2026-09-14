@@ -1,6 +1,6 @@
 # Keyboard and terminal settings
 
-These controls are included in **Inkline 0.3.1**. All nine host and ARM test
+These controls are included in **Inkline 0.3.2**. All nine host and ARM test
 suites pass; physical Folio and USB checks for the new controls are pending.
 
 Each new terminal prints a short shortcut guide with a small Goblin logo and the
@@ -20,13 +20,20 @@ key to reach keys missing from the Folio:
 | Backspace | Ask to quit Inkline |
 | C / V | Copy selection / paste clipboard |
 | X | Copy selection and explain how to cut in the editor |
-| + / − | Grow / shrink terminal text |
 
 The number shortcuts use the physical top number row. USB numeric keypads keep
 their usual behavior. Left Alt remains available for ordinary terminal input,
-including Emacs Meta commands, except that Alt +/− also resizes text. Ctrl and Shift can combine with the function keys.
+including Emacs Meta commands. Ctrl and Shift can combine with the function keys.
 Right Alt is reserved for the listed shortcuts, including on layouts that call
 it AltGr; other keys retain their layout's normal input.
+
+On the **US Type Folio**, hold **right Alt/Option** and press the **minus key
+immediately left of Backspace** (marked `-`, `_`, and `=`) to type `=`.
+With input method **Off**, **Shift+6** types a literal `^`: typing `c^2` produces
+those three characters. The Folio's standalone accent keys are converted to
+literal punctuation before Inkline's selected input method processes them.
+US-International still composes accents when explicitly selected; pasted and
+committed Unicode text is preserved.
 
 ## Six terminals
 
@@ -62,7 +69,7 @@ works throughout the panel.
   available while it is hidden.
 
 Preferences are stored in `~/.config/inkline/settings.ini` and survive restarts.
-Font changes are saved after the pinch ends or key repeats pause for 700 ms.
+Font changes are saved after the pinch ends, or 700 ms after a Settings adjustment.
 Only a changed preference writes this file; typing, graphics and switching
 terminals do not save it. Ordinary Caps Lock's on/off state starts off each time.
 
@@ -83,13 +90,14 @@ the live prompt, and full-screen applications keep their usual alternate screen.
 
 ## Text size
 
-Hold **Alt/Option** and press **+** (or `=`) or **−** to resize text in two-pixel
-steps, from 6 to 48 pixels. Both Alt keys work for resizing. You can also pinch
-with two fingers anywhere in Inkline, or use Settings' minus and plus buttons.
+**Pinch with two fingers** to resize text from **6 to 48 pixels**. Pinching has
+about half its previous proportional response and moves in **one-pixel steps**
+for finer control. Settings' minus and plus buttons still adjust by two pixels.
 The size applies to all six terminals, and existing shells receive a resize
 without restarting. A cancelled pinch restores the previous size.
-The logical minus or underscore key always shrinks text, even when the keyboard
-reports it at the physical position normally used for equals or plus.
+
+Keyboard zoom combinations have been removed from both Alt keys. Punctuation
+and ordinary Alt input now reach the running program.
 
 ## Text selection and clipboard
 

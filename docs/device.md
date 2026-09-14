@@ -112,3 +112,17 @@ GoblinView `0.1.0+20260914.rm2.2` is installed and takes 13,012 KiB (12.7 MiB).
 Its six upstream ARM suites and detached client/server smoke test pass. Real
 PTY tests verify explicit `-m`, automatic monochrome inside Inkline, and normal
 colour outside Inkline. Installation preserved the active Inkline process.
+
+## 0.3.2 literal punctuation and finer pinch sizing — September 14
+
+All nine host and ARM suites pass. New regressions cover both Alt keys passing
+punctuation, literal `c^2` with input method Off, preserved Unicode, explicit
+US-International composition, single-pixel pinch changes at reduced sensitivity,
+cancellation, both font limits, and preservation of the six terminals.
+
+A separate offscreen probe exercised the stock e-paper plugin's US keyboard
+mapper with synthetic events, without reading or injecting input into the active
+terminal. Right Alt plus the key immediately left of Backspace produces `=`;
+Shift+6 produces a dead-circumflex event containing U+0302. Inkline now converts
+that standalone combining accent to `^` before its selected input method runs.
+Physical testing remains for pinch feel, additional layouts, and USB hotplug.
