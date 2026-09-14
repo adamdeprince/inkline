@@ -4,14 +4,14 @@ Inkline is a terminal for **reMarkable 2**, built with **libghostty-vt** and the
 stock Qt e-paper backend. It is designed for Type Folio and external USB
 keyboards, with kitty graphics and an initial sixel implementation.
 
-**Version 0.2.0 is a preview.** The main artifact is the repeatable
+**Version 0.3.0 is a preview.** The main artifact is the repeatable
 [installation procedure](docs/install.md), including preflight, launch, recovery
 and uninstall. It targets firmware **3.27**, tested on **3.27.3.0**. Other models
 and firmware lines are not supported by this installer.
 
 ## Install
 
-Download the **[Inkline 0.2.0 preview](https://github.com/adamdeprince/inkline/releases/tag/v0.2.0)**
+Download the **[Inkline 0.3.0 preview](https://github.com/adamdeprince/inkline/releases/tag/v0.3.0)**
 and follow the [installation procedure](docs/install.md). The prebuilt ARM bundle
 includes the installer, launcher, uninstall script, checksums, source archives
 and licenses. No compiler, SDK or third-party package manager is needed to install it.
@@ -32,7 +32,7 @@ The package is generated at `build/dist/inkline-rm2.tar.gz`. The
 After installation, press **Ctrl+Alt+T on the tablet’s Type Folio or USB keyboard**
 to open Inkline. No second computer is needed for subsequent launches. Tap
 **Quit**, press **Ctrl+Shift+Q**, or exit the shell to return to notebooks.
-In 0.2.0, Quit asks for confirmation and `exit` closes only the current terminal.
+In 0.3.0, Quit asks for confirmation and `exit` closes only the current terminal.
 The launcher temporarily switches from `xochitl` to Inkline and restores it when
 Inkline stops. A small keyboard shortcut service starts at boot; the terminal itself opens only
 on request, and the usual notebook interface remains the default.
@@ -50,7 +50,7 @@ Build recipes, pinned inputs, and device checks are documented in
 Compact TeX Live is installed on the tablet and Purrfect PDF export passes.
 The full collection is optional and too large to recommend for internal storage.
 
-## Keyboard controls in 0.2.0
+## Keyboard controls in 0.3.0
 
 Hold the **right Alt/Option** key for these Folio and USB keyboard shortcuts:
 
@@ -62,13 +62,25 @@ Hold the **right Alt/Option** key for these Folio and USB keyboard shortcuts:
 | Left / Right | Previous / next terminal, across six slots |
 | Space | Open or close Settings |
 | Backspace | Confirm quitting all terminals |
+| C / V | Copy selected text / paste the RAM clipboard |
+| + / − | Grow / shrink text |
 
 **Ctrl+Shift+B** hides or shows the bottom bar. Its fifth button opens
 **Settings**, where Caps Lock can act as **Control** (the default) or normal
-**Caps Lock**. Both settings persist across launches. Each terminal has its own
+**Caps Lock**. Active choices have a solid fill; keyboard focus has a dashed outline.
+Font size (16–48 px) can also change with a two-finger pinch and is saved after
+the gesture or a pause in key repeats. Each terminal has its own
 shell and scrollback; switching to an unused slot opens a shell there.
 New terminals print a short guide with a tiny Goblin logo and the current
 Caps Lock setting. The logo is displayed through inline kitty graphics in RAM.
+Settings also selects **Romaji, Pinyin, Zhuyin, Wubi**, or **US-International**
+input. A candidate strip supports typing or tapping a choice. A bundled CJK
+font makes Chinese and Japanese text readable on the stock firmware.
+
+Drag a finger, pen, or mouse across terminal text, then use right Option+C/V.
+The 128 KiB clipboard is shared by all six terminals, supports OSC 52, and stays
+in RAM. Terminal output is read-only: Option+X copies the selection and explains
+that deletion must be performed by the running editor.
 See [keyboard and session instructions](docs/keyboard.md) for details.
 
 ## Current source features
@@ -92,8 +104,8 @@ See [keyboard and session instructions](docs/keyboard.md) for details.
 
 This is not yet a complete replacement for a desktop kitty terminal. The first
 renderer does not implement Unicode placeholder placements, animation playback,
-all image z-order cases, or gray+alpha image rendering. Mouse reporting,
-selection/copy/paste and clipboard integrations are also unfinished.
+all image z-order cases, or gray+alpha image rendering. Mouse
+reporting to terminal applications is still unfinished. Inkline handles pointer drags as text selection.
 
 Sixel still needs DEC display modes, partial erasure, scrolling-region edge cases
 and reflow refinements. It is therefore **not advertised in device attributes**
@@ -125,12 +137,11 @@ bytecode caches; the installer does not constrain other programs' own caches.
 
 ## Validation
 
-All **seven** suites pass on the development Mac and reMarkable 2: core graphics, sixel decoding,
+All **nine** suites pass on the development Mac and reMarkable 2: core graphics, sixel decoding,
 mixed-stream parsing, shell PTY, renderer/keyboard integration, shortcut mapping,
-and terminal sessions. The two new suites also pass with address and undefined
-behavior sanitizers on the host. The startup guide and logo render correctly
+terminal sessions, clipboard/selection, and input methods. The startup guide and logo render correctly
 using the tablet's stock Qt libraries. Physical checks for the new shortcuts,
-keyboard LEDs and USB hotplug remain outstanding.
+keyboard LEDs, physical pinch/pen behavior and USB hotplug remain outstanding.
 
 The original five suites passed on reMarkable 2 running 3.27.3.0 for 0.1.0.
 The device graphics suite measured **zero Linux

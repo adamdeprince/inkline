@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
     args.setApplicationDescription("Inkline: a terminal for reMarkable 2");
     args.addHelpOption(); args.addVersionOption();
     args.addOption({"rotate", "Screen rotation: 0, 90, or 270.", "degrees", "90"});
-    args.addOption({"font-size", "Font size in pixels (16 to 48).", "pixels", "26"});
+    args.addOption({"font-size", "Override the saved font size (16 to 48 pixels).", "pixels"});
     args.addOption({"check", "Check the terminal and renderer, then exit without opening a window."});
     args.addOption({"settings", "Open the settings screen on startup."});
     args.addOption({"demo", "Display the graphics demonstration without starting a shell."});
@@ -27,8 +27,11 @@ int main(int argc, char **argv) {
     bool valid = false;
     const int rotation = args.value("rotate").toInt(&valid);
     if (!valid || (rotation != 0 && rotation != 90 && rotation != 270)) return 2;
-    const int pixels = args.value("font-size").toInt(&valid);
-    if (!valid || pixels < 16 || pixels > 48) return 2;
+    int pixels = 0;
+    if (args.isSet("font-size")) {
+        pixels = args.value("font-size").toInt(&valid);
+        if (!valid || pixels < 16 || pixels > 48) return 2;
+    }
     int duration = 0;
     if (args.isSet("quit-after")) {
         duration = args.value("quit-after").toInt(&valid);

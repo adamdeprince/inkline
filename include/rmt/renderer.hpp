@@ -16,6 +16,7 @@ public:
     Renderer(const Renderer &) = delete;
     Renderer &operator=(const Renderer &) = delete;
     void resize(int width, int height);
+    void set_font_size(int pixels);
     QImage frame();
     void sixel(sixel::Bitmap &&bitmap);
     void clear_sixel();

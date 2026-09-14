@@ -94,3 +94,21 @@ offscreen snapshot produced on the tablet.
 The new shortcuts, Caps Lock LED handling, settings touch targets and USB hotplug
 still need checks on the physical tablet. The update installer preserves open
 terminals; the new version takes effect after quitting and reopening Inkline.
+
+## 0.3.0 input, clipboard and display changes — September 14
+
+All nine host and ARM suites pass. The new checks include OSC 52 writes and
+queries, clipboard limits, bracketed and kitty paste modes, Unicode selection
+and reflow, a finger selection copied into another terminal, all five input
+methods, rotated pinch events, and saved font size without replacing PTYs.
+The affected host suites also pass with address/undefined-behavior sanitizers.
+
+Settings and the Chinese candidate strip have been inspected in snapshots
+rendered on the tablet. A bundled Noto CJK font supplies glyphs missing from the
+stock font set. Physical finger/pen behavior and the new Folio/USB combinations
+remain acceptance checks.
+
+GoblinView `0.1.0+20260914.rm2.2` is installed and takes 13,012 KiB (12.7 MiB).
+Its six upstream ARM suites and detached client/server smoke test pass. Real
+PTY tests verify explicit `-m`, automatic monochrome inside Inkline, and normal
+colour outside Inkline. Installation preserved the active Inkline process.

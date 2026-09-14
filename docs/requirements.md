@@ -124,8 +124,8 @@ including startup, imports, virtual environments and pip installation.
 The manufacturer's [Qt/e-paper guide](https://developer.remarkable.com/documentation/qt_epaper)
 is the first display-integration reference for current software. If a community
 display manager is needed, verify its compatibility with the actual firmware.
-Seven host and ARM test suites pass. The original installer, display and Folio
-launch/typing passed on the device for 0.1.0. The 0.2.0 controls and six terminals
+Nine host and ARM test suites pass. The original installer, display and Folio
+launch/typing passed on the device for 0.1.0. The 0.3.0 controls, clipboard, input methods and six terminals
 pass automated ARM checks; physical shortcut and USB hotplug checks remain.
 New terminals print a brief how-to and display a tiny Goblin logo through inline
 kitty graphics. See [device findings](device.md).

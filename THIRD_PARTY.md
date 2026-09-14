@@ -26,3 +26,18 @@
 
 The sixel-derived component is GPL-3.0-or-later. A combined terminal containing it
 must be distributed compatibly with that license, including corresponding source.
+
+- **GoblinView input methods**, Apache-2.0, copyright 2026 Adam DePrince.
+  `src/input_method.cpp` adapts the September 14, 2026 local `desqview/src/im.cc`
+  snapshot with owned, bounded dictionaries and Qt key routing. The original
+  phonetic/dead-key tables are retained; prefix handling and UTF-8 candidate
+  truncation are corrected. The source archive is pinned in
+  `scripts/utilities/inputs.lock.json`. Its license and notice are included in
+  `assets/input-methods/licenses/`.
+- **Pinyin/Wubi dictionaries**: mozillazg/pinyin-data (MIT), Unicode Unihan
+  (Unicode Data Files license), and KyleBing/rime-wubi86-jidian (Apache-2.0).
+  Original license texts and provenance accompany the unchanged generated
+  dictionaries in `assets/input-methods/`.
+- **Noto Sans Mono CJK SC**, SIL Open Font License 1.1, from notofonts/noto-cjk.
+  The unmodified font, license, exact source revision and SHA-256 are in
+  `assets/fonts/`. It is loaded privately by Inkline.

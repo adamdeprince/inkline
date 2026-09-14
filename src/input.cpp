@@ -76,9 +76,20 @@ MappedInput InputMapper::map(const QKeyEvent &e, int terminal) {
             case Qt::Key_Space: held.input.action = InputAction::Settings; break;
             case Qt::Key_Left: held.input.action = InputAction::Previous; break;
             case Qt::Key_Right: held.input.action = InputAction::Next; break;
+            case Qt::Key_C: held.input.action = InputAction::Copy; break;
+            case Qt::Key_V: held.input.action = InputAction::Paste; break;
+            case Qt::Key_X: held.input.action = InputAction::Cut; break;
             default: break;
             }
             held.consumes_alt = held.input.key != e.key() || held.input.action != InputAction::Send;
+        }
+        if (held.input.action == InputAction::Send &&
+            (right_alt_ || left_alt_ || (mods & Qt::AltModifier)) &&
+            !(mods & (Qt::ControlModifier | Qt::MetaModifier))) {
+            if (e.key() == Qt::Key_Plus || e.key() == Qt::Key_Equal ||
+                (right_alt_ && e.nativeScanCode() == 21)) held.input.action = InputAction::ZoomIn;
+            else if (e.key() == Qt::Key_Minus || e.key() == Qt::Key_Underscore ||
+                     (right_alt_ && e.nativeScanCode() == 20)) held.input.action = InputAction::ZoomOut;
         }
         if (held.input.action == InputAction::Send) {
             if ((mods & Qt::ControlModifier) && (mods & Qt::ShiftModifier)) {
@@ -103,7 +114,8 @@ MappedInput InputMapper::map(const QKeyEvent &e, int terminal) {
         if (!left_alt_) result.modifiers &= ~Qt::AltModifier;
     }
     if (result.action != InputAction::Send) {
-        if (release || (result.repeat && result.action != InputAction::HistoryUp && result.action != InputAction::HistoryDown))
+        if (release || (result.repeat && result.action != InputAction::HistoryUp && result.action != InputAction::HistoryDown &&
+                       result.action != InputAction::ZoomIn && result.action != InputAction::ZoomOut))
             result.action = InputAction::Ignore;
         return result;
     }

@@ -24,12 +24,19 @@ public:
     bool bottom_bar() const;
     bool settings_open() const;
     bool quit_confirmation_open() const;
+    int font_pixels() const;
+    int input_method() const;
+    QByteArray clipboard_text() const;
 protected:
+    bool event(QEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;
     void focusOutEvent(QFocusEvent *event) override;
     void inputMethodEvent(QInputMethodEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+    void touchEvent(QTouchEvent *event) override;
 private:
     class Private;
     std::unique_ptr<Private> d_;

@@ -48,6 +48,13 @@ int main(int argc, char **argv) {
             CHECK(map.map(event(QEvent::KeyPress, item.first, 0, Qt::AltModifier, {}, true), 0).action == InputAction::Ignore);
             CHECK(map.map(event(QEvent::KeyRelease, item.first, 0), 0).action == InputAction::Ignore);
         }
+        // Local clipboard actions fire once; zoom repeats but emits no release.
+        for (const auto &item : std::vector<std::pair<int, rmt::InputAction>>{{Qt::Key_C, rmt::InputAction::Copy}, {Qt::Key_V, rmt::InputAction::Paste}, {Qt::Key_X, rmt::InputAction::Cut}, {Qt::Key_Plus, rmt::InputAction::ZoomIn}, {Qt::Key_Minus, rmt::InputAction::ZoomOut}}) {
+            CHECK(map.map(event(QEvent::KeyPress, item.first, 0, Qt::AltModifier), 0).action == item.second);
+            const auto repeat = map.map(event(QEvent::KeyPress, item.first, 0, Qt::AltModifier, {}, true), 0).action;
+            CHECK(repeat == ((item.first == Qt::Key_Plus || item.first == Qt::Key_Minus) ? item.second : rmt::InputAction::Ignore));
+            CHECK(map.map(event(QEvent::KeyRelease, item.first, 0), 0).action == rmt::InputAction::Ignore);
+        }
         // A USB numeric keypad keeps its usual Alt+digit behavior.
         const auto keypad = event(QEvent::KeyPress, Qt::Key_1, 87, Qt::KeypadModifier | Qt::AltModifier, "1");
         CHECK(encode(keypad) == reference.encode(keypad));

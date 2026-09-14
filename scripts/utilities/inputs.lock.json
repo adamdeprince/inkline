@@ -24,10 +24,10 @@
       "kind": "project-source"
     },
     "goblin-view": {
-      "filename": "goblin-view-20260913.tar.gz",
-      "url": "https://inkline.goblinreactor.com/downloads/utilities/2026-09-13/sources/goblin-view-20260913.tar.gz",
-      "sha256": "665d499e4095ea71744c6f8a20a21703487379008270d0adb525b27fb0b6f89b",
-      "size": 4207525,
+      "filename": "goblin-view-20260914.tar.gz",
+      "url": "https://inkline.goblinreactor.com/downloads/utilities/2026-09-14/sources/goblin-view-20260914.tar.gz",
+      "sha256": "2dbb59650b52a2f1a1387e00c11c9dd40c2a2dbab769176cc42843095e57d94a",
+      "size": 4236518,
       "kind": "project-source"
     },
     "webp": {

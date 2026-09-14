@@ -1,5 +1,7 @@
 #include "rmt/renderer.hpp"
 #include <QFontMetrics>
+#include <QFontDatabase>
+#include <QCoreApplication>
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -11,13 +13,11 @@ void check(GhosttyResult result) { if (result != GHOSTTY_SUCCESS) throw std::run
 QColor gray(GhosttyColorRgb c) { const int g = qGray(c.r, c.g, c.b); return QColor(g, g, g); }
 }
 Renderer::Renderer(RmtCore &core, int pixels, size_t sixel_budget) : terminal_(rmt_core_terminal(&core)), sixel_budget_(sixel_budget) {
-    font_ = QFont("Noto Mono");
+    static const int cjk_font = QFontDatabase::addApplicationFont(QCoreApplication::applicationDirPath() + "/assets/fonts/NotoSansMonoCJKsc-Regular.otf");
+    if (cjk_font < 0) throw std::runtime_error("Inkline CJK font is missing; reinstall the complete bundle");
+    font_.setFamilies({"Noto Mono", "Noto Sans Mono CJK SC"});
     font_.setStyleHint(QFont::Monospace);
-    font_.setPixelSize(pixels);
-    const QFontMetrics metrics(font_);
-    cw_ = metrics.horizontalAdvance('M');
-    ch_ = metrics.height() + 2;
-    ascent_ = metrics.ascent() + 1;
+    set_font_size(pixels);
     const auto *allocator = rmt_core_allocator(&core);
     try {
         check(ghostty_render_state_new(allocator, &render_));
@@ -38,6 +38,13 @@ Renderer::~Renderer() {
     ghostty_render_state_row_cells_free(cells_);
     ghostty_render_state_row_iterator_free(row_);
     ghostty_render_state_free(render_);
+}
+void Renderer::set_font_size(int pixels) {
+    font_.setPixelSize(pixels);
+    const QFontMetrics metrics(font_);
+    cw_ = metrics.horizontalAdvance('M');
+    ch_ = metrics.height() + 2;
+    ascent_ = metrics.ascent() + 1;
 }
 void Renderer::resize(int width, int height) {
     cols_ = uint16_t(std::clamp(width / cw_, 2, 512));
@@ -187,6 +194,18 @@ QImage Renderer::frame() {
         ++it;
     }
     kitty(p, GHOSTTY_KITTY_PLACEMENT_LAYER_ABOVE_TEXT);
+    // Selection belongs to the terminal grid, including scrollback and reflow.
+    // Invert after graphics so even cells under an image remain visible.
+    check(ghostty_render_state_get(render_, GHOSTTY_RENDER_STATE_DATA_ROW_ITERATOR, &row_));
+    p.save(); p.setCompositionMode(QPainter::CompositionMode_Difference);
+    int selection_y = 0;
+    while (ghostty_render_state_row_iterator_next(row_)) {
+        auto range = GHOSTTY_INIT_SIZED(GhosttyRenderStateRowSelection);
+        if (ghostty_render_state_row_get(row_, GHOSTTY_RENDER_STATE_ROW_DATA_SELECTION, &range) == GHOSTTY_SUCCESS)
+            p.fillRect(QRect(range.start_x * cw_, selection_y * ch_, (range.end_x - range.start_x + 1) * cw_, ch_), Qt::white);
+        ++selection_y;
+    }
+    p.restore();
     GhosttyRenderStateCursor cursor = GHOSTTY_INIT_SIZED(GhosttyRenderStateCursor);
     ghostty_render_state_get(render_, GHOSTTY_RENDER_STATE_DATA_CURSOR, &cursor);
     if (cursor.viewport_has_value && cursor.visible) {

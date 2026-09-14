@@ -77,7 +77,7 @@ if [ -d "$utility_root/runtime/debian" ]; then
 fi
 ''')
     metadata = {"name": name, "version": version, "model": "reMarkable 2", "architecture": "armv7-hard-float",
-                "firmware_line": "3.27", "tested_firmware": "3.27.3.0", "release": "2026-09-13"}
+                "firmware_line": "3.27", "tested_firmware": "3.27.3.0", "release": "2026-09-14" if name == "goblin-view" else "2026-09-13"}
     if group:
         lock = json.loads((CACHE / "debian/lock.json").read_text())
         metadata["debian_packages"] = {p: lock["packages"][p] for p in lock["groups"][group]}
@@ -146,6 +146,18 @@ def rust_licenses(package):
     shutil.copy2(sysroot / "share/doc/rust/COPYRIGHT-library.html", package / "licenses/rust/COPYRIGHT-library.html")
 
 
+def build_goblin_view():
+    package = prepare("goblin-view", "0.1.0+20260914.rm2.2")
+    source = CACHE / "src/goblin-view"
+    binary(source / "goblin-view", package / "libexec/goblin-view")
+    tree(source / "share", package / "share/goblin-view")
+    tree(CACHE / "licenses/goblin-view", package / "licenses/input-methods")
+    for name in ("LICENSE", "NOTICE"):
+        shutil.copy2(source / name, package / name)
+    wrapper(package, "goblin-view", 'export GOBLIN_VIEW_IMDATA="$utility_root/share/goblin-view"\nif [ "${TERM_PROGRAM:-}" = inkline ]; then set -- -m "$@"; fi\nexec "$utility_root/libexec/goblin-view" "$@"')
+    finish(package, ["goblin-view"], '"$utility_root/bin/goblin-view" -h >/dev/null 2>&1 || test "$?" = 1')
+
+
 def build():
     lock = json.loads((CACHE / "debian/lock.json").read_text())
     package = prepare("goblin-mosh", "1.4.0+e4e8afbb.rm2.1", "perl")
@@ -167,15 +179,7 @@ def build():
     wrapper(package, "mosh", 'exec "$utility_debian/usr/bin/perl" "$utility_debian/usr/bin/mosh" "$@"')
     finish(package, ["mosh", "mosh-client", "mosh-server"], perl_check() + '"$utility_root/bin/mosh" --help >/dev/null\n"$utility_root/bin/mosh-client" --version')
 
-    package = prepare("goblin-view", "0.1.0+20260913.rm2.1")
-    source = CACHE / "src/goblin-view"
-    binary(source / "goblin-view", package / "libexec/goblin-view")
-    tree(source / "share", package / "share/goblin-view")
-    tree(CACHE / "licenses/goblin-view", package / "licenses/input-methods")
-    for name in ("LICENSE", "NOTICE"):
-        shutil.copy2(source / name, package / name)
-    wrapper(package, "goblin-view", 'export GOBLIN_VIEW_IMDATA="$utility_root/share/goblin-view"\nexec "$utility_root/libexec/goblin-view" "$@"')
-    finish(package, ["goblin-view"], '"$utility_root/bin/goblin-view" -h >/dev/null 2>&1 || test "$?" = 1')
+    build_goblin_view()
 
     package = prepare("goblin-purrfect", "0.1.0+20260913.rm2.1")
     source = CACHE / "src/goblin-purrfect"

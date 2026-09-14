@@ -12,7 +12,8 @@ export QT_QPA_EVDEV_TOUCHSCREEN_PARAMETERS=rotate=180:invertx
 export HISTFILE=/dev/null
 export PATH="/home/root/.local/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin"
 cd /home/root
-set -- --rotate "${INKLINE_ROTATE:-90}" --font-size "${INKLINE_FONT_SIZE:-26}"
+set -- --rotate "${INKLINE_ROTATE:-90}"
+if [ "${INKLINE_FONT_SIZE:-0}" -gt 0 ]; then set -- "$@" --font-size "$INKLINE_FONT_SIZE"; fi
 if [ "${INKLINE_DEMO:-0}" = 1 ]; then set -- "$@" --demo; fi
 if [ "${INKLINE_QUIT_AFTER:-0}" -gt 0 ]; then set -- "$@" --quit-after "$INKLINE_QUIT_AFTER"; fi
 /usr/bin/systemd-inhibit --what=idle:sleep --mode=block --why='Inkline terminal session' \

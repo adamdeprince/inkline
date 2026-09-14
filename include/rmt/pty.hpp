@@ -15,7 +15,8 @@ namespace rmt {
  */
 class Pty {
 public:
-    static constexpr size_t MAX_PENDING = 256 * 1024;
+    // Fits both UTF-8 MIME aliases in a bounded kitty clipboard reply.
+    static constexpr size_t MAX_PENDING = 512 * 1024;
     Pty(const std::vector<std::string> &argv, uint16_t cols, uint16_t rows);
     ~Pty();
     Pty(const Pty &) = delete;

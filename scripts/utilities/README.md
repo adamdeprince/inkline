@@ -8,7 +8,7 @@ runtime libraries and UTF-8 locale. Stock system libraries are not replaced.
 The public [catalog](https://inkline.goblinreactor.com/utilities.html),
 [installation procedure](https://inkline.goblinreactor.com/install.html#utilities),
 and [matching sources](https://inkline.goblinreactor.com/source.html) describe
-the September 13, 2026 preview release.
+the September 2026 preview releases.
 
 | Package | Input |
 | --- | --- |
@@ -16,7 +16,7 @@ the September 13, 2026 preview release.
 | Mosh | Debian Bookworm ARM, 1.4.0 |
 | Emacs | Debian Bookworm ARM, 28.2, terminal build |
 | Git | Debian Bookworm ARM, 2.39.5 |
-| GoblinView | Dated source snapshot, including input-method dictionaries |
+| GoblinView | September 14 source snapshot, including input-method dictionaries and monochrome mode |
 | Goblin Purrfect | Dated 0.1.0 source snapshot, vendored Rust crates, redistributable fonts |
 | Python | CPython 3.15.0rc2, Astral ARM build `20260901` |
 | TeX Live | Official 2026 network installer with private Perl |
@@ -70,6 +70,13 @@ and repeat the device compatibility checks before publishing new artifacts.
 - All packages include private locale data. Mosh and the tools needing Perl
   use a private interpreter. Firmware libc, libgcc, libstdc++, zlib, and
   OpenSSL remain system dependencies.
+- GoblinView `0.1.0+20260914.rm2.2` defaults to **`-m`** when `TERM_PROGRAM=inkline`.
+  Elsewhere, pass `goblin-view -m` explicitly for its strict black-and-white mode.
+  The wrapper adds the flag before all other arguments. The latest source
+  snapshot excludes personal documents and includes matching dictionary licenses.
+  All six upstream ARM suites and the detached client/server smoke test pass.
+  `tests/goblin_view_mono.py /home/root/.local/bin/goblin-view` checks explicit
+  `-m`, the Inkline default, and ordinary colour mode through real PTYs.
 - Purrfect defaults `WP51_KITTY_MEDIUM=inline`. Its document writes and
   backups remain normal file operations. LuaLaTeX supplies PDF export;
   Poppler and Aspell are optional external dependencies, not bundled here.

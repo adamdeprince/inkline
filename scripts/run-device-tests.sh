@@ -9,6 +9,8 @@ test_binaries='core_tests sixel_tests stream_tests pty_tests'
 if [ -f build/tablet/ui_tests ]; then test_binaries="$test_binaries ui_tests"; fi
 if [ -f build/tablet/input_tests ]; then test_binaries="$test_binaries input_tests"; fi
 if [ -f build/tablet/view_tests ]; then test_binaries="$test_binaries view_tests"; fi
+if [ -f build/tablet/clipboard_tests ]; then test_binaries="$test_binaries clipboard_tests"; fi
+if [ -f build/tablet/input_method_tests ]; then test_binaries="$test_binaries input_method_tests"; fi
 for test_binary in $test_binaries; do
     test -f "build/tablet/$test_binary" || {
         printf 'Missing build/tablet/%s; run scripts/build-tablet.sh first.\n' "$test_binary" >&2
@@ -16,7 +18,7 @@ for test_binary in $test_binaries; do
     }
 done
 test_assets=
-if [ -f build/tablet/assets/goblin.png ]; then test_assets=assets/goblin.png; fi
+if [ -f build/tablet/assets/goblin.png ]; then test_assets=assets; fi
 tar -C build/tablet -cf build/device-tests.tar $test_binaries $test_assets
 ssh -T -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=10 \
     -o ServerAliveInterval=5 -o ServerAliveCountMax=2 "$device_host" '
@@ -41,4 +43,6 @@ ssh -T -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=10 \
     if [ -x ./ui_tests ]; then ./ui_tests; fi
     if [ -x ./input_tests ]; then ./input_tests; fi
     if [ -x ./view_tests ]; then ./view_tests; fi
+    if [ -x ./clipboard_tests ]; then ./clipboard_tests; fi
+    if [ -x ./input_method_tests ]; then ./input_method_tests; fi
 ' < build/device-tests.tar
