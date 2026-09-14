@@ -4,14 +4,14 @@ Inkline is a terminal for **reMarkable 2**, built with **libghostty-vt** and the
 stock Qt e-paper backend. It is designed for Type Folio and external USB
 keyboards, with kitty graphics and an initial sixel implementation.
 
-**Version 0.3.0 is a preview.** The main artifact is the repeatable
+**Version 0.3.1 is a preview.** The main artifact is the repeatable
 [installation procedure](docs/install.md), including preflight, launch, recovery
 and uninstall. It targets firmware **3.27**, tested on **3.27.3.0**. Other models
 and firmware lines are not supported by this installer.
 
 ## Install
 
-Download the **[Inkline 0.3.0 preview](https://github.com/adamdeprince/inkline/releases/tag/v0.3.0)**
+Download the **[Inkline 0.3.1 preview](https://github.com/adamdeprince/inkline/releases/tag/v0.3.1)**
 and follow the [installation procedure](docs/install.md). The prebuilt ARM bundle
 includes the installer, launcher, uninstall script, checksums, source archives
 and licenses. No compiler, SDK or third-party package manager is needed to install it.
@@ -32,7 +32,7 @@ The package is generated at `build/dist/inkline-rm2.tar.gz`. The
 After installation, press **Ctrl+Alt+T on the tablet’s Type Folio or USB keyboard**
 to open Inkline. No second computer is needed for subsequent launches. Tap
 **Quit**, press **Ctrl+Shift+Q**, or exit the shell to return to notebooks.
-In 0.3.0, Quit asks for confirmation and `exit` closes only the current terminal.
+In 0.3.1, Quit asks for confirmation and `exit` closes only the current terminal.
 The launcher temporarily switches from `xochitl` to Inkline and restores it when
 Inkline stops. A small keyboard shortcut service starts at boot; the terminal itself opens only
 on request, and the usual notebook interface remains the default.
@@ -50,7 +50,7 @@ Build recipes, pinned inputs, and device checks are documented in
 Compact TeX Live is installed on the tablet and Purrfect PDF export passes.
 The full collection is optional and too large to recommend for internal storage.
 
-## Keyboard controls in 0.3.0
+## Keyboard controls in 0.3.1
 
 Hold the **right Alt/Option** key for these Folio and USB keyboard shortcuts:
 
@@ -68,9 +68,12 @@ Hold the **right Alt/Option** key for these Folio and USB keyboard shortcuts:
 **Ctrl+Shift+B** hides or shows the bottom bar. Its fifth button opens
 **Settings**, where Caps Lock can act as **Control** (the default) or normal
 **Caps Lock**. Active choices have a solid fill; keyboard focus has a dashed outline.
-Font size (16–48 px) can also change with a two-finger pinch and is saved after
+Font size (6–48 px) can also change with a two-finger pinch and is saved after
 the gesture or a pause in key repeats. Each terminal has its own
 shell and scrollback; switching to an unused slot opens a shell there.
+Drag two fingers down to reveal older output, or up to return toward the prompt.
+Swipe two fingers left for the next terminal, or right for the previous one.
+Single-finger and pen drags still select text.
 New terminals print a short guide with a tiny Goblin logo and the current
 Caps Lock setting. The logo is displayed through inline kitty graphics in RAM.
 Settings also selects **Romaji, Pinyin, Zhuyin, Wubi**, or **US-International**
@@ -119,12 +122,18 @@ The broader intended scope remains in [requirements](docs/requirements.md).
 
 ## Memory and storage
 
-Each open terminal caps libghostty allocations at **64 MiB**, kitty image
-storage at **16 MiB per screen**, and scrollback at **4 MiB**. Sixel retains at
+Each open terminal keeps **500 physical lines of scrollback in RAM**, excluding
+the live screen, with a **4 MiB** storage ceiling. It caps libghostty allocations
+at **64 MiB** and kitty image storage at **16 MiB per screen**. Sixel retains at
 most **16 MiB** and 128 placements per terminal, plus at most 8 MiB of encoded
 staging and a bounded decoded image. Slots allocate memory only when opened.
 Qt display buffers, libpng scratch memory and programs running in the shells
 need additional RAM. These limits do not reserve memory for six large programs.
+Off-screen images are reclaimed when their image budget reaches 75%, the
+terminal allocation budget reaches 75%, or the tablet has less than 64 MiB of
+available RAM. Visible images are kept where possible; hard image limits remain
+the fallback. Sixel images whose anchors leave the 500-line history are removed.
+Kitty images without surviving placements become eligible for reclamation.
 
 There is no image-cache spill to flash. The launcher places runtime/cache files
 in a service-owned RAM directory under `/run`, disables QML disk caching and shell history persistence for that
@@ -134,6 +143,9 @@ persistent storage; programs run inside the shell can also deliberately write
 files. Settings are written only when a preference changes, to
 `~/.config/inkline/settings.ini`. The revised Python package disables automatic
 bytecode caches; the installer does not constrain other programs' own caches.
+The tablet launcher sets `HOME=/home/root`, so bare `cd`, `~`, and programs that
+use the home directory work in every shell. A directly launched terminal also
+supplies the account's home directory when HOME is missing or empty.
 
 ## Validation
 

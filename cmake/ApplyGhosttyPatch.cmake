@@ -1,5 +1,5 @@
 find_package(Git REQUIRED)
-foreach(_name ghostty-arm32-seek ghostty-linux-libc)
+foreach(_name ghostty-arm32-seek ghostty-linux-libc ghostty-inkline-retention)
 set(_patch "${CMAKE_CURRENT_LIST_DIR}/../patches/${_name}.patch")
 execute_process(
     COMMAND "${GIT_EXECUTABLE}" apply --reverse --check "${_patch}"

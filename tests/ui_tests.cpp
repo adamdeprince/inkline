@@ -47,5 +47,26 @@ int main(int argc, char **argv) {
         CHECK(keyboard.encode(release).find(":3") != std::string::npos);
     }
     rmt_core_free(core);
+    core = rmt_core_new(80, 24, nullptr); CHECK(core);
+    {
+        rmt::Renderer renderer(*core, 6, 1024 * 1024);
+        renderer.resize(640, 480);
+        CHECK(renderer.cell_width() > 0 && renderer.cell_height() > 0);
+        CHECK(renderer.cols() > 100 && renderer.rows() > 24);
+        rmt::Stream stream(*core, [&](rmt::sixel::Bitmap &&bitmap) { renderer.sixel(std::move(bitmap)); });
+        const std::string sixel = "\033P0;1q\"1;1;30;6#0;2;0;0;0#0!30~\033\\";
+        stream.write(sixel);
+        const auto bytes = renderer.sixel_bytes(); CHECK(bytes == 30 * 6 * 4);
+        stream.write(std::string(100, '\n'));
+        renderer.reclaim(false); CHECK(renderer.sixel_bytes() == bytes);
+        stream.write(sixel);
+        CHECK(renderer.sixel_bytes() == 2 * bytes);
+        renderer.reclaim(true); CHECK(renderer.sixel_bytes() == bytes);
+        CHECK(!renderer.frame().isNull());
+        // Once its anchor passes the history limit, reclaim without pressure.
+        stream.write(std::string(600, '\n'));
+        renderer.reclaim(false); CHECK(renderer.sixel_bytes() == 0);
+    }
+    rmt_core_free(core);
     std::puts("UI: text, kitty drawing/deletion, sixel drawing/clear, Ctrl-C, cursor mode and kitty key release passed.");
 }

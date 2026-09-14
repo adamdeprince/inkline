@@ -4,7 +4,7 @@
 namespace rmt {
 class Preferences {
 public:
-    static constexpr int MIN_FONT = 16, MAX_FONT = 48, DEFAULT_FONT = 26;
+    static constexpr int MIN_FONT = 6, MAX_FONT = 48, DEFAULT_FONT = 26;
     explicit Preferences(const QString &path = {});
     bool caps_control() const { return caps_control_; }
     bool bottom_bar() const { return bottom_bar_; }

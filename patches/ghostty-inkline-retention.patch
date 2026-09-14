@@ -1,0 +1,122 @@
+--- a/src/terminal/c/terminal.zig
++++ b/src/terminal/c/terminal.zig
+@@ -883,6 +883,41 @@
+         io,
+         default_continuation_max_bytes,
+     );
++}
++
++/// Inkline's exact history cap and RAM-pressure maintenance. Called only
++/// between parser operations; it must not synthesize input into a partial APC.
++pub fn inkline_maintain(
++    terminal_: Terminal,
++    max_lines: usize,
++    memory_pressure: bool,
++) callconv(lib.calling_conv) void {
++    const wrapper = terminal_ orelse return;
++    const t = wrapper.terminal;
++    var screens = t.screens.all.iterator();
++    while (screens.next()) |entry| {
++        const screen = entry.value.*;
++        const history = screen.pages.total_rows - screen.pages.rows;
++        if (history > max_lines) {
++            const excess = history - max_lines;
++            // eraseHistory normally moves deleted references to the next row.
++            // Mark discarded content first, so images/selections never migrate
++            // onto unrelated text at the new beginning of history.
++            for (screen.pages.tracked_pins.keys()) |pin| {
++                const pos = screen.pages.pointFromPin(.screen, pin.*) orelse continue;
++                if (pos.screen.y < excess) pin.garbage = true;
++            }
++            screen.pages.viewport_pin.garbage = false;
++            if (screen.selection) |selection| {
++                const bounds = selection.bounds.tracked;
++                if (bounds.start.garbage or bounds.end.garbage) screen.clearSelection();
++            }
++            screen.eraseHistory(.{ .history = .{ .y = @intCast(excess - 1) } });
++        }
++        if (comptime build_options.kitty_graphics) {
++            screen.kitty_images.reclaimOffscreen(wrapper.io.io(), screen.alloc, t, screen, memory_pressure);
++        }
++    }
+ }
+ 
+ pub fn vt_write(
+--- a/src/terminal/c/main.zig
++++ b/src/terminal/c/main.zig
+@@ -185,6 +185,7 @@
+ pub const terminal_reset = terminal.reset;
+ pub const terminal_resize = terminal.resize;
+ pub const terminal_set = terminal.set;
++pub const terminal_inkline_maintain = terminal.inkline_maintain;
+ pub const terminal_vt_write = terminal.vt_write;
+ pub const terminal_vt_write_until_ground = terminal.vt_write_until_ground;
+ pub const terminal_scroll_viewport = terminal.scroll_viewport;
+--- a/src/lib_vt.zig
++++ b/src/lib_vt.zig
+@@ -318,6 +318,7 @@
+         @export(&c.terminal_reset, .{ .name = "ghostty_terminal_reset" });
+         @export(&c.terminal_resize, .{ .name = "ghostty_terminal_resize" });
+         @export(&c.terminal_set, .{ .name = "ghostty_terminal_set" });
++        @export(&c.terminal_inkline_maintain, .{ .name = "inkline_terminal_maintain" });
+         @export(&c.terminal_vt_write, .{ .name = "ghostty_terminal_vt_write" });
+         @export(&c.terminal_vt_write_until_ground, .{ .name = "ghostty_terminal_vt_write_until_ground" });
+         @export(&c.terminal_scroll_viewport, .{ .name = "ghostty_terminal_scroll_viewport" });
+--- a/src/terminal/kitty/graphics_storage.zig
++++ b/src/terminal/kitty/graphics_storage.zig
+@@ -1594,6 +1594,55 @@
+                 self.removePlacement(t.screens.active, entry);
+                 if (delete_unused) self.deleteIfUnused(alloc, img.id);
+             }
++        }
++    }
++
++    /// Reclaim images outside the current viewport before the hard budget
++    /// is exhausted. Visible images and unresolved placeholder/relative chains
++    /// are retained; the protocol's existing hard-limit eviction is the fallback.
++    pub fn reclaimOffscreen(
++        self: *ImageStorage,
++        io: std.Io,
++        alloc: Allocator,
++        t: *terminal.Terminal,
++        screen: *terminal.Screen,
++        pressure: bool,
++    ) void {
++        self.reapGarbagePlacements(io, screen);
++        if (!pressure and self.total_bytes < self.total_limit - self.total_limit / 4) return;
++        const target = if (pressure) 0 else self.total_limit / 2;
++        while (self.total_bytes > target) {
++            var candidate: ?*Image = null;
++            var images = self.images.iterator();
++            images: while (images.next()) |entry| {
++                const img = entry.value_ptr;
++                if (self.loading) |loading| {
++                    if (loading.image.id == img.id) continue;
++                }
++                if (img.data == .pending) continue;
++                var placements = self.placements.iterator();
++                while (placements.next()) |placement| {
++                    const p = placement.value_ptr;
++                    // A visible child may depend on an off-screen parent.
++                    if (p.location == .relative and p.location.relative.parent.image_id == img.id) continue :images;
++                    if (placement.key_ptr.image_id != img.id) continue;
++                    if (p.location != .pin) continue :images;
++                    if (screen != t.screens.active) continue;
++                    const rect = p.rect(img.*, t) orelse continue;
++                    const top = screen.pages.pointFromPin(.screen, rect.top_left) orelse continue;
++                    const bottom = screen.pages.pointFromPin(.screen, rect.bottom_right) orelse continue;
++                    const viewport = screen.pages.pin(.{ .viewport = .{} }).?;
++                    const origin = screen.pages.pointFromPin(.screen, viewport).?.screen.y;
++                    if (bottom.screen.y >= origin and top.screen.y < origin + screen.pages.rows) continue :images;
++                }
++                if (candidate == null or img.generation < candidate.?.generation) candidate = img;
++            }
++            const img = candidate orelse break;
++            const id = img.id;
++            self.removePlacementsByImageId(screen, id);
++            self.deleteIfUnused(alloc, id);
++            _ = self.removeOrphans(screen, null);
++            self.markMutated(io);
+         }
+     }
+ 

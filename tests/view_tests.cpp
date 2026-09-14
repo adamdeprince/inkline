@@ -60,6 +60,22 @@ int main(int argc, char **argv) {
         CHECK(view.active_terminal() == 0 && view.terminal_count() == 6);
         key(view, QEvent::KeyRelease, Qt::Key_AltGr, 108);
         CHECK(view.snapshot() == first);
+        // Sideways two-finger swipes switch once, even with more motion.
+        using S = QEventPoint::State;
+        for (int rotation : {0, 90, 270}) {
+            view.setRotation(rotation);
+            touch(view, QEvent::TouchBegin, {point(view, 1, S::Pressed, 400, 300), point(view, 2, S::Pressed, 600, 300)});
+            touch(view, QEvent::TouchUpdate, {point(view, 1, S::Updated, 310, 301), point(view, 2, S::Updated, 510, 301)});
+            CHECK(view.active_terminal() == 1 && view.font_pixels() == 24);
+            touch(view, QEvent::TouchUpdate, {point(view, 1, S::Updated, 150, 301), point(view, 2, S::Updated, 350, 301)});
+            CHECK(view.active_terminal() == 1);
+            touch(view, QEvent::TouchEnd, {point(view, 1, S::Released, 150, 301), point(view, 2, S::Released, 350, 301)});
+            touch(view, QEvent::TouchBegin, {point(view, 1, S::Pressed, 400, 300), point(view, 2, S::Pressed, 600, 300)});
+            touch(view, QEvent::TouchUpdate, {point(view, 1, S::Updated, 490, 300), point(view, 2, S::Updated, 690, 300)});
+            touch(view, QEvent::TouchEnd, {});
+            CHECK(view.active_terminal() == 0 && view.terminal_count() == 6);
+        }
+        view.setRotation(0);
         alt(view, Qt::Key_Space, 65); CHECK(view.settings_open());
         if (const char *path = std::getenv("INKLINE_TEST_SNAPSHOTS")) CHECK(view.snapshot().save(QString::fromUtf8(path) + "/terminal-settings.png"));
         press(view, Qt::Key_Space, 65); // Caps Lock row: Control -> Caps Lock.
@@ -88,12 +104,13 @@ int main(int argc, char **argv) {
         alt(view, Qt::Key_Equal, 21); CHECK(view.font_pixels() == 26);
         CHECK(rmt::Preferences(settings).font_pixels() == 26); // default, no write yet
         alt(view, Qt::Key_Equal, 21); CHECK(view.font_pixels() == 28);
+        alt(view, Qt::Key_Minus, 21); CHECK(view.font_pixels() == 26);
+        alt(view, Qt::Key_Plus, 20); CHECK(view.font_pixels() == 28);
         CHECK(rmt::Preferences(settings).font_pixels() == 26);
         pump(800); CHECK(rmt::Preferences(settings).font_pixels() == 28);
         CHECK(view.terminal_count() == 6);
         // Pinch coordinates must work under the tablet's rotated view as well.
         view.setRotation(90);
-        using S = QEventPoint::State;
         touch(view, QEvent::TouchBegin, {point(view, 1, S::Pressed, 400, 300)});
         touch(view, QEvent::TouchUpdate, {point(view, 1, S::Stationary, 400, 300), point(view, 2, S::Pressed, 600, 300)});
         touch(view, QEvent::TouchUpdate, {point(view, 1, S::Updated, 350, 300), point(view, 2, S::Updated, 650, 300)});
@@ -102,7 +119,7 @@ int main(int argc, char **argv) {
         CHECK(rmt::Preferences(settings).font_pixels() == 42);
         touch(view, QEvent::TouchBegin, {point(view, 1, S::Pressed, 400, 300), point(view, 2, S::Pressed, 600, 300)});
         touch(view, QEvent::TouchUpdate, {point(view, 1, S::Updated, 480, 300), point(view, 2, S::Updated, 520, 300)});
-        CHECK(view.font_pixels() == 16);
+        CHECK(view.font_pixels() == 10);
         touch(view, QEvent::TouchCancel, {}); CHECK(view.font_pixels() == 42);
         CHECK(rmt::Preferences(settings).font_pixels() == 42);
         view.setRotation(0);
@@ -129,6 +146,48 @@ int main(int argc, char **argv) {
         QFile file(settings); CHECK(file.open(QIODevice::ReadOnly)); const auto saved = file.readAll(); file.close();
         for (int n = 0; n < 50; ++n) press(view, Qt::Key_A, 38, Qt::NoModifier, "a");
         CHECK(file.open(QIODevice::ReadOnly)); CHECK(file.readAll() == saved);
+    }
+    {
+        const auto tiny_settings = temporary.filePath("tiny.ini");
+        QQuickWindow window;
+        rmt::TerminalView view(window.contentItem(), 24, true, tiny_settings);
+        view.setSize(QSizeF(1000, 750)); view.layout(); view.start();
+        using S = QEventPoint::State;
+        touch(view, QEvent::TouchBegin, {point(view, 1, S::Pressed, 400, 300), point(view, 2, S::Pressed, 600, 300)});
+        touch(view, QEvent::TouchUpdate, {point(view, 1, S::Updated, 480, 300), point(view, 2, S::Updated, 520, 300)});
+        touch(view, QEvent::TouchEnd, {});
+        CHECK(view.font_pixels() == 6 && rmt::Preferences(tiny_settings).font_pixels() == 6);
+        alt(view, Qt::Key_Minus, 21); CHECK(view.font_pixels() == 6);
+        alt(view, Qt::Key_Plus, 20); CHECK(view.font_pixels() == 8);
+        alt(view, Qt::Key_Minus, 21); CHECK(view.font_pixels() == 6);
+        CHECK(!view.snapshot().isNull() && view.terminal_count() == 1);
+        pump(800); CHECK(rmt::Preferences(tiny_settings).font_pixels() == 6);
+        rmt::TerminalView restored(window.contentItem(), 0, true, tiny_settings);
+        CHECK(restored.font_pixels() == 6);
+    }
+    {
+        // Two fingers drag history naturally; changing their spacing after
+        // scrolling starts must not resize text or change terminals.
+        QQuickWindow window;
+        const auto scroll_settings = temporary.filePath("scroll.ini");
+        const std::vector<std::string> shell = {"/bin/sh", "-c", "stty -echo; i=0; while [ $i -lt 600 ]; do printf 'line %04d\\r\\n' $i; i=$((i+1)); done; while read line; do :; done"};
+        rmt::TerminalView view(window.contentItem(), 24, false, scroll_settings, shell);
+        view.setSize(QSizeF(1000, 750)); view.layout(); view.start(); pump(800);
+        const auto bottom = view.snapshot();
+        using S = QEventPoint::State;
+        for (int rotation : {0, 90, 270}) {
+            view.setRotation(rotation);
+            touch(view, QEvent::TouchBegin, {point(view, 1, S::Pressed, 400, 300)});
+            touch(view, QEvent::TouchUpdate, {point(view, 1, S::Stationary, 400, 300), point(view, 2, S::Pressed, 600, 300)});
+            touch(view, QEvent::TouchUpdate, {point(view, 1, S::Updated, 398, 450), point(view, 2, S::Updated, 602, 450)});
+            CHECK(view.snapshot() != bottom && view.font_pixels() == 24);
+            touch(view, QEvent::TouchUpdate, {point(view, 1, S::Updated, 330, 480), point(view, 2, S::Updated, 670, 480)});
+            CHECK(view.font_pixels() == 24 && view.active_terminal() == 0);
+            touch(view, QEvent::TouchUpdate, {point(view, 1, S::Updated, 400, 300), point(view, 2, S::Updated, 600, 300)});
+            touch(view, QEvent::TouchEnd, {});
+            CHECK(view.snapshot() == bottom);
+        }
+        CHECK(!QFile::exists(scroll_settings)); // Scroll gestures do not save preferences.
     }
     {
         QQuickWindow window;

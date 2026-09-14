@@ -180,6 +180,55 @@ int main(void) {
     CHECK(!image(terminal, 10));
     check_red(terminal, 11);
     rmt_core_free(core);
+    /* A newer image in history is reclaimed before an older visible image. */
+    options = rmt_core_defaults();
+    core = rmt_core_new(80, 4, &options); CHECK(core);
+    terminal = rmt_core_terminal(core);
+    CHECK(ghostty_terminal_resize(terminal, 80, 4, 8, 16) == GHOSTTY_SUCCESS);
+    write_vt(terminal, "\033_Ga=T,f=32,s=1,v=1,i=20,p=1,C=1;/wAA/w==\033\\");
+    write_vt(terminal, "\033_Ga=T,f=32,s=1,v=1,i=21,C=1;/wAA/w==\033\\");
+    for (unsigned i = 0; i < 20; ++i) write_vt(terminal, "line\r\n");
+    write_vt(terminal, "\033_Ga=p,i=20,p=1,C=1\033\\");
+    rmt_core_maintain(core, false); CHECK(image(terminal, 20) && image(terminal, 21));
+    const size_t before_reclaim = rmt_core_memory_used(core);
+    rmt_core_maintain(core, true);
+    CHECK(image(terminal, 20) && !image(terminal, 21));
+    CHECK(rmt_core_memory_used(core) < before_reclaim);
+    /* Maintenance must not alter a partially received graphics command. */
+    write_vt(terminal, "\033_Ga=T,f=32,s=1,v=1,i=22,m=1;/wAA\033\\");
+    rmt_core_maintain(core, true);
+    write_vt(terminal, "\033_Gm=0;/w==\033\\");
+    check_red(terminal, 22);
+    rmt_core_free(core);
+
+    /* Retain exactly 500 physical history rows, including partial pages. */
+    core = rmt_core_new(80, 24, NULL); CHECK(core);
+    terminal = rmt_core_terminal(core);
+    GhosttyPoint first_point = {.tag = GHOSTTY_POINT_TAG_ACTIVE, .value.coordinate = {0, 0}};
+    GhosttyTrackedGridRef old_line = NULL;
+    CHECK(ghostty_terminal_grid_ref_track(terminal, first_point, &old_line) == GHOSTTY_SUCCESS);
+    for (unsigned i = 0; i < 1500; ++i) {
+        write_vt(terminal, "history line\r\n");
+        rmt_core_maintain(core, false);
+        size_t lines = 0;
+        CHECK(ghostty_terminal_get(terminal, GHOSTTY_TERMINAL_DATA_SCROLLBACK_ROWS, &lines) == GHOSTTY_SUCCESS);
+        CHECK(lines == (i < 23 ? 0 : i - 22 < 500 ? i - 22 : 500));
+    }
+    CHECK(!ghostty_tracked_grid_ref_has_value(old_line));
+    ghostty_tracked_grid_ref_free(old_line);
+    CHECK(ghostty_terminal_resize(terminal, 20, 12, 4, 8) == GHOSTTY_SUCCESS);
+    rmt_core_maintain(core, false);
+    size_t history_rows = 0;
+    CHECK(ghostty_terminal_get(terminal, GHOSTTY_TERMINAL_DATA_SCROLLBACK_ROWS, &history_rows) == GHOSTTY_SUCCESS);
+    CHECK(history_rows == 500);
+    write_vt(terminal, "\033[?1049h");
+    for (unsigned i = 0; i < 50; ++i) { write_vt(terminal, "alternate\r\n"); rmt_core_maintain(core, false); }
+    CHECK(ghostty_terminal_get(terminal, GHOSTTY_TERMINAL_DATA_SCROLLBACK_ROWS, &history_rows) == GHOSTTY_SUCCESS);
+    CHECK(history_rows == 0);
+    write_vt(terminal, "\033[?1049l");
+    CHECK(ghostty_terminal_get(terminal, GHOSTTY_TERMINAL_DATA_SCROLLBACK_ROWS, &history_rows) == GHOSTTY_SUCCESS);
+    CHECK(history_rows == 500);
+    rmt_core_free(core);
     options.memory_bytes = 1;
     CHECK(!rmt_core_new(80, 24, &options));
 #ifdef __linux__

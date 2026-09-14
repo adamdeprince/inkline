@@ -7,7 +7,7 @@
 
 namespace rmt {
 Stream::Stream(RmtCore &core, ImageHandler handler, size_t encoded_limit)
-    : terminal_(rmt_core_terminal(&core)), handler_(std::move(handler)),
+    : core_(core), terminal_(rmt_core_terminal(&core)), handler_(std::move(handler)),
       limit_(std::min(encoded_limit, sixel::MAX_ENCODED_BYTES)) {
     if (!handler_) throw std::invalid_argument("A sixel image handler is required");
 }
@@ -81,6 +81,10 @@ void Stream::finish_sixel() {
 }
 
 void Stream::write(std::string_view bytes) {
+    // Keep history and images bounded even for background terminals. This
+    // touches terminal storage directly and never injects into a partial APC.
+    struct Maintain { RmtCore &core; ~Maintain() { rmt_core_maintain(&core, false); } } maintain{core_};
+    rmt_core_maintain(&core_, false);
     size_t at = 0;
     while (at < bytes.size()) {
         if (state_ == State::Normal) {

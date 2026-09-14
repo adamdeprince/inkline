@@ -55,6 +55,16 @@ int main(int argc, char **argv) {
             CHECK(repeat == ((item.first == Qt::Key_Plus || item.first == Qt::Key_Minus) ? item.second : rmt::InputAction::Ignore));
             CHECK(map.map(event(QEvent::KeyRelease, item.first, 0), 0).action == rmt::InputAction::Ignore);
         }
+        // Logical zoom symbols win over conflicting physical key positions.
+        for (const auto &item : std::vector<std::pair<int, InputAction>>{
+                 {Qt::Key_Minus, InputAction::ZoomOut}, {Qt::Key_Underscore, InputAction::ZoomOut},
+                 {Qt::Key_Plus, InputAction::ZoomIn}, {Qt::Key_Equal, InputAction::ZoomIn}}) {
+            for (quint32 scan : {20u, 21u}) {
+                CHECK(map.map(event(QEvent::KeyPress, item.first, scan, Qt::AltModifier), 0).action == item.second);
+                CHECK(map.map(event(QEvent::KeyPress, item.first, scan, Qt::AltModifier, {}, true), 0).action == item.second);
+                CHECK(map.map(event(QEvent::KeyRelease, item.first, scan), 0).action == InputAction::Ignore);
+            }
+        }
         // A USB numeric keypad keeps its usual Alt+digit behavior.
         const auto keypad = event(QEvent::KeyPress, Qt::Key_1, 87, Qt::KeypadModifier | Qt::AltModifier, "1");
         CHECK(encode(keypad) == reference.encode(keypad));

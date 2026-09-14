@@ -1,6 +1,6 @@
 # Keyboard and terminal settings
 
-These controls are included in **Inkline 0.3.0**. All nine host and ARM test
+These controls are included in **Inkline 0.3.1**. All nine host and ARM test
 suites pass; physical Folio and USB checks for the new controls are pending.
 
 Each new terminal prints a short shortcut guide with a small Goblin logo and the
@@ -36,6 +36,10 @@ scrollback, and background terminals continue receiving output. The Settings
 button shows the active slot; when the bar is hidden, a brief label appears after
 switching terminals.
 
+Swipe **two fingers left** for the next terminal or **right** for the previous
+one. Each swipe changes one slot and wraps through the same six slots as the
+keyboard. One-finger dragging remains text selection.
+
 Type `exit` or press Ctrl+D at a shell prompt to close that terminal. Inkline
 switches to another open terminal, or returns to notebooks after the last one
 closes. **Right Alt+Backspace**, **Ctrl+Shift+Q**, and the **Quit** button ask
@@ -66,13 +70,26 @@ The touch Page up/Page down buttons scroll terminal history. On a keyboard,
 use **Shift+PageUp/PageDown** or **Shift+Right Alt+Up/Down** for history.
 Right Alt+Up/Down without Shift sends page keys to the current application.
 
+Drag **two fingers down** to reveal older output or **up** to return toward the
+prompt. Inkline distinguishes the shared movement from a pinch and locks the
+gesture once it starts, so small spacing changes do not resize the text. These
+gestures work in portrait and either landscape orientation.
+
+Each terminal retains **500 physical lines of history**, excluding the live
+screen, entirely in RAM. Older lines are discarded; wrapping and font changes
+can change how many physical lines the same text occupies. Off-screen graphics
+can disappear from retained history under memory pressure. Typing returns to
+the live prompt, and full-screen applications keep their usual alternate screen.
+
 ## Text size
 
 Hold **Alt/Option** and press **+** (or `=`) or **−** to resize text in two-pixel
-steps, from 16 to 48 pixels. Both Alt keys work for resizing. You can also pinch
+steps, from 6 to 48 pixels. Both Alt keys work for resizing. You can also pinch
 with two fingers anywhere in Inkline, or use Settings' minus and plus buttons.
 The size applies to all six terminals, and existing shells receive a resize
 without restarting. A cancelled pinch restores the previous size.
+The logical minus or underscore key always shrinks text, even when the keyboard
+reports it at the physical position normally used for equals or plus.
 
 ## Text selection and clipboard
 

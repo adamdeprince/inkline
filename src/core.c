@@ -14,7 +14,11 @@ struct RmtCore {
     pthread_mutex_t lock;
     size_t used;
     size_t limit;
+    size_t scrollback_lines;
 };
+
+/* Inkline extension supplied by patches/ghostty-inkline-retention.patch. */
+extern void inkline_terminal_maintain(GhosttyTerminal, size_t, bool);
 
 static void *budget_alloc(void *ctx, size_t len, uint8_t alignment, uintptr_t return_address) {
     (void)return_address;
@@ -105,7 +109,7 @@ static void install_png_decoder(void) {
 RmtCoreOptions rmt_core_defaults(void) {
     return (RmtCoreOptions){
         .memory_bytes = 128 * MIB, .image_bytes = 32 * MIB,
-        .scrollback_bytes = 8 * MIB, .allow_file_images = false
+        .scrollback_bytes = 8 * MIB, .scrollback_lines = 500, .allow_file_images = false
     };
 }
 
@@ -119,6 +123,7 @@ RmtCore *rmt_core_new(uint16_t cols, uint16_t rows, const RmtCoreOptions *option
         return NULL;
     }
     core->limit = settings.memory_bytes;
+    core->scrollback_lines = settings.scrollback_lines;
     core->allocator = (GhosttyAllocator){.ctx = core, .vtable = &budget_vtable};
     pthread_once(&png_once, install_png_decoder);
     if (ghostty_terminal_new(&core->allocator, &core->terminal, cols, rows) != GHOSTTY_SUCCESS)
@@ -160,4 +165,14 @@ size_t rmt_core_memory_used(RmtCore *core) {
     size_t used = core->used;
     pthread_mutex_unlock(&core->lock);
     return used;
+}
+
+bool rmt_core_under_pressure(RmtCore *core) {
+    return core && rmt_core_memory_used(core) >= core->limit - core->limit / 4;
+}
+
+void rmt_core_maintain(RmtCore *core, bool memory_pressure) {
+    if (!core) return;
+    const bool pressure = memory_pressure || rmt_core_under_pressure(core);
+    inkline_terminal_maintain(core->terminal, core->scrollback_lines, pressure);
 }

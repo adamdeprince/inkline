@@ -20,6 +20,7 @@ public:
     QImage frame();
     void sixel(sixel::Bitmap &&bitmap);
     void clear_sixel();
+    void reclaim(bool memory_pressure);
     int cell_width() const { return cw_; }
     int cell_height() const { return ch_; }
     uint16_t cols() const { return cols_; }
@@ -27,6 +28,7 @@ public:
     size_t sixel_bytes() const { return sixel_bytes_; }
 private:
     struct Overlay { QImage image; GhosttyTrackedGridRef anchor; GhosttyTerminalScreen screen; };
+    RmtCore &core_;
     GhosttyTerminal terminal_;
     GhosttyRenderState render_ = nullptr;
     GhosttyRenderStateRowIterator row_ = nullptr;
@@ -40,7 +42,8 @@ private:
     size_t sixel_budget_;
     void cells(QPainter &p, const GhosttyRenderStateColors &colors, bool backgrounds);
     void kitty(QPainter &p, GhosttyKittyPlacementLayer layer);
-    void drop_sixel();
+    void drop_sixel(std::deque<Overlay>::iterator it);
+    bool visible(const Overlay &overlay) const;
 };
 }
 #endif

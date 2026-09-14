@@ -12,7 +12,7 @@ namespace {
 void check(GhosttyResult result) { if (result != GHOSTTY_SUCCESS) throw std::runtime_error("Terminal renderer allocation failed"); }
 QColor gray(GhosttyColorRgb c) { const int g = qGray(c.r, c.g, c.b); return QColor(g, g, g); }
 }
-Renderer::Renderer(RmtCore &core, int pixels, size_t sixel_budget) : terminal_(rmt_core_terminal(&core)), sixel_budget_(sixel_budget) {
+Renderer::Renderer(RmtCore &core, int pixels, size_t sixel_budget) : core_(core), terminal_(rmt_core_terminal(&core)), sixel_budget_(sixel_budget) {
     static const int cjk_font = QFontDatabase::addApplicationFont(QCoreApplication::applicationDirPath() + "/assets/fonts/NotoSansMonoCJKsc-Regular.otf");
     if (cjk_font < 0) throw std::runtime_error("Inkline CJK font is missing; reinstall the complete bundle");
     font_.setFamilies({"Noto Mono", "Noto Sans Mono CJK SC"});
@@ -50,18 +50,45 @@ void Renderer::resize(int width, int height) {
     cols_ = uint16_t(std::clamp(width / cw_, 2, 512));
     rows_ = uint16_t(std::clamp(height / ch_, 2, 256));
     check(ghostty_terminal_resize(terminal_, cols_, rows_, cw_, ch_));
+    rmt_core_maintain(&core_, false);
 }
-void Renderer::drop_sixel() {
-    sixel_bytes_ -= size_t(sixels_.front().image.sizeInBytes());
-    ghostty_tracked_grid_ref_free(sixels_.front().anchor);
-    sixels_.pop_front();
+void Renderer::drop_sixel(std::deque<Overlay>::iterator it) {
+    sixel_bytes_ -= size_t(it->image.sizeInBytes());
+    ghostty_tracked_grid_ref_free(it->anchor);
+    sixels_.erase(it);
 }
-void Renderer::clear_sixel() { while (!sixels_.empty()) drop_sixel(); }
+void Renderer::clear_sixel() { while (!sixels_.empty()) drop_sixel(sixels_.begin()); }
+bool Renderer::visible(const Overlay &overlay) const {
+    GhosttyTerminalScreen screen{};
+    GhosttyTerminalScrollbar scrollbar{};
+    GhosttyPointCoordinate pos{};
+    ghostty_terminal_get(terminal_, GHOSTTY_TERMINAL_DATA_ACTIVE_SCREEN, &screen);
+    ghostty_terminal_get(terminal_, GHOSTTY_TERMINAL_DATA_SCROLLBAR, &scrollbar);
+    if (screen != overlay.screen || !ghostty_tracked_grid_ref_has_value(overlay.anchor) ||
+        ghostty_tracked_grid_ref_point(overlay.anchor, GHOSTTY_POINT_TAG_SCREEN, &pos) != GHOSTTY_SUCCESS) return false;
+    const int64_t y = (int64_t(pos.y) - int64_t(scrollbar.offset)) * ch_;
+    return y < int64_t(rows_) * ch_ && y + overlay.image.height() > 0;
+}
+void Renderer::reclaim(bool pressure) {
+    pressure = pressure || rmt_core_under_pressure(&core_);
+    rmt_core_maintain(&core_, pressure);
+    const bool near_limit = sixel_bytes_ >= sixel_budget_ - sixel_budget_ / 4;
+    const size_t target = pressure ? 0 : near_limit ? sixel_budget_ / 2 : sixel_bytes_;
+    for (size_t i = 0; i < sixels_.size();) {
+        const auto it = sixels_.begin() + qsizetype(i);
+        if (!ghostty_tracked_grid_ref_has_value(it->anchor) || (sixel_bytes_ > target && !visible(*it))) drop_sixel(it);
+        else ++i;
+    }
+}
 void Renderer::sixel(sixel::Bitmap &&bitmap) {
+    reclaim(false);
     const size_t budget = sixel_budget_;
     const size_t bytes = bitmap.rgba.size();
     if (!bytes || bytes > budget) return;
-    while (!sixels_.empty() && (sixel_bytes_ + bytes > budget || sixels_.size() >= 128)) drop_sixel();
+    while (!sixels_.empty() && (sixel_bytes_ + bytes > budget || sixels_.size() >= 128)) {
+        auto victim = std::find_if(sixels_.begin(), sixels_.end(), [this](const Overlay &s) { return !visible(s); });
+        drop_sixel(victim == sixels_.end() ? sixels_.begin() : victim);
+    }
     QImage image(reinterpret_cast<const uchar *>(bitmap.rgba.data()), int(bitmap.width),
                  int(bitmap.height), int(bitmap.width * 4), QImage::Format_RGBA8888);
     // Own exactly one retained copy, independent of the decoder's staging buffer.
@@ -163,6 +190,7 @@ void Renderer::kitty(QPainter &p, GhosttyKittyPlacementLayer layer) {
     }
 }
 QImage Renderer::frame() {
+    reclaim(false);
     check(ghostty_render_state_update(render_, terminal_));
     GhosttyRenderStateColors colors = GHOSTTY_INIT_SIZED(GhosttyRenderStateColors);
     check(ghostty_render_state_get(render_, GHOSTTY_RENDER_STATE_DATA_COLORS, &colors));

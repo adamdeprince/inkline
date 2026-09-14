@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <poll.h>
+#include <pwd.h>
 #include <unistd.h>
 
 #define CHECK(condition) do { if (!(condition)) { \
@@ -37,6 +38,24 @@ template<class Done> static std::string drain(rmt::Pty &pty, Done done) {
 }
 
 int main() {
+    {
+        const char *inherited = std::getenv("HOME");
+        const bool had_home = inherited != nullptr;
+        const std::string saved_home = inherited ? inherited : "";
+        const auto *account = getpwuid(getuid()); CHECK(account && account->pw_dir);
+        const std::string expected = account->pw_dir;
+        for (bool empty : {false, true}) {
+            CHECK((empty ? setenv("HOME", "", 1) : unsetenv("HOME")) == 0);
+            rmt::Pty pty({"/bin/sh", "-c", "cd /; cd && printf 'HOME=%s;PWD=%s' \"$HOME\" \"$PWD\""}, 80, 24);
+            const auto output = drain(pty, [&](const std::string &) { return pty.poll_exit().has_value(); });
+            CHECK(pty.poll_exit() == 0);
+            CHECK(output == "HOME=" + expected + ";PWD=" + expected);
+        }
+        CHECK(setenv("HOME", "/", 1) == 0);
+        rmt::Pty pty({"/bin/sh", "-c", "cd && printf '%s' \"$HOME\""}, 80, 24);
+        CHECK(drain(pty, [&](const std::string &) { return pty.poll_exit().has_value(); }) == "/");
+        CHECK((had_home ? setenv("HOME", saved_home.c_str(), 1) : unsetenv("HOME")) == 0);
+    }
     {
         rmt::Pty pty({"/bin/sh", "-c", "test -t 0 && stty size; printf '%s:%s' \"$TERM\" \"$COLORTERM\"; exit 7"}, 80, 24);
         const auto output = drain(pty, [&](const std::string &) { return pty.poll_exit().has_value(); });

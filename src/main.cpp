@@ -1,4 +1,5 @@
 #include "rmt/view.hpp"
+#include "rmt/preferences.hpp"
 #include <QCommandLineParser>
 #include <QFontDatabase>
 #include <QGuiApplication>
@@ -17,7 +18,7 @@ int main(int argc, char **argv) {
     args.setApplicationDescription("Inkline: a terminal for reMarkable 2");
     args.addHelpOption(); args.addVersionOption();
     args.addOption({"rotate", "Screen rotation: 0, 90, or 270.", "degrees", "90"});
-    args.addOption({"font-size", "Override the saved font size (16 to 48 pixels).", "pixels"});
+    args.addOption({"font-size", "Override the saved font size (6 to 48 pixels).", "pixels"});
     args.addOption({"check", "Check the terminal and renderer, then exit without opening a window."});
     args.addOption({"settings", "Open the settings screen on startup."});
     args.addOption({"demo", "Display the graphics demonstration without starting a shell."});
@@ -30,7 +31,7 @@ int main(int argc, char **argv) {
     int pixels = 0;
     if (args.isSet("font-size")) {
         pixels = args.value("font-size").toInt(&valid);
-        if (!valid || pixels < 16 || pixels > 48) return 2;
+        if (!valid || pixels < rmt::Preferences::MIN_FONT || pixels > rmt::Preferences::MAX_FONT) return 2;
     }
     int duration = 0;
     if (args.isSet("quit-after")) {

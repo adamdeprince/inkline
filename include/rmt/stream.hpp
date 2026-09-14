@@ -32,6 +32,7 @@ public:
 
 private:
     enum class State { Normal, Escape, Csi, DcsHeader, Sixel, SixelEscape };
+    RmtCore &core_;
     GhosttyTerminal terminal_;
     ImageHandler handler_;
     std::function<void(std::string_view)> control_;

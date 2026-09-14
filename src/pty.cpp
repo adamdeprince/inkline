@@ -2,6 +2,7 @@
 #include <cerrno>
 #include <csignal>
 #include <fcntl.h>
+#include <pwd.h>
 #include <stdexcept>
 #include <system_error>
 #include <sys/ioctl.h>
@@ -32,14 +33,31 @@ Pty::Pty(const std::vector<std::string> &argv, uint16_t cols, uint16_t rows) {
     // Prepare all allocations before fork. The child only calls execve/write/
     // _exit, avoiding C++ and allocator locks inherited from other threads.
     std::vector<std::string> environment;
+    bool has_home = false;
     for (char **entry = environ; *entry; ++entry) {
         const std::string_view value(*entry);
+        if (value.substr(0, 5) == "HOME=") {
+            if (value.size() == 5) continue;
+            has_home = true;
+        }
         if (value.substr(0, 5) != "TERM=" && value.substr(0, 10) != "COLORTERM=" &&
             value.substr(0, 13) != "TERM_PROGRAM=") environment.emplace_back(value);
     }
     environment.emplace_back("TERM=xterm-256color");
     environment.emplace_back("COLORTERM=truecolor");
     environment.emplace_back("TERM_PROGRAM=inkline");
+    if (!has_home) {
+        // A system service can have no login environment. Resolve the actual
+        // account before fork, so bare `cd` and applications agree on HOME.
+        std::vector<char> buffer(4096);
+        passwd account{}, *found = nullptr;
+        int result;
+        while ((result = getpwuid_r(getuid(), &account, buffer.data(), buffer.size(), &found)) == ERANGE &&
+               buffer.size() < 1024 * 1024) buffer.resize(buffer.size() * 2);
+        if (result || !found || !found->pw_dir || !found->pw_dir[0])
+            throw std::runtime_error("Cannot find the shell's home directory");
+        environment.emplace_back(std::string("HOME=") + found->pw_dir);
+    }
     std::vector<char *> env;
     for (auto &value : environment) env.push_back(value.data());
     env.push_back(nullptr);

@@ -86,10 +86,12 @@ MappedInput InputMapper::map(const QKeyEvent &e, int terminal) {
         if (held.input.action == InputAction::Send &&
             (right_alt_ || left_alt_ || (mods & Qt::AltModifier)) &&
             !(mods & (Qt::ControlModifier | Qt::MetaModifier))) {
-            if (e.key() == Qt::Key_Plus || e.key() == Qt::Key_Equal ||
-                (right_alt_ && e.nativeScanCode() == 21)) held.input.action = InputAction::ZoomIn;
-            else if (e.key() == Qt::Key_Minus || e.key() == Qt::Key_Underscore ||
-                     (right_alt_ && e.nativeScanCode() == 20)) held.input.action = InputAction::ZoomOut;
+            // A layout's minus symbol must not be overridden by the physical
+            // position of the US equals key (and vice versa).
+            if (e.key() == Qt::Key_Minus || e.key() == Qt::Key_Underscore) held.input.action = InputAction::ZoomOut;
+            else if (e.key() == Qt::Key_Plus || e.key() == Qt::Key_Equal) held.input.action = InputAction::ZoomIn;
+            else if (right_alt_ && e.nativeScanCode() == 20) held.input.action = InputAction::ZoomOut;
+            else if (right_alt_ && e.nativeScanCode() == 21) held.input.action = InputAction::ZoomIn;
         }
         if (held.input.action == InputAction::Send) {
             if ((mods & Qt::ControlModifier) && (mods & Qt::ShiftModifier)) {

@@ -23,6 +23,7 @@
 #include <array>
 #include <cerrno>
 #include <cstring>
+#include <cstdio>
 #include <functional>
 #include <stdexcept>
 #include <unistd.h>
@@ -30,6 +31,19 @@
 namespace rmt {
 namespace {
 constexpr int margin = 12, footer = 60;
+bool low_memory() {
+#ifdef __linux__
+    // procfs is RAM-backed. No cache or telemetry is written to the tablet.
+    if (FILE *input = std::fopen("/proc/meminfo", "r")) {
+        char line[256]; unsigned long long available = 0; bool low = false;
+        while (std::fgets(line, sizeof(line), input)) {
+            if (std::sscanf(line, "MemAvailable: %llu kB", &available) == 1) { low = available < 64 * 1024; break; }
+        }
+        std::fclose(input); return low;
+    }
+#endif
+    return false;
+}
 using Core = std::unique_ptr<RmtCore, decltype(&rmt_core_free)>;
 Core make_core() {
     auto options = rmt_core_defaults();
@@ -121,6 +135,8 @@ public:
             "  Left/Right: terminals   Space: Settings\r\n"
             "  Backspace: quit (confirm)   C/V: copy/paste\r\n"
             "  +/- or pinch: text size   Drag finger/pen: select\r\n"
+            "Two fingers: up/down scroll, sideways switch terminals.\r\n"
+            "Scrollback: 500 lines, kept in RAM.\r\n"
             "Settings also selects the input method.\r\n"
             "Ctrl+Shift+B: bottom bar   Caps Lock: %4\r\n"
             "exit closes this terminal.\r\n\r\n")
@@ -130,6 +146,7 @@ public:
     }
     void layout(int width, int height) { renderer_.resize(width, height); resize_pty(); }
     QImage frame() { return renderer_.frame(); }
+    void maintain(bool pressure) { renderer_.reclaim(pressure); }
     InputMethod ime;
     void font_size(int pixels) { renderer_.set_font_size(pixels); }
     void key(const MappedInput &input) {
@@ -181,8 +198,12 @@ public:
         writer_->setEnabled(pty_->pending_bytes() != 0);
     }
     void scroll(int direction) {
+        scroll_lines(direction * std::max(1, int(renderer_.rows()) - 2));
+    }
+    int cell_height() const { return renderer_.cell_height(); }
+    void scroll_lines(int lines) {
         GhosttyTerminalScrollViewport delta{}; delta.tag = GHOSTTY_SCROLL_VIEWPORT_DELTA;
-        delta.value.delta = direction * std::max(1, int(renderer_.rows()) - 2);
+        delta.value.delta = lines;
         ghostty_terminal_scroll_viewport(rmt_core_terminal(core_.get()), delta);
         changed_();
     }
@@ -212,7 +233,7 @@ private:
             else if (count < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) break;
             else { reader_->setEnabled(false); break; }
         }
-        if (received) changed_();
+        if (received) { maintain(false); changed_(); }
     }
     static void reply(GhosttyTerminal, void *context, const uint8_t *bytes, size_t count) {
         auto *self = static_cast<Session *>(context);
@@ -249,15 +270,19 @@ public:
     int active = 0, pixels, selected = 0;
     bool demo;
     std::vector<std::string> shell;
-    QTimer repaint, toast, font_save, autoscroll;
+    QTimer repaint, toast, font_save, autoscroll, maintenance;
     bool font_dirty = false;
     QString notice;
     bool pointer_down = false, dragging = false, text_drag = false, pen_down = false;
     QPointF press_point, last_point;
     Overlay press_overlay = Overlay::None;
-    bool pinching = false;
+    enum class Gesture { None, Pending, Pinch, Scroll, Swipe };
+    Gesture gesture = Gesture::None;
     int touch_id = -1, pinch_a = -1, pinch_b = -1, pinch_pixels = 26;
     qreal pinch_distance = 0;
+    QPointF gesture_start, gesture_last;
+    qreal scroll_remainder = 0;
+    bool can_scroll = false;
     QImage frame;
     Overlay overlay = Overlay::None;
     QString error;
@@ -272,6 +297,13 @@ public:
         font_save.setSingleShot(true); font_save.setInterval(700);
         QObject::connect(&font_save, &QTimer::timeout, &view, [this] { guarded([this] { save_font(); }); });
         autoscroll.setInterval(160);
+        maintenance.setInterval(1000);
+        QObject::connect(&maintenance, &QTimer::timeout, &view, [this] { guarded([this] {
+            const bool pressure = low_memory();
+            for (auto &session : sessions) if (session) session->maintain(pressure);
+            if (pressure) schedule();
+        }); });
+        maintenance.start();
         QObject::connect(&autoscroll, &QTimer::timeout, &view, [this] { guarded([this] {
             if (!pointer_down || !text_drag || !dragging || !sessions[active]) return;
             const auto area = text_area();
@@ -599,24 +631,54 @@ public:
         if (pen_down) return;
         if (event.type() == QEvent::TouchCancel) {
             cancel_pointer();
-            if (pinching) { zoom(pinch_pixels, false); font_save.start(); }
-            pinching = false; touch_id = -1; return;
+            if (gesture == Gesture::Pinch) { zoom(pinch_pixels, false); font_save.start(); }
+            gesture = Gesture::None; touch_id = -1; return;
         }
         QList<QEventPoint> live;
         for (const auto &point : event.points()) if (point.state() != QEventPoint::State::Released) live.append(point);
-        if (live.size() >= 2 && !pinching) {
-            cancel_pointer(); pinching = true; font_save.stop();
-            pinch_pixels = pixels; pinch_a = live[0].id(); pinch_b = live[1].id(); pinch_distance = 0;
+        if (live.size() >= 2 && gesture == Gesture::None) {
+            cancel_pointer(); gesture = Gesture::Pending;
+            pinch_pixels = pixels; pinch_a = live[0].id(); pinch_b = live[1].id();
+            const auto a = view.mapFromScene(live[0].scenePosition()), b = view.mapFromScene(live[1].scenePosition());
+            pinch_distance = QLineF(a, b).length();
+            gesture_start = gesture_last = (a + b) / 2;
+            scroll_remainder = 0;
+            can_scroll = overlay == Overlay::None && sessions[active] && text_area().contains(a) && text_area().contains(b);
         }
-        if (pinching) {
+        if (gesture != Gesture::None) {
             const QEventPoint *a = nullptr, *b = nullptr;
             for (const auto &point : live) { if (point.id() == pinch_a) a = &point; if (point.id() == pinch_b) b = &point; }
             if (a && b) {
-                const auto distance = QLineF(a->scenePosition(), b->scenePosition()).length();
-                if (!pinch_distance && distance >= 20) pinch_distance = distance;
-                if (pinch_distance) zoom(int(std::lround(pinch_pixels * std::clamp(distance / pinch_distance, qreal(0.25), qreal(4)) / 2)) * 2, false);
+                const auto first = view.mapFromScene(a->scenePosition()), second = view.mapFromScene(b->scenePosition());
+                const auto center = (first + second) / 2;
+                const auto distance = QLineF(first, second).length();
+                if (gesture == Gesture::Pending) {
+                    const qreal stretch = std::abs(distance - pinch_distance);
+                    const qreal travel = std::abs(center.y() - gesture_start.y());
+                    const qreal sideways = center.x() - gesture_start.x();
+                    // Lock the gesture after deliberate movement. Small changes
+                    // in finger spacing during a scroll must not resize text.
+                    if (pinch_distance >= 20 && stretch >= std::max(qreal(12), pinch_distance * 0.06) && stretch > 2 * std::max(travel, std::abs(sideways))) {
+                        gesture = Gesture::Pinch; font_save.stop();
+                    } else if (can_scroll && std::abs(sideways) >= 60 && std::abs(sideways) > 1.5 * travel) {
+                        gesture = Gesture::Swipe;
+                        choose(active + (sideways < 0 ? 1 : -1));
+                    } else if (can_scroll && travel >= 12 && travel >= std::abs(sideways)) gesture = Gesture::Scroll;
+                }
+                if (gesture == Gesture::Pinch)
+                    zoom(int(std::lround(pinch_pixels * std::clamp(distance / pinch_distance, qreal(0.25), qreal(4)) / 2)) * 2, false);
+                if (gesture == Gesture::Scroll && sessions[active]) {
+                    scroll_remainder -= center.y() - gesture_last.y();
+                    const int height = sessions[active]->cell_height();
+                    const int lines = int(scroll_remainder / height);
+                    if (lines) { sessions[active]->scroll_lines(lines); scroll_remainder -= lines * height; }
+                    gesture_last = center;
+                }
             }
-            if (live.isEmpty() || event.type() == QEvent::TouchEnd) { pinching = false; touch_id = -1; save_font(); }
+            if (live.isEmpty() || event.type() == QEvent::TouchEnd) {
+                if (gesture == Gesture::Pinch) save_font();
+                gesture = Gesture::None; touch_id = -1;
+            }
             return;
         }
         if (event.type() == QEvent::TouchBegin && live.size() == 1) {
@@ -657,8 +719,8 @@ void TerminalView::keyReleaseEvent(QKeyEvent *event) { d_->guarded([&] { d_->key
 void TerminalView::focusOutEvent(QFocusEvent *event) {
     d_->guarded([&] {
         d_->cancel_pointer();
-        if (d_->pinching) { d_->zoom(d_->pinch_pixels, false); d_->font_save.start(); }
-        d_->pinching = false; d_->touch_id = -1; d_->pen_down = false;
+        if (d_->gesture == Private::Gesture::Pinch) { d_->zoom(d_->pinch_pixels, false); d_->font_save.start(); }
+        d_->gesture = Private::Gesture::None; d_->touch_id = -1; d_->pen_down = false;
     });
     d_->guarded([&] { for (const auto &release : d_->input.reset()) if (d_->sessions[release.terminal]) d_->sessions[release.terminal]->key(release); });
     QQuickPaintedItem::focusOutEvent(event);
