@@ -217,6 +217,28 @@ int main(int argc, char **argv) {
         CHECK(view.terminal_count() == 1 && view.active_terminal() == 0);
     }
     {
+        // Firmware Folio events reach a real shell as + and F10, respectively.
+        QQuickWindow window;
+        const std::vector<std::string> shell = {"/bin/sh", "-c",
+            "stty -echo; printf '\\033]52;c;cmVhZHk=\\007'; "
+            "IFS= read -r line; [ \"$line\" = '+' ] || exit 1; "
+            "printf '\\033]52;c;cGx1cw==\\007'; "
+            "IFS= read -r line; [ \"$line\" = \"$(printf '\\033[21~')\" ] || exit 1; "
+            "printf '\\033]52;c;ZjEw\\007'; IFS= read -r line"};
+        rmt::TerminalView view(window.contentItem(), 24, false, temporary.filePath("folio.ini"), shell);
+        view.setSize(QSizeF(1000, 750)); view.layout(); view.start(); pump(200);
+        CHECK(view.clipboard_text() == "ready");
+        key(view, QEvent::KeyPress, Qt::Key_AltGr, 108, Qt::GroupSwitchModifier);
+        press(view, Qt::Key_Plus, 19, Qt::NoModifier, "+");
+        key(view, QEvent::KeyRelease, Qt::Key_AltGr, 108);
+        view.send_text("\n"); pump(200); CHECK(view.clipboard_text() == "plus");
+        key(view, QEvent::KeyPress, Qt::Key_Meta, 115, Qt::MetaModifier);
+        press(view, Qt::Key_0, 19, Qt::MetaModifier);
+        key(view, QEvent::KeyRelease, Qt::Key_Meta, 115);
+        view.send_text("\n"); pump(200); CHECK(view.clipboard_text() == "f10");
+        CHECK(view.font_pixels() == 24 && view.terminal_count() == 1);
+    }
+    {
         // Finger selection -> Option+C -> another PTY -> Option+V.
         QQuickWindow window;
         const std::vector<std::string> shell = {"/bin/sh", "-c", "stty -echo; printf '\\033[2J\\033[Hhello world\\r\\n'; while IFS= read -r line; do printf '%s\\r\\n' \"$line\"; done"};

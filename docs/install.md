@@ -29,7 +29,7 @@ a convenience in the development setup, not an installer requirement.
 
 On your computer, download `inkline-rm2.tar.gz` and
 `inkline-rm2.tar.gz.sha256` from the
-[0.3.2 preview release](https://github.com/adamdeprince/inkline/releases/tag/v0.3.2).
+[0.3.3 preview release](https://github.com/adamdeprince/inkline/releases/tag/v0.3.3).
 Use the attached Inkline bundle; GitHub's automatically generated source-code
 archives do not contain the compiled application. The bundle is about 79 MiB
 and includes the installer, uninstall script, source archives and licenses.
@@ -39,12 +39,12 @@ additional tablet package manager.
 Alternatively, download both files from a terminal on your computer:
 
 ```sh
-curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.3.2/inkline-rm2.tar.gz
-curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.3.2/inkline-rm2.tar.gz.sha256
+curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.3.3/inkline-rm2.tar.gz
+curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.3.3/inkline-rm2.tar.gz.sha256
 ```
 
 The same files are mirrored under
-[`inkline.goblinreactor.com/downloads/v0.3.2/`](https://inkline.goblinreactor.com/downloads/v0.3.2/inkline-rm2.tar.gz).
+[`inkline.goblinreactor.com/downloads/v0.3.3/`](https://inkline.goblinreactor.com/downloads/v0.3.3/inkline-rm2.tar.gz).
 To compile the application yourself, see [building from source](#building-from-source).
 
 ## 3. Check, then install
@@ -144,7 +144,7 @@ Useful controls:
 - Option+Space also selects Asian input methods; Option+C/V uses the RAM clipboard.
 - `~/inkline stop` restores notebooks from another SSH session.
 
-Inkline 0.3.2 includes right Alt/Option shortcuts, six terminal slots,
+Inkline 0.3.3 includes right Alt/Option shortcuts, six terminal slots,
 quit confirmation, a Settings button, and a saved Caps Lock/Control toggle.
 Each new terminal shows a brief guide and a tiny Goblin logo.
 Inkline sets `HOME=/home/root` for tablet sessions, including shells opened by

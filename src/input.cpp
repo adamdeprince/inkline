@@ -11,13 +11,16 @@ bool caps(const QKeyEvent &e) { return e.nativeScanCode() == 66 || e.key() == Qt
 quint32 identity(const QKeyEvent &e) {
     return e.nativeScanCode() ? e.nativeScanCode() : quint32(e.key()) | 0x80000000u;
 }
-int physical_key(const QKeyEvent &e) {
+int number_function_key(const QKeyEvent &e) {
     if (!(e.modifiers() & Qt::KeypadModifier)) {
         const auto scan = e.nativeScanCode();
         if (scan >= 10 && scan <= 19) return Qt::Key_F1 + int(scan - 10);
         if (!scan && e.key() >= Qt::Key_1 && e.key() <= Qt::Key_9) return Qt::Key_F1 + e.key() - Qt::Key_1;
         if (!scan && e.key() == Qt::Key_0) return Qt::Key_F10;
     }
+    return 0;
+}
+int physical_key(const QKeyEvent &e) {
     switch (e.nativeScanCode()) {
     case 23: return Qt::Key_Tab;
     case 22: return Qt::Key_Backspace;
@@ -81,10 +84,15 @@ MappedInput InputMapper::map(const QKeyEvent &e, int terminal) {
         held.input.scan = e.nativeScanCode();
         held.input.terminal = terminal;
         if (caps(e)) held.input.key = caps_control_ ? Qt::Key_Control : Qt::Key_CapsLock;
+        else if (const auto function = number_function_key(e); function && (mods & Qt::MetaModifier)) {
+            // The Folio's separate Opt key is Qt Meta (evdev 107, scan 115).
+            // Right Alt/Opt must keep the number row's printed symbols, e.g. +.
+            held.input.key = function;
+            held.consumes_meta = true;
+        }
         else if (right_alt_ && !right_alt(e)) {
             const auto key = physical_key(e);
-            if (key >= Qt::Key_F1 && key <= Qt::Key_F10) held.input.key = key;
-            else switch (key) {
+            switch (key) {
             case Qt::Key_Tab: held.input.key = Qt::Key_Escape; break;
             case Qt::Key_Up: held.input.key = Qt::Key_PageUp; break;
             case Qt::Key_Down: held.input.key = Qt::Key_PageDown; break;
@@ -99,7 +107,7 @@ MappedInput InputMapper::map(const QKeyEvent &e, int terminal) {
             }
             held.consumes_alt = held.input.key != e.key() || held.input.action != InputAction::Send;
         }
-        if (held.input.action == InputAction::Send && !held.consumes_alt) {
+        if (held.input.action == InputAction::Send && !held.consumes_alt && !held.consumes_meta) {
             if (const auto accent = literal_accent(e)) {
                 held.input.key = accent;
                 held.input.text = QString(QChar(ushort(accent)));
@@ -123,6 +131,7 @@ MappedInput InputMapper::map(const QKeyEvent &e, int terminal) {
     result.repeat = e.isAutoRepeat();
     result.modifiers = mods;
     result.caps_locked = caps_locked_;
+    if (held.consumes_meta) result.modifiers &= ~Qt::MetaModifier;
     if (held.consumes_alt) {
         result.modifiers &= ~Qt::GroupSwitchModifier;
         if (!left_alt_) result.modifiers &= ~Qt::AltModifier;
@@ -132,7 +141,7 @@ MappedInput InputMapper::map(const QKeyEvent &e, int terminal) {
             result.action = InputAction::Ignore;
         return result;
     }
-    if (!held.consumes_alt && !caps(e)) {
+    if (!held.consumes_alt && !held.consumes_meta && !caps(e)) {
         result.text = held.input.text.isEmpty() ? e.text() : held.input.text;
         // Caps Lock is an application setting. Ignore the platform's lock
         // state so a Caps-as-Control press cannot leave later letters capitalized.

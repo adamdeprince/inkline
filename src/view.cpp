@@ -130,12 +130,13 @@ public:
         }
         const auto banner = QString(
             "\033[%1G\033[1mInkline %2 | Terminal %3/6\033[0m\r\n"
-            "\033[%1GHold right Alt/Option:\r\n"
-            "  1-0: F1-F10   Tab: Esc   Up/Down: PgUp/PgDn\r\n"
+            "\033[%1GOpt + 1-0: F1-F10\r\n"
+            "Hold right Alt/Opt:\r\n"
+            "  Tab: Esc   Up/Down: PgUp/PgDn\r\n"
             "  Left/Right: terminals   Space: Settings\r\n"
             "  Backspace: quit (confirm)   C/V: copy/paste\r\n"
             "Pinch: text size   Drag finger/pen: select\r\n"
-            "US Folio: right Alt + minus types =; Shift+6 types ^.\r\n"
+            "US Folio: right Alt/Opt + 0: +; minus: =; Shift+6: ^.\r\n"
             "Two fingers: up/down scroll, sideways switch terminals.\r\n"
             "Scrollback: 500 lines, kept in RAM.\r\n"
             "Settings also selects the input method.\r\n"

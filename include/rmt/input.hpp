@@ -29,7 +29,7 @@ public:
     bool caps_control() const { return caps_control_; }
     bool caps_locked() const { return caps_locked_; }
 private:
-    struct Held { MappedInput input; bool consumes_alt = false; };
+    struct Held { MappedInput input; bool consumes_alt = false, consumes_meta = false; };
     QHash<quint32, Held> held_;
     bool right_alt_ = false, left_alt_ = false;
     bool caps_control_ = true, caps_locked_ = false, caps_held_control_ = false;

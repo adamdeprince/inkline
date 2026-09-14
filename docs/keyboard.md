@@ -1,18 +1,23 @@
 # Keyboard and terminal settings
 
-These controls are included in **Inkline 0.3.2**. All nine host and ARM test
+These controls are included in **Inkline 0.3.3**. All nine host and ARM test
 suites pass; physical Folio and USB checks for the new controls are pending.
 
 Each new terminal prints a short shortcut guide with a small Goblin logo and the
 current Caps Lock setting before starting the shell. Switching back to an open
 terminal preserves its contents and does not repeat the guide.
 
-Press **Ctrl+Alt+T** to open Inkline on the tablet. Hold the **right Alt/Option**
-key to reach keys missing from the Folio:
+Press **Ctrl+Alt+T** to open Inkline on the tablet.
+
+Hold the separate **Opt** key, between Ctrl and Alt on the Folio, and press
+**1, 2, 3, 4, 5, 6, 7, 8, 9, 0** for **F1–F10**. This uses the keyboard's Meta
+modifier. On USB keyboards, the shortcut follows the active layout's Meta key;
+physical function keys continue to work normally.
+
+Hold the **right Alt/Option** key for these other shortcuts:
 
 | Right Alt/Option + | Result |
 | --- | --- |
-| 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 | F1, F2, F3, F4, F5, F6, F7, F8, F9, F10 |
 | Tab | Escape |
 | Up / Down | PageUp / PageDown, sent to the program |
 | Left / Right | Previous / next terminal |
@@ -23,11 +28,14 @@ key to reach keys missing from the Folio:
 
 The number shortcuts use the physical top number row. USB numeric keypads keep
 their usual behavior. Left Alt remains available for ordinary terminal input,
-including Emacs Meta commands. Ctrl and Shift can combine with the function keys.
+including Emacs Meta commands. Ctrl, Shift, and Alt can combine with Opt's
+function keys.
 Right Alt is reserved for the listed shortcuts, including on layouts that call
 it AltGr; other keys retain their layout's normal input.
 
-On the **US Type Folio**, hold **right Alt/Option** and press the **minus key
+On the **US Type Folio**, **right Alt/Option + 0** types `+`. The right-hand
+modifier no longer turns the number row into function keys.
+Hold **right Alt/Option** and press the **minus key
 immediately left of Backspace** (marked `-`, `_`, and `=`) to type `=`.
 With input method **Off**, **Shift+6** types a literal `^`: typing `c^2` produces
 those three characters. The Folio's standalone accent keys are converted to

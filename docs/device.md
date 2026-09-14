@@ -126,3 +126,17 @@ terminal. Right Alt plus the key immediately left of Backspace produces `=`;
 Shift+6 produces a dead-circumflex event containing U+0302. Inkline now converts
 that standalone combining accent to `^` before its selected input method runs.
 Physical testing remains for pinch feel, additional layouts, and USB hotplug.
+
+## 0.3.3 separate Opt function keys — September 14
+
+The stock US e-paper keymap reports the Folio's separate Opt key as Qt Meta,
+using evdev 107 / native scan 115. Its right Alt/Opt key reports AltGr, and
+right Alt/Opt + 0 reports a printable `+` with no remaining modifier. An
+offscreen probe verified those events without reading or injecting input into
+the active terminal. Function shortcuts now use Opt/Meta, freeing the right
+Alt/Opt number row for its printed symbols.
+
+All nine host and ARM suites pass, including a real shell receiving literal
+plus and F10 from the captured firmware event shapes. Tests retain Ctrl/Shift/Alt
+function modifiers, key repeat/release and session routing, numeric keypads,
+and ordinary Alt input. Physical Folio and USB layout checks remain.

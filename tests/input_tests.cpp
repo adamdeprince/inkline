@@ -21,22 +21,34 @@ int main(int argc, char **argv) {
         };
         const auto alt_down = event(QEvent::KeyPress, Qt::Key_AltGr, 108, Qt::GroupSwitchModifier);
         const auto alt_up = event(QEvent::KeyRelease, Qt::Key_AltGr, 108);
-        (void)encode(alt_down);
+        const auto opt_down = event(QEvent::KeyPress, Qt::Key_Meta, 115, Qt::MetaModifier);
+        const auto opt_up = event(QEvent::KeyRelease, Qt::Key_Meta, 115);
+        (void)encode(opt_down);
         const char *expected[] = {"\033OP", "\033OQ", "\033OR", "\033OS", "\033[15~", "\033[17~", "\033[18~", "\033[19~", "\033[20~", "\033[21~"};
         for (int i = 0; i < 10; ++i) {
             const int key = i == 9 ? Qt::Key_0 : Qt::Key_1 + i;
-            CHECK(encode(event(QEvent::KeyPress, key, 10 + i, Qt::AltModifier, QString(QChar(key)))) == expected[i]);
-            CHECK(encode(event(QEvent::KeyPress, key, 10 + i, Qt::AltModifier, QString(QChar(key)), true)) == expected[i]);
-            (void)encode(event(QEvent::KeyRelease, key, 10 + i, Qt::AltModifier));
+            // The firmware reports Opt+number with Meta and an empty text field.
+            CHECK(encode(event(QEvent::KeyPress, key, 10 + i, Qt::MetaModifier)) == expected[i]);
+            CHECK(encode(event(QEvent::KeyPress, key, 10 + i, Qt::MetaModifier, {}, true)) == expected[i]);
+            (void)encode(event(QEvent::KeyRelease, key, 10 + i, Qt::MetaModifier));
         }
         // Shifted punctuation is still the physical number row.
-        const auto shifted = event(QEvent::KeyPress, Qt::Key_Exclam, 10, Qt::AltModifier | Qt::ShiftModifier, "!");
+        const auto shifted = event(QEvent::KeyPress, Qt::Key_Exclam, 10, Qt::MetaModifier | Qt::ShiftModifier, "!");
         QKeyEvent real_shift_f1(QEvent::KeyPress, Qt::Key_F1, Qt::ShiftModifier);
         CHECK(encode(shifted) == reference.encode(real_shift_f1));
         (void)encode(event(QEvent::KeyRelease, Qt::Key_Exclam, 10));
         QKeyEvent real_ctrl_f10(QEvent::KeyPress, Qt::Key_F10, Qt::ControlModifier);
-        CHECK(encode(event(QEvent::KeyPress, Qt::Key_0, 19, Qt::AltModifier | Qt::ControlModifier, "0")) == reference.encode(real_ctrl_f10));
+        CHECK(encode(event(QEvent::KeyPress, Qt::Key_0, 19, Qt::MetaModifier | Qt::ControlModifier)) == reference.encode(real_ctrl_f10));
         (void)encode(event(QEvent::KeyRelease, Qt::Key_0, 19));
+        // USB keypad input and non-number Meta shortcuts keep their usual encoding.
+        for (const auto &key : {event(QEvent::KeyPress, Qt::Key_1, 87, Qt::KeypadModifier | Qt::MetaModifier, "1"),
+                               event(QEvent::KeyPress, Qt::Key_A, 38, Qt::MetaModifier, "a"),
+                               event(QEvent::KeyPress, Qt::Key_F1, 67, Qt::MetaModifier)}) {
+            CHECK(encode(key) == reference.encode(key));
+            (void)encode(event(QEvent::KeyRelease, key.key(), key.nativeScanCode(), key.modifiers()));
+        }
+        (void)encode(opt_up);
+        (void)encode(alt_down);
         CHECK(encode(event(QEvent::KeyPress, Qt::Key_Tab, 23, Qt::AltModifier, "\t")) == "\033");
         (void)encode(event(QEvent::KeyRelease, Qt::Key_Tab, 23));
         CHECK(encode(event(QEvent::KeyPress, Qt::Key_Up, 111, Qt::AltModifier)) == "\033[5~");
@@ -68,6 +80,12 @@ int main(int argc, char **argv) {
         CHECK(encode(event(QEvent::KeyPress, Qt::Key_Equal, 21, Qt::NoModifier, "=")) == "=");
         CHECK(encode(event(QEvent::KeyPress, Qt::Key_Equal, 21, Qt::NoModifier, "=", true)) == "=");
         (void)encode(event(QEvent::KeyRelease, Qt::Key_Equal, 21, Qt::NoModifier, "="));
+        // Right Alt/Opt+0 is a literal plus, not F10; other number keys pass through.
+        CHECK(encode(event(QEvent::KeyPress, Qt::Key_Plus, 19, Qt::NoModifier, "+")) == "+");
+        CHECK(encode(event(QEvent::KeyPress, Qt::Key_Plus, 19, Qt::NoModifier, "+", true)) == "+");
+        (void)encode(event(QEvent::KeyRelease, Qt::Key_Plus, 19, Qt::NoModifier, "+"));
+        CHECK(encode(event(QEvent::KeyPress, Qt::Key_1, 10, Qt::NoModifier, "1")) == "1");
+        (void)encode(event(QEvent::KeyRelease, Qt::Key_1, 10));
         // A USB numeric keypad keeps its usual Alt+digit behavior.
         const auto keypad = event(QEvent::KeyPress, Qt::Key_1, 87, Qt::KeypadModifier | Qt::AltModifier, "1");
         CHECK(encode(keypad) == reference.encode(keypad));
@@ -83,22 +101,22 @@ int main(int argc, char **argv) {
             CHECK(encode(down) == reference.encode(down));
             (void)encode(event(QEvent::KeyRelease, code, 21, Qt::AltModifier));
         }
-        (void)encode(alt_down);
+        (void)encode(opt_down);
         QKeyEvent real_alt_f1(QEvent::KeyPress, Qt::Key_F1, Qt::AltModifier);
-        CHECK(encode(event(QEvent::KeyPress, Qt::Key_1, 10, Qt::AltModifier, "1")) == reference.encode(real_alt_f1));
+        CHECK(encode(event(QEvent::KeyPress, Qt::Key_1, 10, Qt::AltModifier | Qt::MetaModifier)) == reference.encode(real_alt_f1));
         (void)map.reset();
-        // Do not change a held digit into a function key when Alt arrives later.
+        // Do not change a held digit into a function key when Opt arrives later.
         CHECK(encode(event(QEvent::KeyPress, Qt::Key_1, 10, Qt::NoModifier, "1")) == "1");
-        (void)encode(alt_down);
-        CHECK(map.map(event(QEvent::KeyPress, Qt::Key_1, 10, Qt::AltModifier, "1", true), 0).key == Qt::Key_1);
+        (void)encode(opt_down);
+        CHECK(map.map(event(QEvent::KeyPress, Qt::Key_1, 10, Qt::MetaModifier, "1", true), 0).key == Qt::Key_1);
         (void)map.reset();
         // Kitty release reports retain their F-key identity and original session.
         ghostty_terminal_vt_write(rmt_core_terminal(core), reinterpret_cast<const uint8_t *>("\033[>31u"), 6);
-        (void)encode(alt_down);
-        const auto down = event(QEvent::KeyPress, Qt::Key_1, 10, Qt::AltModifier, "1");
+        (void)encode(opt_down);
+        const auto down = event(QEvent::KeyPress, Qt::Key_1, 10, Qt::MetaModifier);
         QKeyEvent real_f1(QEvent::KeyPress, Qt::Key_F1, Qt::NoModifier);
         CHECK(encode(down, 2) == reference.encode(real_f1));
-        (void)encode(alt_up, 4);
+        (void)encode(opt_up, 4);
         const auto released = map.map(event(QEvent::KeyRelease, Qt::Key_1, 10), 4);
         CHECK(released.terminal == 2 && released.key == Qt::Key_F1);
         QKeyEvent real_release(QEvent::KeyRelease, Qt::Key_F1, Qt::NoModifier);
