@@ -32,7 +32,7 @@ memory budgets through the public API.
 | Kitty existing-file images (`t=f`) | Off by default; explicit option allows reading existing images |
 | Kitty temporary-file images (`t=t`) | Disabled by default |
 | Automatic image-cache writes to flash | Exclude; keep bounded storage in memory |
-| Kitty file-transfer protocol | Separate from graphics; user is reconsidering whether to include it |
+| Kitty file-transfer protocol | Separate from graphics; inclusion remains under consideration |
 | Sixel | Initial decoding, framing, placement, scrolling and rendering work; DEC modes and full erase semantics remain |
 
 The [kitty graphics protocol](https://sw.kovidgoyal.net/kitty/graphics-protocol/)
