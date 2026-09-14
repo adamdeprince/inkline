@@ -69,25 +69,28 @@ for boot, though a reboot test has not been performed.
 
 All seven program bundles are installed: Goblin Mosh, Mosh, Emacs, GoblinView,
 Goblin Purrfect, Git and Python 3.15.0rc2. Their combined measured footprint is
-497.8 MiB. Compact TeX Live is also installed; Purrfect created a nonempty PDF
-using LuaLaTeX. The TeX tree takes about 187.8 MiB, with an estimated 79 MiB for
-its private installer/runtime. About 5.18 GiB remained free after installation.
+499.2 MiB after the Python bytecode policy update. Compact TeX Live is also
+installed; Purrfect created a nonempty PDF using LuaLaTeX. The TeX tree takes
+187.8 MiB, with 80.0 MiB for its private installer/runtime. The eight current
+utility releases total about 767 MiB; retained older releases take extra space.
 The [public catalog](https://inkline.goblinreactor.com/utilities.html) records
 individual package sizes and links separate installation instructions.
 
-The revised Python bytecode policy passes a native startup, import, virtualenv
-and pip test. The ARM startup and import checks also passed, but the final ARM
-rerun after fixing pip's compilation option was interrupted by lost USB SSH.
-The revised Python package has not yet replaced the installed/public version.
+The revised Python bytecode policy passes the complete tablet startup, import,
+virtualenv/ensurepip and local wheel pip-install check with no `.pyc` files or
+`__pycache__` directories created. It is installed, along with the corrected TeX
+bootstrap package. LuaLaTeX and tlmgr still use the existing compact TeX tree.
+Both utility updates preserved the running Inkline process (PID 2795).
 
 ## 0.2.0 keyboard and session changes
 
-All seven host suites pass, including actual independent shell PTYs, background
+All seven host and ARM suites pass, including actual independent shell PTYs, background
 output, six slot navigation, saved settings and quit confirmation. The new
 shortcut and session suites also pass with address/undefined behavior sanitizers.
-The ARM build passes, and the Settings and quit dialogs have been inspected in
-offscreen snapshots.
+The ARM build passes. The Settings and quit dialogs have been inspected in host
+snapshots, and the startup guide and 64-pixel Goblin logo render correctly in an
+offscreen snapshot produced on the tablet.
 
-USB SSH became unavailable before the new ARM tests and installation could run.
-The installed app remains 0.1.0. The new shortcuts, Caps Lock LED handling,
-settings touch targets, and USB hotplug still need checks on the physical tablet.
+The new shortcuts, Caps Lock LED handling, settings touch targets and USB hotplug
+still need checks on the physical tablet. The update installer preserves open
+terminals; the new version takes effect after quitting and reopening Inkline.

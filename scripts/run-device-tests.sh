@@ -15,7 +15,9 @@ for test_binary in $test_binaries; do
         exit 1
     }
 done
-tar -C build/tablet -cf build/device-tests.tar $test_binaries
+test_assets=
+if [ -f build/tablet/assets/goblin.png ]; then test_assets=assets/goblin.png; fi
+tar -C build/tablet -cf build/device-tests.tar $test_binaries $test_assets
 ssh -T -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=10 \
     -o ServerAliveInterval=5 -o ServerAliveCountMax=2 "$device_host" '
     set -eu

@@ -4,16 +4,14 @@ Inkline is a terminal for **reMarkable 2**, built with **libghostty-vt** and the
 stock Qt e-paper backend. It is designed for Type Folio and external USB
 keyboards, with kitty graphics and an initial sixel implementation.
 
-**The published preview is 0.1.0; this checkout contains 0.2.0 development work.**
-The new keyboard controls and multiple terminals pass host tests and cross-build
-for ARM; their device checks are pending. The main artifact is the repeatable
+**Version 0.2.0 is a preview.** The main artifact is the repeatable
 [installation procedure](docs/install.md), including preflight, launch, recovery
 and uninstall. It targets firmware **3.27**, tested on **3.27.3.0**. Other models
 and firmware lines are not supported by this installer.
 
 ## Install
 
-Download the **[Inkline 0.1.0 preview](https://github.com/adamdeprince/inkline/releases/tag/v0.1.0)**
+Download the **[Inkline 0.2.0 preview](https://github.com/adamdeprince/inkline/releases/tag/v0.2.0)**
 and follow the [installation procedure](docs/install.md). The prebuilt ARM bundle
 includes the installer, launcher, uninstall script, checksums, source archives
 and licenses. No compiler, SDK or third-party package manager is needed to install it.
@@ -69,6 +67,8 @@ Hold the **right Alt/Option** key for these Folio and USB keyboard shortcuts:
 **Settings**, where Caps Lock can act as **Control** (the default) or normal
 **Caps Lock**. Both settings persist across launches. Each terminal has its own
 shell and scrollback; switching to an unused slot opens a shell there.
+New terminals print a short guide with a tiny Goblin logo and the current
+Caps Lock setting. The logo is displayed through inline kitty graphics in RAM.
 See [keyboard and session instructions](docs/keyboard.md) for details.
 
 ## Current source features
@@ -125,10 +125,12 @@ bytecode caches; the installer does not constrain other programs' own caches.
 
 ## Validation
 
-All **seven** suites pass on the development Mac: core graphics, sixel decoding,
+All **seven** suites pass on the development Mac and reMarkable 2: core graphics, sixel decoding,
 mixed-stream parsing, shell PTY, renderer/keyboard integration, shortcut mapping,
 and terminal sessions. The two new suites also pass with address and undefined
-behavior sanitizers. The 0.2.0 ARM build passes; its device tests are pending.
+behavior sanitizers on the host. The startup guide and logo render correctly
+using the tablet's stock Qt libraries. Physical checks for the new shortcuts,
+keyboard LEDs and USB hotplug remain outstanding.
 
 The original five suites passed on reMarkable 2 running 3.27.3.0 for 0.1.0.
 The device graphics suite measured **zero Linux

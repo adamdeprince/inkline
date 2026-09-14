@@ -9,6 +9,7 @@
 #include <QCoreApplication>
 #include <QFocusEvent>
 #include <QInputMethodEvent>
+#include <QImageReader>
 #include <QMouseEvent>
 #include <QSocketNotifier>
 #include <QTimer>
@@ -54,10 +55,8 @@ public:
             if (pty_ && pty_->poll_exit()) { reap_.stop(); exited_(this); }
         }); });
     }
-    void start(int number, bool demo, const std::vector<std::string> &command) {
-        const auto banner = QString("Inkline %1 — terminal %2 of 6\r\nRight Alt/Option + Space: settings. Ctrl+Shift+B: bottom bar.\r\n\r\n")
-            .arg(QCoreApplication::applicationVersion()).arg(number).toUtf8();
-        stream_.write({banner.constData(), size_t(banner.size())});
+    void start(int number, bool demo, const std::vector<std::string> &command, bool caps_control) {
+        welcome(number, caps_control);
         if (demo) {
             stream_.write("\033[1mText, kitty graphics, and sixel\033[0m\r\n\r\n");
             stream_.write("\033_Ga=T,f=32,s=1,v=1,c=12,r=4,i=1;/wAA/w==\033\\\r\n");
@@ -81,6 +80,43 @@ public:
             pty_->flush(); writer_->setEnabled(pty_->pending_bytes() != 0);
         }); });
         reap_.start(250);
+    }
+    void welcome(int number, bool caps_control) {
+        // Decode the installed asset once; scaled pixels and inline transport
+        // stay in RAM. An implicit kitty ID avoids client image-ID collisions.
+        static const QImage logo = [] {
+            QImageReader reader(QCoreApplication::applicationDirPath() + "/assets/goblin.png");
+            reader.setScaledSize(QSize(64, 64));
+            return reader.read();
+        }();
+        int column = 1;
+        if (!logo.isNull()) {
+            const int side = std::min(64, 2 * renderer_.cell_height());
+            const auto pixels = logo.scaled(side, side, Qt::KeepAspectRatio, Qt::SmoothTransformation)
+                                   .convertToFormat(QImage::Format_RGBA8888);
+            const auto bytes = QByteArray(reinterpret_cast<const char *>(pixels.constBits()), pixels.sizeInBytes()).toBase64();
+            for (qsizetype offset = 0; offset < bytes.size(); offset += 4096) {
+                const auto chunk = bytes.mid(offset, 4096);
+                const bool more = offset + chunk.size() < bytes.size();
+                const auto header = offset == 0
+                    ? QString("\033_Ga=T,t=d,f=32,s=%1,v=%2,C=1,q=2,m=%3;").arg(pixels.width()).arg(pixels.height()).arg(int(more)).toLatin1()
+                    : QString("\033_Gm=%1;").arg(int(more)).toLatin1();
+                const auto data = header + chunk + "\033\\";
+                stream_.write({data.constData(), size_t(data.size())});
+            }
+            column += (side + renderer_.cell_width() - 1) / renderer_.cell_width() + 1;
+        }
+        const auto banner = QString(
+            "\033[%1G\033[1mInkline %2 | Terminal %3/6\033[0m\r\n"
+            "\033[%1GHold right Alt/Option:\r\n"
+            "  1-0: F1-F10   Tab: Esc   Up/Down: PgUp/PgDn\r\n"
+            "  Left/Right: terminals   Space: Settings\r\n"
+            "  Backspace: quit (confirm)\r\n"
+            "Ctrl+Shift+B: bottom bar   Caps Lock: %4\r\n"
+            "exit closes this terminal.\r\n\r\n")
+            .arg(column).arg(QCoreApplication::applicationVersion()).arg(number)
+            .arg(caps_control ? "Control" : "Caps Lock").toUtf8();
+        stream_.write({banner.constData(), size_t(banner.size())});
     }
     void layout(int width, int height) { renderer_.resize(width, height); resize_pty(); }
     QImage frame() { return renderer_.frame(); }
@@ -211,7 +247,7 @@ public:
                 }); },
                 [this](const QString &message) { error = message; overlay = Overlay::Error; view.update(); });
             next->layout(int(view.width()) - 2 * margin, int(view.height()) - 2 * margin - footer_height());
-            next->start(index + 1, demo, shell);
+            next->start(index + 1, demo, shell, prefs.caps_control());
             sessions[index] = std::move(next);
         }
         active = index; overlay = Overlay::None; frame = {};

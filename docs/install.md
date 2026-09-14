@@ -29,9 +29,9 @@ a convenience in the development setup, not an installer requirement.
 
 On your computer, download `inkline-rm2.tar.gz` and
 `inkline-rm2.tar.gz.sha256` from the
-[0.1.0 preview release](https://github.com/adamdeprince/inkline/releases/tag/v0.1.0).
+[0.2.0 preview release](https://github.com/adamdeprince/inkline/releases/tag/v0.2.0).
 Use the attached Inkline bundle; GitHub's automatically generated source-code
-archives do not contain the compiled application. The bundle is about 49 MiB
+archives do not contain the compiled application. The bundle is about 52 MiB
 and includes the installer, uninstall script, source archives and licenses.
 Installation needs SSH and SCP on your computer, with no SDK, compiler or
 additional tablet package manager.
@@ -39,12 +39,12 @@ additional tablet package manager.
 Alternatively, download both files from a terminal on your computer:
 
 ```sh
-curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.1.0/inkline-rm2.tar.gz
-curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.1.0/inkline-rm2.tar.gz.sha256
+curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.2.0/inkline-rm2.tar.gz
+curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.2.0/inkline-rm2.tar.gz.sha256
 ```
 
 The same files are mirrored under
-[`inkline.goblinreactor.com/downloads/v0.1.0/`](https://inkline.goblinreactor.com/downloads/v0.1.0/inkline-rm2.tar.gz).
+[`inkline.goblinreactor.com/downloads/v0.2.0/`](https://inkline.goblinreactor.com/downloads/v0.2.0/inkline-rm2.tar.gz).
 To compile the application yourself, see [building from source](#building-from-source).
 
 ## 3. Check, then install
@@ -92,7 +92,7 @@ Installation creates:
 An unrelated file at either location makes installation stop. Reinstalling the
 same verified bundle is supported. Upgrades retain the previous release
 directory, and the `current` symlink switches only after the new files verify.
-The 0.2.0 source installer preserves an already running Inkline session; quit
+The installer preserves an already running Inkline session; quit
 and reopen Inkline when ready to use the update.
 The notebook interface remains the default application. System libraries and
 notebook files are left alone. The installer needs writable systemd configuration
@@ -131,17 +131,18 @@ layout/hotplug behavior should be checked with your hardware.
 
 Useful controls:
 
-- Tap **Quit**, type `exit`, or press **Ctrl+Shift+Q** to return to notebooks.
+- Tap **Quit** or press **Ctrl+Shift+Q**, then confirm, to return to notebooks.
+  Type `exit` to close one terminal; closing the last one also returns to notebooks.
 - Tap **Esc** or use **Ctrl+[** when your Folio has no Escape key.
 - **Shift+PageUp/PageDown**, or the bottom touch buttons, scroll history.
 - `~/inkline start --rotate 270` reverses landscape orientation; `--rotate 0` uses portrait.
 - `~/inkline start --font-size 32` increases text size (valid range: 16–48 pixels).
 - `~/inkline stop` restores notebooks from another SSH session.
 
-The 0.2.0 source build adds right Alt/Option shortcuts, six terminal slots,
+Inkline 0.2.0 adds right Alt/Option shortcuts, six terminal slots,
 quit confirmation, a Settings button, and a saved Caps Lock/Control toggle.
-See [keyboard settings](keyboard.md) for the complete controls. The download
-links above still point to the device-validated 0.1.0 preview.
+Each new terminal shows a brief guide and a tiny Goblin logo.
+See [keyboard settings](keyboard.md) for the complete controls.
 
 Opening Inkline temporarily stops `xochitl`, the notebook interface. A service
 loaded only into `/run` restores it on normal exit and process failure. The

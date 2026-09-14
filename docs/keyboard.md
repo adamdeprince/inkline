@@ -1,8 +1,11 @@
 # Keyboard and terminal settings
 
-These controls are implemented in the **0.2.0 source build**. The published
-0.1.0 preview does not include them yet. Host tests and the ARM build pass;
-physical Folio and USB checks for the new controls are pending.
+These controls are included in **Inkline 0.2.0**. All seven host and ARM test
+suites pass; physical Folio and USB checks for the new controls are pending.
+
+Each new terminal prints a short shortcut guide with a small Goblin logo and the
+current Caps Lock setting before starting the shell. Switching back to an open
+terminal preserves its contents and does not repeat the guide.
 
 Press **Ctrl+Alt+T** to open Inkline on the tablet. Hold the **right Alt/Option**
 key to reach keys missing from the Folio:
@@ -65,6 +68,6 @@ shortcuts and Caps Lock setting apply to Folio and USB input. USB hotplug,
 keyboard LEDs and layout-specific combinations remain physical acceptance checks.
 When the keyboard occupies the USB port, use the tablet's Wi-Fi address for SSH.
 
-The 0.2.0 source installer preserves open terminals during an update.
+The installer preserves open terminals during an update.
 Quit and reopen Inkline once to start the new version. The older release stays
 on storage for the existing process and rollback.
