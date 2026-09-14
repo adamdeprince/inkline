@@ -7,6 +7,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import tarfile
+import zipfile
 
 ROOT = Path(__file__).resolve().parent.parent
 CACHE = ROOT / ".cache/utilities"
@@ -208,15 +209,31 @@ export GIT_TEMPLATE_DIR="$utility_debian/usr/share/git-core/templates"
 exec "$utility_debian/usr/bin/git" "$@"''')
     finish(package, ["git"], '"$utility_root/bin/git" --version')
 
-    package = prepare("python3", "3.15.0rc2+20260901")
+    package = prepare("python3", "3.15.0rc2+20260901.rm2.2")
     tree(CACHE / "python-3.15/python", package / "runtime/python")
-    shutil.copy2(ROOT / "scripts/utilities/python-sitecustomize.py",
-                 package / "runtime/python/lib/python3.15/sitecustomize.py")
+    python_lib = package / "runtime/python/lib"
+    # encodings is imported before sitecustomize. Loading it from the standard
+    # library zip prevents startup itself from creating bytecode, including
+    # when a virtual environment invokes the interpreter without our wrapper.
+    # Store entries uncompressed: encoding initialization must not import zlib.
+    with zipfile.ZipFile(python_lib / "python315.zip", "w", compression=zipfile.ZIP_STORED) as startup:
+        for source in sorted((python_lib / "python3.15/encodings").glob("*.py")):
+            text = source.read_text()
+            if source.name == "__init__.py":
+                text = "import sys\nsys.dont_write_bytecode = True\n" + text
+            startup.writestr("encodings/" + source.name, text)
+        startup.write(ROOT / "scripts/utilities/python-sitecustomize.py", "sitecustomize.py")
+    ensurepip = python_lib / "python3.15/ensurepip/__init__.py"
+    text = ensurepip.read_text()
+    original = "if sys.implementation.cache_tag is None:"
+    if text.count(original) != 1:
+        raise RuntimeError("Review ensurepip's bytecode policy for this Python release.")
+    ensurepip.write_text(text.replace(original, "if sys.implementation.cache_tag is None or sys.dont_write_bytecode:"))
     tree(CACHE / "python-full-metadata/python/licenses", package / "licenses/python")
     shutil.copy2(CACHE / "python-full-metadata/python/PYTHON.json", package / "licenses/python/PYTHON.json")
     for command in ("python3", "python3.15", "pip3", "pip3.15"):
         argument = " -m pip" if command.startswith("pip") else ""
-        wrapper(package, command, 'export TERMINFO_DIRS="$utility_root/runtime/python/share/terminfo:/etc/terminfo:/usr/share/terminfo"\nexec "$utility_root/runtime/python/bin/python3.15"' + argument + ' "$@"')
+        wrapper(package, command, 'export PYTHONDONTWRITEBYTECODE=1 PIP_COMPILE=0\nexport TERMINFO_DIRS="$utility_root/runtime/python/share/terminfo:/etc/terminfo:/usr/share/terminfo"\nexec "$utility_root/runtime/python/bin/python3.15"' + argument + ' "$@"')
     finish(package, ["python3", "python3.15", "pip3", "pip3.15"], '''"$utility_root/bin/python3.15" -c 'import sys, ssl, sqlite3, ctypes, readline, decimal, zlib, bz2, lzma, venv, pip; assert sys.version_info[:2] == (3, 15); assert ssl.create_default_context().cert_store_stats()["x509_ca"] > 0; print(sys.version)' ''')
     package = prepare("texlive", "2026+20260913.rm2.1", "texlive")
     tree(CACHE / "texlive-installer/install-tl-20260913", package / "runtime/texlive-installer")
@@ -243,12 +260,20 @@ exec "$texlive_prefix/bin/armhf-linux/{command}" "$@"''')
     print("Staged eight utility packages. Run device checks before creating release archives.")
 
 
-def archive():
-    DIST.mkdir(parents=True, exist_ok=True)
-    for package in sorted(STAGE.iterdir()):
+def archive(names=None, release="2026-09-13"):
+    import re
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}(?:\.\d+)?", release):
+        raise SystemExit("Use a release directory such as 2026-09-13.1.")
+    output_dir = DIST.parent / release
+    packages = [STAGE / name for name in names] if names else sorted(STAGE.iterdir())
+    for package in packages:
         if not (package / "SHA256SUMS").is_file():
-            continue
-        destination = DIST / f"{package.name}-rm2.tar.gz"
+            raise SystemExit(f"Package has not been staged: {package.name}")
+        if (output_dir / f"{package.name}-rm2.tar.gz").exists():
+            raise SystemExit(f"{package.name} already exists in {release}; choose a new --release.")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    for package in packages:
+        destination = output_dir / f"{package.name}-rm2.tar.gz"
         def normalized(member):
             member.uid = member.gid = 0
             member.uname = member.gname = "root"
@@ -262,8 +287,12 @@ def archive():
 
 
 if __name__ == "__main__":
-    import sys
-    if sys.argv[1:] == ["--archive"]:
-        archive()
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--archive", nargs="*", choices=["goblin-mosh", "mosh", "emacs", "goblin-view", "goblin-purrfect", "git", "python3", "texlive"], help="Archive all staged packages, or only the names listed.")
+    parser.add_argument("--release", default="2026-09-13", help="New versioned output directory; existing archives are never replaced.")
+    args = parser.parse_args()
+    if args.archive is not None:
+        archive(args.archive, args.release)
     else:
         build()

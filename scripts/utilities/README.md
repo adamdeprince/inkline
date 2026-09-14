@@ -21,8 +21,11 @@ the September 13, 2026 preview release.
 | Python | CPython 3.15.0rc2, Astral ARM build `20260901` |
 | TeX Live | Official 2026 network installer with private Perl |
 
-The seven program bundles are published. The compact TeX installer remains in
-validation until installation and Purrfect PDF export pass on the tablet.
+The seven program bundles and compact TeX installation have been exercised on
+the tablet. Purrfect successfully exported a PDF using the compact installation.
+The Python bytecode policy revision is staged separately from the published
+Python bundle. Its native startup/venv/pip checks pass; the final ARM rerun and
+installation are pending restored tablet SSH access.
 
 `inputs.lock.json` pins source archives, the matching protobuf compiler,
 WebP, Python, and the TeX installer. `debian.lock.json` records exact Debian
@@ -72,7 +75,16 @@ and repeat the device compatibility checks before publishing new artifacts.
   Poppler and Aspell are optional external dependencies, not bundled here.
 - Emacs paths and its portable dump point into the bundle. Deferred native
   compilation is disabled by the launcher.
-- Python retains the complete standard library and pip. Common terminfo
+- Python retains the complete standard library and pip. Automatic bytecode
+  cache writes are disabled, and pip defaults to `--no-compile`. A small
+  uncompressed standard-library zip loads `encodings` with bytecode writes
+  disabled before startup imports can create caches; `sitecustomize` applies
+  the same policy to later imports and child processes. This also covers
+  virtual environments that invoke the interpreter directly. The bundled
+  `ensurepip` also honors this setting when bootstrapping pip. Run
+  `scripts/utilities/test-python-bytecode.sh /path/to/python3-bundle` on the
+  tablet to check startup, imports, virtual environments, and a local pip wheel
+  installation for newly created bytecode caches. Common terminfo
   descriptions replace case-only aliases that cannot be extracted reliably
   on a default macOS filesystem. `python-sitecustomize.py` selects the stock
   certificate bundle unless explicit certificate settings already exist;
@@ -109,7 +121,9 @@ The device validation covered:
 - Python native modules, trust roots, SQLite, ctypes, venv, and pip, including
   certificate lookup from a new virtual environment.
 - TeX installer architecture/storage preflight, LuaTeX 1.24.0, and kpathsea
-  6.4.2. The full collection was not installed on the tablet.
+  6.4.2, compact installation, and Purrfect PDF export. The installed TeX tree
+  occupies about 188 MiB, plus its private installer/runtime. The full collection
+  was not installed on the tablet.
 - GoblinView installation, repeated installation, command resolution, and
   removal, with the existing Inkline session remaining active.
 
@@ -120,6 +134,13 @@ python3 scripts/package-utilities.py --archive
 ```
 
 Outputs go to `build/dist/utilities/2026-09-13`, with adjacent SHA-256 files.
+For a later revision of selected packages, use a new release directory:
+
+```sh
+python3 scripts/package-utilities.py --archive python3 --release 2026-09-14
+```
+
+The archiver refuses to replace an existing artifact.
 Publish matching source archives and license information alongside binaries.
 Keep published versioned artifacts immutable; choose a new release directory
 for subsequent changes. Website sources and local deployment notes are
