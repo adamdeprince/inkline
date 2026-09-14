@@ -179,9 +179,15 @@ python3 scripts/package-tailscale.py --archive --release 2026-09-14.1
 Packaging needs Python 3.12+, curl, and Go for reading binary metadata and
 retrieving dependency sources. `--offline` validates and uses cached inputs,
 failing instead of accessing the network. No SDK is needed. The tablet needs
-only the finished archive, not these tools. See the bundled
-[tailscale/README.txt](tailscale/README.txt) for installation, sign-in, SSH/Git,
-service control, storage policy, and removal instructions.
+only the finished archive, not these tools. The
+[Tailscale walkthrough](tailscale/README.txt) covers installation on both
+devices, opening the tablet's sign-in link in another browser, preparing and
+authorizing a Dropbear SSH key, connecting over SSH, and saving the SSH helper
+in each Git repository. It also explains direct GitHub access, troubleshooting,
+service control, storage policy, and removal. The
+[published installation guide](https://inkline.goblinreactor.com/install.html#tailscale)
+and [current text guide](https://inkline.goblinreactor.com/docs/tailscale.txt)
+include documentation updates made after the original binary bundle.
 
 The installer starts `inkline-tailscale.service` and enables it at boot.
 SOCKS5/HTTP listen only on `127.0.0.1:1055`; the daemon uses
