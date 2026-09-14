@@ -97,7 +97,7 @@ TMPDIR="$scratch" "$utility_root/bin/perl" "$installer" \
 test -x "$prefix/bin/armhf-linux/luatex"
 if [ "$full" = 0 ]; then
     PATH="$prefix/bin/armhf-linux:$PATH" TMPDIR="$scratch" \
-        "$utility_root/bin/perl" "$prefix/texmf-dist/scripts/texlive/tlmgr.pl" install \
+        "$utility_root/bin/perl" "$prefix/bin/armhf-linux/tlmgr" install \
         collection-luatex amsmath amsfonts xcolor graphics ulem fontspec ragged2e \
         setspace tabto-ltx fancyhdr endnotes tools geometry lm latexmk
 fi
