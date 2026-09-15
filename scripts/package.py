@@ -32,6 +32,21 @@ def repository_files():
     return files, directories
 
 
+def copy_repository_tree(name, destination, tracked_files):
+    source = ROOT / name
+    if tracked_files is None:
+        shutil.copytree(source, destination)
+        return
+    destination.mkdir()
+    for relative in sorted(path for path in tracked_files if path.parts and path.parts[0] == name):
+        path = ROOT / relative
+        if not path.is_file():
+            continue
+        output = destination / relative.relative_to(name)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(path, output)
+
+
 def main():
     binary = ROOT / "build/tablet/inkline"
     if not binary.is_file() or binary.read_bytes()[:20] != bytes.fromhex("7f454c4601010100000000000000000002002800"):
@@ -45,12 +60,12 @@ def main():
         stage.mkdir()
         shutil.copy2(binary, stage / "inkline")
         shutil.copy2(ROOT / "build/tablet/inkline-hotkey", stage / "inkline-hotkey")
-        shutil.copytree(ROOT / "assets", stage / "assets")
+        copy_repository_tree("assets", stage / "assets", tracked_files)
         for name in ["install-device.sh", "uninstall-device.sh", "run-session.sh", "inkline-launcher", "inkline.service", "inkline-hotkey.service"]:
             shutil.copy2(ROOT / "scripts" / name, stage / name)
         for name in ["README.md", "LICENSE", "THIRD_PARTY.md"]:
             shutil.copy2(ROOT / name, stage / name)
-        shutil.copytree(ROOT / "docs", stage / "docs")
+        copy_repository_tree("docs", stage / "docs", tracked_files)
         (stage / "INSTALL.md").write_text((ROOT / "docs/install.md").read_text().replace("(keyboard.md)", "(docs/keyboard.md)"))
         (stage / "manifest.json").write_text(json.dumps({
             "name": "Inkline", "version": version, "maturity": "preview",
