@@ -26,6 +26,8 @@ public:
     bool quit_confirmation_open() const;
     int font_pixels() const;
     int text_darkness() const;
+    int minimum_contrast() const;
+    int update_profile() const;
     int input_method() const;
     QByteArray clipboard_text() const;
 protected:

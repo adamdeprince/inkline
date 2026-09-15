@@ -1,6 +1,6 @@
 # Keyboard and terminal settings
 
-These controls are included in **Inkline 0.3.4**. All nine host and ARM test
+These controls are included in **Inkline 0.3.5**. All nine host and ARM test
 suites pass; physical Folio and USB checks for the new controls are pending.
 
 Each new terminal prints a short shortcut guide with a small Goblin logo and the
@@ -77,7 +77,7 @@ works throughout the panel.
   available while it is hidden.
 
 Keyboard, input-method, font-size, and bottom-bar preferences are stored in
-`~/.config/inkline/settings.ini` and survive restarts. Text darkness stays in RAM.
+`~/.config/inkline/settings.ini` and survive restarts. Display tuning stays in RAM.
 Font changes are saved after the pinch ends, or 700 ms after a Settings adjustment.
 Only a changed preference writes this file; typing, graphics and switching
 terminals do not save it. Ordinary Caps Lock's on/off state starts off each time.
@@ -169,7 +169,31 @@ The installer preserves open terminals during an update.
 Quit and reopen Inkline once to start the new version. The older release stays
 on storage for the existing process and rollback.
 
-## Text darkness
+## E-paper updates
+
+The **E-paper updates** row changes both output batching and the stock firmware
+waveform used for Inkline's full-screen region:
+
+| Profile | Firmware mode | Behavior |
+| --- | --- | --- |
+| Fast (default) | Animation | Immediate interactive redraws and 16 ms output batching. Lowest delay, with more visible ghosting. |
+| Balanced | UI | Clear UI updates, 4 ms interactive delay and 32 ms output batching. |
+| Crisp | Content | The cleanest grayscale waveform, with 12 ms interactive delay and 60 ms batching. Physical updates take longer. |
+| Mono | Mono | Fast black-and-white text with 24 ms output batching. Graphics lose their gray shades. |
+| Saver | UI | 40 ms interactive delay and 120 ms batching, requesting fewer updates during bursts. |
+
+The setting applies to the whole Inkline window and all six terminals. It stays
+in RAM and returns to Fast when Inkline closes. Fast or Balanced suits typing;
+Crisp suits static graphics and dense pages; Saver suits long command output
+when immediate feedback matters less.
+
+Inkline also keeps one grayscale surface per open terminal. Libghostty marks
+changed rows, so typing redraws those rows directly instead of rebuilding and
+comparing the whole screen. On the reMarkable 2 test device, a dirty text-row
+render averaged about 0.37 ms while a dense full 1840 × 1280 render averaged
+about 554 ms. The physical e-paper update follows that application render.
+
+## Text darkness and minimum contrast
 
 In Settings (right Alt/Option+Space), drag **Text darkness** with a finger, pen
 or mouse. Keyboard users can focus the slider with Tab or Up/Down and adjust
@@ -177,7 +201,12 @@ with Left/Right; Home/End selects the endpoints. 50% preserves the original
 rendering. Normal text is already black; higher values darken its smoothed
 edges without changing glyph positions, graphics, backgrounds, or app colors.
 
-The surrounding terminal previews the change. The value stays in RAM when you
-lift your finger, close Settings, or switch terminals. It never writes a
-contrast preference to flash and resets to 50% when Inkline closes. Other
-existing saved preferences retain their behavior.
+**Minimum contrast** prevents terminal foreground and background luminance from
+being too close. 0% disables the floor; higher values move only the text color
+toward black or white until the requested gap is reached. Backgrounds and
+graphics are unchanged.
+
+The surrounding terminal previews both changes. The values stay in RAM when
+you lift your finger, close Settings, or switch terminals. They never write a
+contrast preference to flash. Closing Inkline resets text darkness to 50% and
+minimum contrast to 35%. Other existing saved preferences retain their behavior.

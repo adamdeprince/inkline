@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import re
 import shutil
+import subprocess
 import tarfile
 import tempfile
 
@@ -16,6 +17,21 @@ def digest(path):
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
+def repository_files():
+    """Return tracked paths so local drafts and build debris never enter a release."""
+    try:
+        output = subprocess.check_output(
+            ["git", "-C", str(ROOT), "ls-files", "-z"], stderr=subprocess.DEVNULL
+        )
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        return None, None
+    files = {Path(value.decode()) for value in output.split(b"\0") if value}
+    directories = {Path(".")}
+    for path in files:
+        directories.update(path.parents)
+    return files, directories
+
+
 def main():
     binary = ROOT / "build/tablet/inkline"
     if not binary.is_file() or binary.read_bytes()[:20] != bytes.fromhex("7f454c4601010100000000000000000002002800"):
@@ -23,6 +39,7 @@ def main():
     version = re.search(r"project\(inkline VERSION ([0-9.]+)", (ROOT / "CMakeLists.txt").read_text())[1]
     dist = ROOT / "build/dist"
     dist.mkdir(parents=True, exist_ok=True)
+    tracked_files, tracked_directories = repository_files()
     with tempfile.TemporaryDirectory(prefix=".package-", dir=dist) as temp:
         stage = Path(temp) / "inkline"
         stage.mkdir()
@@ -45,6 +62,10 @@ def main():
                 def source_filter(info):
                     if "__pycache__" in info.name or info.name.endswith(".pyc"):
                         return None
+                    if tracked_files is not None:
+                        relative = Path(info.name).relative_to("inkline-source")
+                        if relative not in tracked_files and relative not in tracked_directories:
+                            return None
                     return info
                 source.add(ROOT / name, arcname="inkline-source/" + name, filter=source_filter)
         (stage / "licenses").mkdir()

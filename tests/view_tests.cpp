@@ -45,35 +45,42 @@ int main(int argc, char **argv) {
     QTemporaryDir temporary; CHECK(temporary.isValid());
     const auto settings = temporary.filePath("settings.ini");
     {
-        // Darkness stays in RAM through finger lifts, Settings exit and shutdown.
+        // Darkness and minimum contrast stay in RAM through finger lifts,
+        // Settings exit and shutdown.
         const auto path = temporary.filePath("darkness.ini");
         QQuickWindow window; window.resize(1000, 750);
         rmt::TerminalView view(window.contentItem(), 24, true, path);
         view.setSize(QSizeF(1000, 750)); view.layout(); view.start(); view.settings();
-        CHECK(view.text_darkness() == 50);
+        CHECK(view.text_darkness() == 50 && view.minimum_contrast() == 35 && view.update_profile() == 0);
         for (int n = 0; n < 4; ++n) press(view, Qt::Key_Tab);
-        press(view, Qt::Key_Right); CHECK(view.text_darkness() == 55);
+        press(view, Qt::Key_Right); CHECK(view.update_profile() == 1);
+        press(view, Qt::Key_Tab); press(view, Qt::Key_Right); CHECK(view.text_darkness() == 55);
+        press(view, Qt::Key_Tab); press(view, Qt::Key_Right);
+        CHECK(view.minimum_contrast() == 40);
         pump(800); CHECK(!QFile::exists(path));
         using S = QEventPoint::State;
         for (int rotation : {0, 90, 270}) {
             view.setRotation(rotation);
-            touch(view, QEvent::TouchBegin, {point(view, 1, S::Pressed, 202, 522)});
-            touch(view, QEvent::TouchUpdate, {point(view, 1, S::Updated, 798, 522)});
+            touch(view, QEvent::TouchBegin, {point(view, 1, S::Pressed, 202, 530)});
+            touch(view, QEvent::TouchUpdate, {point(view, 1, S::Updated, 798, 530)});
             CHECK(view.text_darkness() == 100);
             pump(800); CHECK(!QFile::exists(path));
             touch(view, QEvent::TouchCancel, {});
             CHECK(view.text_darkness() == 55);
         }
         view.setRotation(0);
-        touch(view, QEvent::TouchBegin, {point(view, 1, S::Pressed, 202, 522)});
-        touch(view, QEvent::TouchEnd, {point(view, 1, S::Released, 798, 522)});
+        touch(view, QEvent::TouchBegin, {point(view, 1, S::Pressed, 202, 530)});
+        touch(view, QEvent::TouchEnd, {point(view, 1, S::Released, 798, 530)});
         CHECK(view.text_darkness() == 100 && !QFile::exists(path));
+        touch(view, QEvent::TouchBegin, {point(view, 1, S::Pressed, 202, 610)});
+        touch(view, QEvent::TouchEnd, {point(view, 1, S::Released, 798, 610)});
+        CHECK(view.minimum_contrast() == 100 && !QFile::exists(path));
         view.settings(); view.select_terminal(1);
-        CHECK(view.text_darkness() == 100 && view.terminal_count() == 2);
-        view.settings(); CHECK(view.text_darkness() == 100);
+        CHECK(view.text_darkness() == 100 && view.minimum_contrast() == 100 && view.update_profile() == 1 && view.terminal_count() == 2);
+        view.settings(); CHECK(view.text_darkness() == 100 && view.minimum_contrast() == 100 && view.update_profile() == 1);
         press(view, Qt::Key_Escape); pump(800); CHECK(!QFile::exists(path));
         rmt::TerminalView restored(window.contentItem(), 0, true, path);
-        CHECK(restored.text_darkness() == 50);
+        CHECK(restored.text_darkness() == 50 && restored.minimum_contrast() == 35 && restored.update_profile() == 0);
     }
     CHECK(!QFile::exists(temporary.filePath("darkness.ini")));
     {

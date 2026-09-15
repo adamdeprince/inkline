@@ -2,6 +2,7 @@
 #include "rmt/renderer.hpp"
 #include "rmt/stream.hpp"
 #include <QGuiApplication>
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #define CHECK(c) do { if (!(c)) { std::fprintf(stderr, "%s:%d: %s\n", __FILE__, __LINE__, #c); std::exit(1); } } while (0)
@@ -18,9 +19,14 @@ int main(int argc, char **argv) {
         rmt::Stream stream(*core, [&](rmt::sixel::Bitmap &&bitmap) { renderer.sixel(std::move(bitmap)); });
         stream.set_control_handler([&](std::string_view control) { if (control == "\033[2J") renderer.clear_sixel(); });
         stream.write("\033[?25l");
+        const QRect initial_dirty = renderer.render();
+        CHECK(initial_dirty == renderer.image().rect());
+        CHECK(renderer.render().isEmpty());
         const QImage empty = renderer.frame();
         stream.write("Inkline \033[1mBOLD\033[0m\r\n");
-        CHECK(renderer.frame() != empty);
+        const QRect text_dirty = renderer.render();
+        CHECK(!text_dirty.isEmpty() && text_dirty.height() <= 2 * renderer.cell_height());
+        CHECK(renderer.image() != empty);
         const auto normal = renderer.frame();
         const auto cols = renderer.cols(), rows = renderer.rows();
         renderer.set_text_darkness(100); const auto dark = renderer.frame();
@@ -35,6 +41,22 @@ int main(int argc, char **argv) {
         CHECK(darker > 0 && lighter > 0);
         CHECK(renderer.cols() == cols && renderer.rows() == rows);
         renderer.set_text_darkness(50); CHECK(renderer.frame() == normal);
+        // A minimum luminance gap moves only foreground colors that are too
+        // close to their effective cell background.
+        renderer.set_minimum_contrast(0);
+        stream.write("\033[2J\033[H\033[38;2;230;230;230mM\033[0m");
+        const auto low_contrast = renderer.frame();
+        renderer.set_minimum_contrast(50);
+        const auto readable = renderer.frame();
+        int low_ink = 255, readable_ink = 255;
+        for (int y = 0; y < renderer.cell_height(); ++y)
+            for (int x = 0; x < renderer.cell_width(); ++x) {
+                low_ink = std::min(low_ink, qGray(low_contrast.pixel(x, y)));
+                readable_ink = std::min(readable_ink, qGray(readable.pixel(x, y)));
+            }
+        CHECK(low_ink >= 220);
+        CHECK(readable_ink <= 140);
+        renderer.set_minimum_contrast(35);
         stream.write("\033[2J\033[H\033_Ga=T,f=32,s=1,v=1,c=4,r=3,i=1,C=1;AAAA/w==\033\\");
         const QImage kitty = renderer.frame();
         CHECK(qGray(kitty.pixel(2, 2)) == 0);

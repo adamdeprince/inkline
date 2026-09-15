@@ -33,7 +33,9 @@ Renderer::Renderer(RmtCore &core, int pixels, size_t sixel_budget) : core_(core)
     }
 }
 Renderer::~Renderer() {
-    clear_sixel();
+    // Destruction must not invalidate a render state that is about to be
+    // released (or allow an error-returning C API to escape a destructor).
+    while (!sixels_.empty()) drop_sixel(sixels_.begin());
     ghostty_kitty_graphics_placement_iterator_free(placements_);
     ghostty_render_state_row_cells_free(cells_);
     ghostty_render_state_row_iterator_free(row_);
@@ -45,25 +47,60 @@ void Renderer::set_font_size(int pixels) {
     cw_ = metrics.horizontalAdvance('M');
     ch_ = metrics.height() + 2;
     ascent_ = metrics.ascent() + 1;
+    surface_ = {};
+    if (render_) invalidate();
 }
 void Renderer::set_text_darkness(int value) {
-    darkness_ = std::clamp(value, 0, 100);
+    value = std::clamp(value, 0, 100);
+    if (darkness_ == value) return;
+    darkness_ = value;
     const double exponent = std::pow(2.5, (50 - darkness_) / 50.0);
     for (size_t a = 0; a < coverage_.size(); ++a)
         coverage_[a] = uchar(std::lround(255 * std::pow(a / 255.0, exponent)));
+    invalidate();
+}
+void Renderer::set_minimum_contrast(int value) {
+    value = std::clamp(value, 0, 100);
+    if (minimum_contrast_ == value) return;
+    minimum_contrast_ = value;
+    invalidate();
+}
+QColor Renderer::text_color(GhosttyColorRgb foreground, GhosttyColorRgb background) const {
+    int fg = qGray(foreground.r, foreground.g, foreground.b);
+    const int bg = qGray(background.r, background.g, background.b);
+    const int minimum = int(std::lround(255 * minimum_contrast_ / 100.0));
+    if (std::abs(fg - bg) < minimum) {
+        const int darker = bg - minimum;
+        const int lighter = bg + minimum;
+        if (darker < 0) fg = std::min(255, lighter);
+        else if (lighter > 255) fg = std::max(0, darker);
+        else fg = std::abs(fg - darker) <= std::abs(lighter - fg) ? darker : lighter;
+    }
+    return QColor(fg, fg, fg);
 }
 void Renderer::resize(int width, int height) {
     cols_ = uint16_t(std::clamp(width / cw_, 2, 512));
     rows_ = uint16_t(std::clamp(height / ch_, 2, 256));
     check(ghostty_terminal_resize(terminal_, cols_, rows_, cw_, ch_));
     rmt_core_maintain(&core_, false);
+    surface_ = {};
+    invalidate();
+}
+void Renderer::invalidate() {
+    if (!render_) return;
+    const auto dirty = GHOSTTY_RENDER_STATE_DIRTY_FULL;
+    check(ghostty_render_state_set(render_, GHOSTTY_RENDER_STATE_OPTION_DIRTY, &dirty));
 }
 void Renderer::drop_sixel(std::deque<Overlay>::iterator it) {
     sixel_bytes_ -= size_t(it->image.sizeInBytes());
     ghostty_tracked_grid_ref_free(it->anchor);
     sixels_.erase(it);
 }
-void Renderer::clear_sixel() { while (!sixels_.empty()) drop_sixel(sixels_.begin()); }
+void Renderer::clear_sixel() {
+    if (sixels_.empty()) return;
+    while (!sixels_.empty()) drop_sixel(sixels_.begin());
+    invalidate();
+}
 bool Renderer::visible(const Overlay &overlay) const {
     GhosttyTerminalScreen screen{};
     GhosttyTerminalScrollbar scrollbar{};
@@ -112,6 +149,7 @@ void Renderer::sixel(sixel::Bitmap &&bitmap) {
     ghostty_terminal_get(terminal_, GHOSTTY_TERMINAL_DATA_ACTIVE_SCREEN, &screen);
     sixels_.push_back({std::move(image), anchor, screen});
     sixel_bytes_ += bytes;
+    invalidate();
     // Leave the cursor on the row below the image, scrolling normally.
     const std::string advance(size_t((bitmap.height + ch_ - 1) / ch_), '\n');
     ghostty_terminal_vt_write(terminal_, reinterpret_cast<const uint8_t *>(advance.data()), advance.size());
@@ -127,8 +165,9 @@ void Renderer::cells(QPainter &p, const GhosttyRenderStateColors &colors, bool b
         ink = QImage(cols_ * cw_, ch_, QImage::Format_ARGB32);
         if (ink.isNull()) throw std::bad_alloc();
     }
-    int y = 0;
-    while (ghostty_render_state_row_iterator_next(row_)) {
+    uint16_t row_y = 0;
+    while (ghostty_render_state_row_iterator_next_dirty(row_, &row_y)) {
+        const int y = row_y;
         QPainter row_painter;
         if (!ink.isNull()) {
             ink.fill(Qt::transparent);
@@ -160,7 +199,10 @@ void Renderer::cells(QPainter &p, const GhosttyRenderStateColors &colors, bool b
                     QFont f = font_; f.setBold(style.bold); f.setItalic(style.italic);
                     f.setUnderline(style.underline != 0); f.setStrikeOut(style.strikethrough); f.setOverline(style.overline);
                     text_painter.setFont(f);
-                    QColor color = gray(fg); if (style.faint) color.setAlpha(150);
+                    QColor color = text_color(fg, bg);
+                    // Minimum contrast is an accessibility floor. Once it is
+                    // enabled, a faint attribute cannot lower the pair below it.
+                    if (style.faint && minimum_contrast_ == 0) color.setAlpha(150);
                     text_painter.setPen(color);
                     text_painter.save();
                     text_painter.setClipRect(QRect(rect.x(), rect.y(), cw_ * (wide == GHOSTTY_CELL_WIDE_WIDE ? 2 : 1), ch_));
@@ -181,7 +223,6 @@ void Renderer::cells(QPainter &p, const GhosttyRenderStateColors &colors, bool b
             }
             p.drawImage(0, y * ch_, ink);
         }
-        ++y;
     }
 }
 void Renderer::kitty(QPainter &p, GhosttyKittyPlacementLayer layer) {
@@ -221,15 +262,35 @@ void Renderer::kitty(QPainter &p, GhosttyKittyPlacementLayer layer) {
                     QRectF(info.source_x, info.source_y, info.source_width, info.source_height));
     }
 }
-QImage Renderer::frame() {
+QRect Renderer::render() {
     reclaim(false);
     check(ghostty_render_state_update(render_, terminal_));
+    GhosttyRenderStateDirty dirty = GHOSTTY_RENDER_STATE_DIRTY_FALSE;
+    check(ghostty_render_state_get(render_, GHOSTTY_RENDER_STATE_DATA_DIRTY, &dirty));
+    const QSize size(cols_ * cw_, rows_ * ch_);
+    if (surface_.size() != size || surface_.format() != QImage::Format_Grayscale8) {
+        surface_ = QImage(size, QImage::Format_Grayscale8);
+        if (surface_.isNull()) throw std::bad_alloc();
+        dirty = GHOSTTY_RENDER_STATE_DIRTY_FULL;
+        check(ghostty_render_state_set(render_, GHOSTTY_RENDER_STATE_OPTION_DIRTY, &dirty));
+    }
+    if (dirty == GHOSTTY_RENDER_STATE_DIRTY_FALSE) return {};
+
+    check(ghostty_render_state_get(render_, GHOSTTY_RENDER_STATE_DATA_ROW_ITERATOR, &row_));
+    QRegion changed;
+    uint16_t row_y = 0;
+    while (ghostty_render_state_row_iterator_next_dirty(row_, &row_y))
+        changed += QRect(0, row_y * ch_, surface_.width(), ch_);
+    // A non-row global change (for example a palette change) must still
+    // repaint safely even if a future libghostty version reports no row bits.
+    if (changed.isEmpty()) changed = surface_.rect();
+
     GhosttyRenderStateColors colors = GHOSTTY_INIT_SIZED(GhosttyRenderStateColors);
     check(ghostty_render_state_get(render_, GHOSTTY_RENDER_STATE_DATA_COLORS, &colors));
-    QImage image(cols_ * cw_, rows_ * ch_, QImage::Format_RGB32);
-    if (image.isNull()) throw std::bad_alloc();
-    image.fill(gray(colors.background));
-    QPainter p(&image);
+    QPainter p(&surface_);
+    if (!p.isActive()) throw std::runtime_error("Terminal display surface is not paintable");
+    p.setClipRegion(changed);
+    p.fillRect(surface_.rect(), gray(colors.background));
     p.setRenderHint(QPainter::TextAntialiasing);
     kitty(p, GHOSTTY_KITTY_PLACEMENT_LAYER_BELOW_BG);
     cells(p, colors, true);
@@ -249,7 +310,7 @@ QImage Renderer::frame() {
         GhosttyPointCoordinate pos{};
         if (screen == it->screen && ghostty_tracked_grid_ref_point(it->anchor, GHOSTTY_POINT_TAG_SCREEN, &pos) == GHOSTTY_SUCCESS) {
             const int64_t y = (int64_t(pos.y) - int64_t(scrollbar.offset)) * ch_;
-            if (y < image.height() && y + it->image.height() > 0) p.drawImage(QPoint(pos.x * cw_, int(y)), it->image);
+            if (y < surface_.height() && y + it->image.height() > 0) p.drawImage(QPoint(pos.x * cw_, int(y)), it->image);
         }
         ++it;
     }
@@ -258,23 +319,24 @@ QImage Renderer::frame() {
     // Invert after graphics so even cells under an image remain visible.
     check(ghostty_render_state_get(render_, GHOSTTY_RENDER_STATE_DATA_ROW_ITERATOR, &row_));
     p.save(); p.setCompositionMode(QPainter::CompositionMode_Difference);
-    int selection_y = 0;
-    while (ghostty_render_state_row_iterator_next(row_)) {
+    while (ghostty_render_state_row_iterator_next_dirty(row_, &row_y)) {
         auto range = GHOSTTY_INIT_SIZED(GhosttyRenderStateRowSelection);
         if (ghostty_render_state_row_get(row_, GHOSTTY_RENDER_STATE_ROW_DATA_SELECTION, &range) == GHOSTTY_SUCCESS)
-            p.fillRect(QRect(range.start_x * cw_, selection_y * ch_, (range.end_x - range.start_x + 1) * cw_, ch_), Qt::white);
-        ++selection_y;
+            p.fillRect(QRect(range.start_x * cw_, row_y * ch_, (range.end_x - range.start_x + 1) * cw_, ch_), Qt::white);
     }
     p.restore();
     GhosttyRenderStateCursor cursor = GHOSTTY_INIT_SIZED(GhosttyRenderStateCursor);
     ghostty_render_state_get(render_, GHOSTTY_RENDER_STATE_DATA_CURSOR, &cursor);
     if (cursor.viewport_has_value && cursor.visible) {
-        p.setPen(QPen(gray(colors.foreground), 2));
+        p.setPen(QPen(text_color(colors.foreground, colors.background), 2));
         p.drawRect(QRect(cursor.viewport_x * cw_ + 1, cursor.viewport_y * ch_ + 1, cw_ - 2, ch_ - 2));
     }
     p.end();
     ghostty_render_state_clean(render_);
-    // The retained display surface is grayscale, independent of color traffic.
-    return image.convertToFormat(QImage::Format_Grayscale8);
+    return changed.boundingRect();
+}
+QImage Renderer::frame() {
+    render();
+    return surface_;
 }
 }

@@ -29,7 +29,7 @@ a convenience in the development setup, not an installer requirement.
 
 On your computer, download `inkline-rm2.tar.gz` and
 `inkline-rm2.tar.gz.sha256` from the
-[0.3.4 preview release](https://github.com/adamdeprince/inkline/releases/tag/v0.3.4).
+[0.3.5 preview release](https://github.com/adamdeprince/inkline/releases/tag/v0.3.5).
 Use the attached Inkline bundle; GitHub's automatically generated source-code
 archives do not contain the compiled application. The bundle is about 79 MiB
 and includes the installer, uninstall script, source archives and licenses.
@@ -39,12 +39,12 @@ additional tablet package manager.
 Alternatively, download both files from a terminal on your computer:
 
 ```sh
-curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.3.4/inkline-rm2.tar.gz
-curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.3.4/inkline-rm2.tar.gz.sha256
+curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.3.5/inkline-rm2.tar.gz
+curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.3.5/inkline-rm2.tar.gz.sha256
 ```
 
 The same files are mirrored under
-[`inkline.goblinreactor.com/downloads/v0.3.4/`](https://inkline.goblinreactor.com/downloads/v0.3.4/inkline-rm2.tar.gz).
+[`inkline.goblinreactor.com/downloads/v0.3.5/`](https://inkline.goblinreactor.com/downloads/v0.3.5/inkline-rm2.tar.gz).
 To compile the application yourself, see [building from source](#building-from-source).
 
 ## 3. Check, then install
@@ -144,7 +144,7 @@ Useful controls:
 - Option+Space also selects Asian input methods; Option+C/V uses the RAM clipboard.
 - `~/inkline stop` restores notebooks from another SSH session.
 
-Inkline 0.3.4 includes right Alt/Option shortcuts, six terminal slots,
+Inkline 0.3.5 includes right Alt/Option shortcuts, six terminal slots,
 quit confirmation, a Settings button, and a saved Caps Lock/Control toggle.
 Each new terminal shows a brief guide and a tiny Goblin logo.
 Inkline sets `HOME=/home/root` for tablet sessions, including shells opened by
@@ -156,13 +156,24 @@ loaded only into `/run` restores it on normal exit and process failure. The
 terminal survives the SSH connection closing. A separate shortcut service is enabled at boot. Rebooting starts the usual
 notebook interface with the shortcut available in the background.
 
-### Text darkness and shell preferences
+### Display response, contrast, and shell preferences
 
 Open Settings with right Alt/Option+Space and drag **Text darkness**, or focus
 it with Tab and use Left/Right. 50% is the original rendering; darker values
 strengthen antialiased letter edges. Text colors and graphics retain their
-original values. The contrast value stays in RAM across all six terminals and
-Settings visits. No contrast changes write to flash. Closing Inkline resets it.
+original values. **Minimum contrast** keeps foreground and background luminance
+apart when a terminal program chooses hard-to-read colors.
+
+The **E-paper updates** row offers five tradeoffs. Fast is the default and uses
+the firmware's low-latency animation mode. Balanced uses its normal UI mode,
+Crisp uses the higher-quality content mode, Mono favors black-and-white text,
+and Saver batches command output for 120 ms so bursts request fewer screen updates. Text darkness, minimum
+contrast, and update profile stay in RAM across all six terminals and Settings
+visits. Changing them does not write to flash; closing Inkline resets them.
+
+Normal typing redraws only libghostty's dirty rows on a retained grayscale
+surface. This avoids the previous full-screen raster and comparison on every
+character; e-paper waveform time remains and depends on the chosen profile.
 
 Inkline starts interactive Bash so the tablet's `~/.bashrc` is loaded. Optional
 Python/pip cache preferences belong in that file; see [Python setup](python.md).

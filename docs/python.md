@@ -14,7 +14,7 @@ export PYTHONDONTWRITEBYTECODE=1
 export PIP_NO_CACHE_DIR=1
 ```
 
-Apply them to the current Bash shell with `source ~/.bashrc`. Inkline 0.3.4
+Apply them to the current Bash shell with `source ~/.bashrc`. Inkline 0.3.5
 starts interactive `/bin/bash`, which reads that file for each new terminal.
 After updating Inkline, quit and reopen it to use the new shell launcher.
 Existing shells and Python processes keep their existing environments.

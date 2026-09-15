@@ -1,6 +1,7 @@
 .DS_Store
 /.cache/
 /build/
+/.venv-qt/
 /html/
 /toolchains/installed/
 /device-info*.txt

@@ -19,6 +19,9 @@ public:
     void resize(int width, int height);
     void set_font_size(int pixels);
     void set_text_darkness(int value);
+    void set_minimum_contrast(int value);
+    QRect render();
+    const QImage &image() const { return surface_; }
     QImage frame();
     void sixel(sixel::Bitmap &&bitmap);
     void clear_sixel();
@@ -38,13 +41,17 @@ private:
     GhosttyKittyGraphicsPlacementIterator placements_ = nullptr;
     QFont font_;
     int darkness_ = 50;
+    int minimum_contrast_ = 35;
     std::array<uchar, 256> coverage_{};
     int cw_, ch_, ascent_;
     uint16_t cols_ = 80, rows_ = 24;
+    QImage surface_;
     std::deque<Overlay> sixels_;
     size_t sixel_bytes_ = 0;
     size_t sixel_budget_;
     void cells(QPainter &p, const GhosttyRenderStateColors &colors, bool backgrounds);
+    void invalidate();
+    QColor text_color(GhosttyColorRgb foreground, GhosttyColorRgb background) const;
     void kitty(QPainter &p, GhosttyKittyPlacementLayer layer);
     void drop_sixel(std::deque<Overlay>::iterator it);
     bool visible(const Overlay &overlay) const;

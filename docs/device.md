@@ -140,3 +140,20 @@ All nine host and ARM suites pass, including a real shell receiving literal
 plus and F10 from the captured firmware event shapes. Tests retain Ctrl/Shift/Alt
 function modifiers, key repeat/release and session routing, numeric keypads,
 and ordinary Alt input. Physical Folio and USB layout checks remain.
+
+## Incremental display and waveform controls — September 15
+
+Firmware 3.27.3.0's stock `libqsgepaper.so` exposes an
+`EPScreenModeItem::Mode` enum with Pen, Mono, Animation, UI, Content, and Sleep.
+An ARM probe loaded the installed plugin from `/tmp`, constructed its screen-mode
+item, and successfully selected Animation, UI, and Content. Inkline resolves
+that firmware interface at runtime and falls back to Qt's normal UI mode if it
+is unavailable on a later firmware build.
+
+The renderer now uses libghostty's global and per-row dirty state. A retained
+1840 × 1280 grayscale surface on the tablet averaged 0.374 ms for a dirty text
+row versus 554.340 ms for a dense full redraw. The previous 80 ms application
+timer has also been replaced by profile-specific adaptive batching. All nine ARM
+suites pass, including checks that an unchanged frame performs no drawing and a
+normal text update covers at most two terminal rows. Physical waveform response,
+ghosting, and battery behavior still need interactive observation.
