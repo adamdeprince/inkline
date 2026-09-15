@@ -219,18 +219,7 @@ def build():
 
     build_goblin_purrfect()
 
-    package = prepare("emacs", lock["packages"]["emacs-nox"]["version"], "emacs")
-    dump = next((package / "runtime/debian").rglob("emacs*.pdmp")).relative_to(package / "runtime/debian")
-    lisp = package / "runtime/debian/usr/share/emacs/28.2/lisp"
-    load_path = ":".join("$utility_debian/" + str(p.relative_to(package / "runtime/debian"))
-                         for p in [lisp, *sorted(p for p in lisp.rglob("*") if p.is_dir())])
-    wrapper(package, "emacs", f'''export EMACSDATA="$utility_debian/usr/share/emacs/28.2/etc"
-export EMACSDOC="$utility_debian/usr/share/emacs/28.2/etc"
-export EMACSLOADPATH="{load_path}"
-export EMACSPATH="$utility_debian/usr/libexec/emacs/28.2/arm-linux-gnueabihf"
-export EMACSNATIVELOADPATH="$utility_debian/usr/lib/emacs/28.2/native-lisp"
-exec "$utility_debian/usr/bin/emacs-nox" --dump-file="$utility_debian/{dump}" --no-site-file --eval '(setq native-comp-deferred-compilation nil)' "$@"''')
-    finish(package, ["emacs"], '''"$utility_root/bin/emacs" -Q --batch --eval '(progn (require (quote org)) (require (quote tramp)) (require (quote tex-mode)) (with-temp-buffer (insert "Inkline λ") (unless (= (buffer-size) 9) (error "Unicode failed"))) (princ emacs-version) (terpri))' ''')
+    subprocess.run(["python3", str(ROOT / "scripts/package-emacs.py")], check=True)
 
     package = prepare("git", lock["packages"]["git"]["version"], "git")
     wrapper(package, "git", '''export GIT_EXEC_PATH="$utility_debian/usr/lib/git-core"
@@ -293,13 +282,15 @@ def archive(names=None, release="2026-09-13"):
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--archive", nargs="*", choices=["goblin-mosh", "mosh", "emacs", "goblin-view", "goblin-purrfect", "git", "python3", "texlive"], help="Archive all staged packages, or only the names listed.")
-    parser.add_argument("--only", choices=["python3"], help="Stage only the selected utility.")
+    parser.add_argument("--archive", nargs="*", choices=["goblin-mosh", "mosh", "emacs", "goblin-view", "goblin-purrfect", "git", "python3", "texlive", "ghostty-tex", "tailscale"], help="Archive all staged packages, or only the names listed.")
+    parser.add_argument("--only", choices=["python3", "emacs"], help="Stage only the selected utility.")
     parser.add_argument("--release", default="2026-09-13", help="New versioned output directory; existing archives are never replaced.")
     args = parser.parse_args()
     if args.archive is not None:
         archive(args.archive, args.release)
     elif args.only == "python3":
         build_python()
+    elif args.only == "emacs":
+        subprocess.run(["python3", str(ROOT / "scripts/package-emacs.py")], check=True)
     else:
         build()

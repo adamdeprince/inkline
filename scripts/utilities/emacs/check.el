@@ -1,0 +1,22 @@
+;;; check.el --- Emacs no-X package preflight -*- lexical-binding: t; -*-
+(unless (equal emacs-version "31.1") (error "Expected Emacs 31.1, got %s" emacs-version))
+(dolist (feature '(x ns pgtk cairo native-compile))
+  (when (featurep feature) (error "Unexpected graphical/native compiler feature: %s" feature)))
+(when (and (fboundp 'native-comp-available-p) (native-comp-available-p))
+  (error "Native compilation should be disabled"))
+(require 'org)
+(require 'tramp)
+(require 'tex-mode)
+(unless (gnutls-available-p) (error "GnuTLS unavailable"))
+(unless (treesit-available-p) (error "Tree-sitter unavailable"))
+(unless (sqlite-available-p) (error "SQLite unavailable"))
+(let ((db (sqlite-open)))
+  (unwind-protect
+      (unless (equal (sqlite-select db "select 42") '((42))) (error "SQLite query failed"))
+    (sqlite-close db)))
+(unless (equal (alist-get 'answer (json-parse-string "{\"answer\":42}" :object-type 'alist)) 42)
+  (error "JSON parsing failed"))
+(with-temp-buffer
+  (insert "Inkline λ 日本語")
+  (unless (= (buffer-size) 13) (error "Unicode buffer failed")))
+(princ (format "GNU Emacs %s: terminal-only; Org, TRAMP, TeX, Unicode, TLS, SQLite, JSON and tree-sitter ready.\n" emacs-version))

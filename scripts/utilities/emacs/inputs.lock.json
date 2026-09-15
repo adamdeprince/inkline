@@ -1,0 +1,60 @@
+{
+  "version": "31.1",
+  "release": "2026-09-15.1",
+  "source": {
+    "url": "https://ftp.gnu.org/gnu/emacs/emacs-31.1.tar.xz",
+    "sha256": "1da5790d9580c81932b5bf700633114468da7b3412d69faa767daebf974f4586",
+    "signature_url": "https://ftp.gnu.org/gnu/emacs/emacs-31.1.tar.xz.sig",
+    "signing_key": "9B917007AE030E36E4FC248B695B7AE4BF066240"
+  },
+  "build_headers": [
+    {
+      "url": "https://deb.debian.org/debian/pool/main/g/gnutls28/libgnutls28-dev_3.7.9-2+deb12u7_armhf.deb",
+      "sha256": "8c0f566f864b51f6cff646c09081474c1ec930b01e9ef978ae0d69edfc617f0c"
+    },
+    {
+      "url": "https://deb.debian.org/debian/pool/main/t/tree-sitter/libtree-sitter-dev_0.20.7-1_armhf.deb",
+      "sha256": "a1e6418f93d488d5218e9b879cd54480295278840579b571a8ca29a4c37517fa"
+    }
+  ],
+  "tree_sitter_source": [
+    {
+      "url": "https://deb.debian.org/debian/pool/main/t/tree-sitter/tree-sitter_0.20.7-1.dsc",
+      "sha256": "e20be3f8d552f4f59d9d38a5be597ff4745beef54430fd82cf00f45edbd35a94"
+    },
+    {
+      "url": "https://deb.debian.org/debian/pool/main/t/tree-sitter/tree-sitter_0.20.7.orig.tar.xz",
+      "sha256": "e8c0573be475dce5b024d83628a3eb47376923da701376e55a11804cc5d25487"
+    },
+    {
+      "url": "https://deb.debian.org/debian/pool/main/t/tree-sitter/tree-sitter_0.20.7-1.debian.tar.xz",
+      "sha256": "87e1804dade9d65cf4683e39fc279a6133673d071887fa288fe14f1056354bed"
+    }
+  ],
+  "runtime_packages": [
+    {
+      "name": "libsqlite3-0",
+      "version": "3.40.1-2+deb12u2",
+      "url": "https://deb.debian.org/debian/pool/main/s/sqlite3/libsqlite3-0_3.40.1-2+deb12u2_armhf.deb",
+      "sha256": "216a65aab002d49e325430a6498ba62b59e3cf1b6b8f5fb87747c685a0713d92"
+    }
+  ],
+  "sqlite_source": [
+    {
+      "url": "https://deb.debian.org/debian/pool/main/s/sqlite3/sqlite3_3.40.1-2+deb12u2.dsc",
+      "sha256": "ee3459ae9d00939741c7708fc1b8ce1bde12d8c3fb1dfa005bbbc8651d884e23"
+    },
+    {
+      "url": "https://deb.debian.org/debian/pool/main/s/sqlite3/sqlite3_3.40.1.orig-www.tar.xz",
+      "sha256": "a5e95a18d1b59729278860559ded78751b9163ffb5bb906c5cd24c015f71d5fd"
+    },
+    {
+      "url": "https://deb.debian.org/debian/pool/main/s/sqlite3/sqlite3_3.40.1.orig.tar.xz",
+      "sha256": "aaa776260ab4dc976db34aa7891819484c8676b5b2783123ebc6301e2ca5d655"
+    },
+    {
+      "url": "https://deb.debian.org/debian/pool/main/s/sqlite3/sqlite3_3.40.1-2+deb12u2.debian.tar.xz",
+      "sha256": "0843bc12e4364076477935ce313a6d0796fd899a989ff18ebb6545540e10e4ca"
+    }
+  ]
+}

@@ -15,7 +15,7 @@ the September 2026 preview releases.
 | --- | --- |
 | Goblin Mosh | `e4e8afbb694aea23155f42eddea13c5280b57827` from `adamdeprince/mosh` |
 | Mosh | Debian Bookworm ARM, 1.4.0 |
-| Emacs | Debian Bookworm ARM, 28.2, terminal build |
+| Emacs | GNU Emacs 31.1, source build without GUI or native compilation |
 | Git | Debian Bookworm ARM, 2.39.5 |
 | GoblinView | September 14 source snapshot, including input-method dictionaries and monochrome mode |
 | Goblin Purrfect | Dated 0.1.0 source snapshot, vendored Rust crates, redistributable fonts |
@@ -37,11 +37,15 @@ maintainer scripts are never run. The tablet does not need apt or dpkg.
 
 ## Rebuild
 
-The cross-build was performed on Apple Silicon macOS with Zig 0.16.0,
+The main cross-build was performed on Apple Silicon macOS with Zig 0.16.0,
 Rust 1.98.1, Python 3.14, CMake, Ninja, Autoconf, Automake, and pkg-config.
 Prepare the official 5.7.119 SDK sysroot using the instructions in
 [`toolchains/README.md`](../../toolchains/README.md). Keep the SDK outside
 version control.
+
+Emacs 31.1 also needs a Linux build host for its QEMU build helpers. Follow
+the [Emacs build recipe](emacs/README.md) first and copy its installed tree
+back to the Mac before assembling all utilities.
 
 ```sh
 rustup toolchain install 1.98.1 --profile minimal --component llvm-tools \
@@ -87,8 +91,10 @@ and repeat the device compatibility checks before publishing new artifacts.
   Its document writes and
   backups remain normal file operations. LuaLaTeX supplies PDF export;
   Poppler and Aspell are optional external dependencies, not bundled here.
-- Emacs paths and its portable dump point into the bundle. Deferred native
-  compilation is disabled by the launcher.
+- Emacs 31.1 is built from GNU source without graphical backends or native
+  compilation. Its paths and portable dump point into the bundle, `emacs`
+  always uses `--no-window-system`, and `emacsclient` uses `--tty`. The build
+  includes Org, TRAMP, TeX mode, GnuTLS, SQLite, JSON and tree-sitter.
 - The optional [ghostty-tex add-on](ghostty-tex/README.txt) installs a removable
   Emacs configuration block. It recognizes Inkline, uses inline Kitty graphics,
   and keeps standard LaTeX builds, auxiliary files, logs, preview PNGs and caches
@@ -144,6 +150,9 @@ The device validation covered:
 - All six GoblinView unit suites and `regress/skeleton.sh` session lifecycle.
 - Purrfect document creation, round-trip verification, and LaTeX export.
 - Emacs Unicode editing and loading Org, TRAMP, and TeX mode.
+- The September 15 Emacs 31.1 source build also passes real PTY Unicode
+  editing/save/exit, JSON/SQLite/tree-sitter checks, and all three ghostty-tex
+  RAM-build integration tests. Its installed release occupies 138.1 MiB.
 - Git init, commit, local clone, and an HTTPS remote with certificate checks.
 - Python native modules, trust roots, SQLite, ctypes, venv, and pip, including
   certificate lookup from a new virtual environment.

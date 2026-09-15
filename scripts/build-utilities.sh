@@ -5,6 +5,10 @@ root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 cd "$root"
 export ZIG_GLOBAL_CACHE_DIR="$root/.cache/zig-global"
 sdk="$root/.cache/sdk/sysroot-5.7.119"
+test -f "$root/build/emacs/install/home/root/.local/share/inkline-utilities/emacs/current/runtime/emacs/bin/emacs-31.1" || {
+    echo 'Build Emacs on Linux first; see scripts/utilities/emacs/README.md.' >&2
+    exit 1
+}
 test -f "$sdk/usr/lib/libstdc++.so" || {
     echo 'Prepare the SDK with scripts/fetch-sdk.py and scripts/extract-sdk-sysroot.py first; see toolchains/README.md.' >&2
     exit 1

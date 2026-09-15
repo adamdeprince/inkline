@@ -16,7 +16,8 @@
 (setenv "TEXMFCONFIG" (expand-file-name "texmf-config" temporary-file-directory))
 (setenv "TEXMFCACHE" (expand-file-name "texmf-var" temporary-file-directory))
 (setq native-comp-deferred-compilation nil)
-(when (fboundp 'startup-redirect-eln-cache)
+(when (and (fboundp 'startup-redirect-eln-cache)
+           (boundp 'native-comp-eln-load-path))
   (startup-redirect-eln-cache (expand-file-name "eln-cache" temporary-file-directory)))
 
 (add-to-list 'load-path (expand-file-name "share/ghostty-tex-0.1.4" inkline-ghostty-tex-root))

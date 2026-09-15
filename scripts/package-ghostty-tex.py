@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parent.parent
 RECIPE = ROOT / "scripts/utilities/ghostty-tex"
 UPSTREAM = "ghostty-tex-0.1.4.tar.gz"
 SHA256 = "30e66c3c94d540647e132c9ef51057692ed62d6a3a49b7be849bbcfb9aadc6a4"
-VERSION = "0.1.4+rm2.1"
+VERSION = "0.1.4+rm2.2"
 UPSTREAM_URL = "https://inkline.goblinreactor.com/downloads/utilities/2026-09-14.2/sources/" + UPSTREAM
 
 
@@ -39,7 +39,7 @@ def main():
     parser.add_argument("--package-file", type=Path, help="Exact upstream 0.1.4 archive (SHA-256 pinned).")
     parser.add_argument("--offline", action="store_true")
     parser.add_argument("--archive", action="store_true", help="Also create the installable archive.")
-    parser.add_argument("--release", default="2026-09-14.2")
+    parser.add_argument("--release", default="2026-09-15.1")
     args = parser.parse_args()
     common = module("utility_packages", ROOT / "scripts/package-utilities.py")
     debian = module("utility_debian", ROOT / "scripts/utilities/debian.py")
