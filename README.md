@@ -4,14 +4,14 @@ Inkline is a terminal for **reMarkable 2**, built with **libghostty-vt** and the
 stock Qt e-paper backend. It is designed for Type Folio and external USB
 keyboards, with kitty graphics and an initial sixel implementation.
 
-**Version 0.3.3 is a preview.** The main artifact is the repeatable
+**Version 0.3.4 is a preview.** The main artifact is the repeatable
 [installation procedure](docs/install.md), including preflight, launch, recovery
 and uninstall. It targets firmware **3.27**, tested on **3.27.3.0**. Other models
 and firmware lines are not supported by this installer.
 
 ## Install
 
-Download the **[Inkline 0.3.3 preview](https://github.com/adamdeprince/inkline/releases/tag/v0.3.3)**
+Download the **[Inkline 0.3.4 preview](https://github.com/adamdeprince/inkline/releases/tag/v0.3.4)**
 and follow the [installation procedure](docs/install.md). The prebuilt ARM bundle
 includes the installer, launcher, uninstall script, checksums, source archives
 and licenses. No compiler, SDK or third-party package manager is needed to install it.
@@ -32,7 +32,7 @@ The package is generated at `build/dist/inkline-rm2.tar.gz`. The
 After installation, press **Ctrl+Alt+T on the tablet’s Type Folio or USB keyboard**
 to open Inkline. No second computer is needed for subsequent launches. Tap
 **Quit**, press **Ctrl+Shift+Q**, or exit the shell to return to notebooks.
-In 0.3.3, Quit asks for confirmation and `exit` closes only the current terminal.
+In 0.3.4, Quit asks for confirmation and `exit` closes only the current terminal.
 The launcher temporarily switches from `xochitl` to Inkline and restores it when
 Inkline stops. A small keyboard shortcut service starts at boot; the terminal itself opens only
 on request, and the usual notebook interface remains the default.
@@ -50,7 +50,7 @@ Build recipes, pinned inputs, and device checks are documented in
 Compact TeX Live is installed on the tablet and Purrfect PDF export passes.
 The full collection is optional and too large to recommend for internal storage.
 
-## Keyboard controls in 0.3.3
+## Keyboard controls in 0.3.4
 
 Hold the separate **Opt** key (between Ctrl and Alt on the Folio) and press
 **1 through 0** for **F1 through F10**. The shortcut uses the keyboard's Meta
@@ -148,9 +148,10 @@ in a service-owned RAM directory under `/run`, disables QML disk caching and she
 session, and suppresses application logs. Preflight requires tmpfs for `/tmp`
 and `/dev/shm`, RAM-backed `/run`, and zero swap. Installed binaries and sources take normal
 persistent storage; programs run inside the shell can also deliberately write
-files. Settings are written only when a preference changes, to
-`~/.config/inkline/settings.ini`. The revised Python package disables automatic
-bytecode caches; the installer does not constrain other programs' own caches.
+files. Contrast adjustments stay in RAM until Inkline closes. Other settings are
+written only when a preference changes, to
+`~/.config/inkline/settings.ini`. Python uses the unmodified upstream runtime; optional Python and pip cache
+preferences belong in the tablet’s `~/.bashrc`. See [Python configuration](docs/python.md).
 The tablet launcher sets `HOME=/home/root`, so bare `cd`, `~`, and programs that
 use the home directory work in every shell. A directly launched terminal also
 supplies the account's home directory when HOME is missing or empty.

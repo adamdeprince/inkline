@@ -46,6 +46,12 @@ void Renderer::set_font_size(int pixels) {
     ch_ = metrics.height() + 2;
     ascent_ = metrics.ascent() + 1;
 }
+void Renderer::set_text_darkness(int value) {
+    darkness_ = std::clamp(value, 0, 100);
+    const double exponent = std::pow(2.5, (50 - darkness_) / 50.0);
+    for (size_t a = 0; a < coverage_.size(); ++a)
+        coverage_[a] = uchar(std::lround(255 * std::pow(a / 255.0, exponent)));
+}
 void Renderer::resize(int width, int height) {
     cols_ = uint16_t(std::clamp(width / cw_, 2, 512));
     rows_ = uint16_t(std::clamp(height / ch_, 2, 256));
@@ -114,8 +120,23 @@ void Renderer::sixel(sixel::Bitmap &&bitmap) {
 }
 void Renderer::cells(QPainter &p, const GhosttyRenderStateColors &colors, bool backgrounds) {
     check(ghostty_render_state_get(render_, GHOSTTY_RENDER_STATE_DATA_ROW_ITERATOR, &row_));
+    // Adjust glyph coverage only. A single reusable row bounds scratch memory;
+    // images, backgrounds and the terminal's color choices are unaffected.
+    QImage ink;
+    if (!backgrounds && darkness_ != 50) {
+        ink = QImage(cols_ * cw_, ch_, QImage::Format_ARGB32);
+        if (ink.isNull()) throw std::bad_alloc();
+    }
     int y = 0;
     while (ghostty_render_state_row_iterator_next(row_)) {
+        QPainter row_painter;
+        if (!ink.isNull()) {
+            ink.fill(Qt::transparent);
+            row_painter.begin(&ink);
+            row_painter.setRenderHint(QPainter::TextAntialiasing);
+            row_painter.translate(0, -y * ch_);
+        }
+        QPainter &text_painter = ink.isNull() ? p : row_painter;
         check(ghostty_render_state_row_get(row_, GHOSTTY_RENDER_STATE_ROW_DATA_CELLS, &cells_));
         int x = 0;
         while (ghostty_render_state_row_cells_next(cells_)) {
@@ -138,16 +159,27 @@ void Renderer::cells(QPainter &p, const GhosttyRenderStateColors &colors, bool b
                 if (ghostty_render_state_row_cells_get(cells_, GHOSTTY_RENDER_STATE_ROW_CELLS_DATA_GRAPHEMES_UTF8, &buffer) == GHOSTTY_SUCCESS && buffer.len) {
                     QFont f = font_; f.setBold(style.bold); f.setItalic(style.italic);
                     f.setUnderline(style.underline != 0); f.setStrikeOut(style.strikethrough); f.setOverline(style.overline);
-                    p.setFont(f);
+                    text_painter.setFont(f);
                     QColor color = gray(fg); if (style.faint) color.setAlpha(150);
-                    p.setPen(color);
-                    p.save();
-                    p.setClipRect(QRect(rect.x(), rect.y(), cw_ * (wide == GHOSTTY_CELL_WIDE_WIDE ? 2 : 1), ch_));
-                    p.drawText(QPoint(rect.x(), rect.y() + ascent_), QString::fromUtf8(text, qsizetype(buffer.len)));
-                    p.restore();
+                    text_painter.setPen(color);
+                    text_painter.save();
+                    text_painter.setClipRect(QRect(rect.x(), rect.y(), cw_ * (wide == GHOSTTY_CELL_WIDE_WIDE ? 2 : 1), ch_));
+                    text_painter.drawText(QPoint(rect.x(), rect.y() + ascent_), QString::fromUtf8(text, qsizetype(buffer.len)));
+                    text_painter.restore();
                 }
             }
             ++x;
+        }
+        if (!ink.isNull()) {
+            row_painter.end();
+            for (int line = 0; line < ink.height(); ++line) {
+                auto *pixels = reinterpret_cast<QRgb *>(ink.scanLine(line));
+                for (int col = 0; col < ink.width(); ++col) {
+                    const auto pixel = pixels[col];
+                    pixels[col] = (pixel & 0x00ffffffu) | (uint32_t(coverage_[qAlpha(pixel)]) << 24);
+                }
+            }
+            p.drawImage(0, y * ch_, ink);
         }
         ++y;
     }

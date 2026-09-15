@@ -98,21 +98,25 @@ and repeat the device compatibility checks before publishing new artifacts.
   --package-file ghostty-tex-0.1.4.tar.gz --archive`; its own Debian lock pins
   converter, font, AUCTeX and source inputs. Emacs and compact TeX Live are
   prerequisites. MuPDF and dvipng are not needed for PDF/DVI page previews.
-- Python retains the complete standard library and pip. Automatic bytecode
-  cache writes are disabled, and pip defaults to `--no-compile`. A small
-  uncompressed standard-library zip loads `encodings` with bytecode writes
-  disabled before startup imports can create caches; `sitecustomize` applies
-  the same policy to later imports and child processes. This also covers
-  virtual environments that invoke the interpreter directly. The bundled
-  `ensurepip` also honors this setting when bootstrapping pip. Run
-  `scripts/utilities/test-python-bytecode.sh /path/to/python3-bundle` on the
-  tablet to check startup, imports, virtual environments, and a local pip wheel
-  installation for newly created bytecode caches. Common terminfo
-  descriptions replace case-only aliases that cannot be extracted reliably
-  on a default macOS filesystem. `python-sitecustomize.py` selects the stock
-  certificate bundle unless explicit certificate settings already exist;
-  this also applies inside virtual environments. Python 3.15.0rc2 is a
-  release candidate, not a final release.
+- Python uses the unmodified upstream CPython 3.15.0rc2 interpreter, standard
+  library, pip, and ensurepip from the pinned ARM archive. Inkline's previous
+  startup zip, `sitecustomize`, and ensurepip cache patches have been removed.
+  Neither its launcher nor Inkline sets Python/pip cache policy. Put
+  `export PYTHONDONTWRITEBYTECODE=1` and `export PIP_NO_CACHE_DIR=1` in the
+  tablet's `~/.bashrc` if desired. The first suppresses bytecode on imports;
+  the second disables pip's download/wheel cache. Use `pip install --no-compile`
+  to also suppress installation-time bytecode. Stock `-I`/`-E` ignore Python
+  environment settings; venv's ensurepip bootstrap can still compile bytecode.
+  See [Python configuration](../../docs/python.md) for commands and a venv
+  procedure that avoids ensurepip. The wrappers select the tablet's certificate
+  bundle unless explicit certificate settings already exist; set
+  `SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt` in the shell for direct
+  virtual-environment interpreters. No upstream Python code is patched.
+  Common terminfo descriptions replace case-only aliases that cannot be
+  extracted reliably on a default macOS filesystem. This is a release candidate.
+  Stage a pristine bundle in RAM, then run
+  `scripts/utilities/test-python-bytecode.sh /tmp/staging/python3`. Tests verify
+  both normal stock behavior and optional cache settings, with all writes in RAM.
 - TeX Live is an installer package. By default, `texlive-install` installs
   `scheme-basic`, LuaLaTeX, and Purrfect’s required packages, without local
   documentation/source copies. Its package files total 145,854,464 bytes;

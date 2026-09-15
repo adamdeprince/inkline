@@ -25,6 +25,7 @@ public:
     bool settings_open() const;
     bool quit_confirmation_open() const;
     int font_pixels() const;
+    int text_darkness() const;
     int input_method() const;
     QByteArray clipboard_text() const;
 protected:

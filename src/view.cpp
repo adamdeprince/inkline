@@ -151,6 +151,7 @@ public:
     void maintain(bool pressure) { renderer_.reclaim(pressure); }
     InputMethod ime;
     void font_size(int pixels) { renderer_.set_font_size(pixels); }
+    void text_darkness(int value) { renderer_.set_text_darkness(value); }
     void key(const MappedInput &input) {
         const auto composed = ime.key(input);
         if (!composed.commit.isEmpty()) text_input(composed.commit);
@@ -269,11 +270,13 @@ public:
     CapsLeds leds;
     Clipboard clipboard;
     std::array<std::unique_ptr<Session>, TERMINALS> sessions;
-    int active = 0, pixels, selected = 0;
+    int active = 0, pixels, selected = 0, darkness = Preferences::DEFAULT_DARKNESS;
     bool demo;
     std::vector<std::string> shell;
     QTimer repaint, toast, font_save, autoscroll, maintenance;
     bool font_dirty = false;
+    bool darkness_drag = false;
+    int press_darkness = Preferences::DEFAULT_DARKNESS;
     QString notice;
     bool pointer_down = false, dragging = false, text_drag = false, pen_down = false;
     QPointF press_point, last_point;
@@ -331,6 +334,17 @@ public:
         layout();
         if (defer) font_save.start();
     }
+    void set_darkness(int value) {
+        value = std::clamp(value, 0, 100);
+        if (darkness == value) return;
+        darkness = value;
+        for (auto &session : sessions) if (session) session->text_darkness(value);
+        schedule(); view.update();
+    }
+    void slide_darkness(const QPointF &point) {
+        const auto track = darkness_track();
+        set_darkness(int(std::lround(100 * (point.x() - track.left()) / track.width())));
+    }
     void tell(const QString &message) { notice = message; toast.start(); view.update(); }
     int footer_height() const { return prefs.bottom_bar() ? footer : 0; }
     void schedule() { if (!repaint.isActive()) repaint.start(); }
@@ -372,6 +386,7 @@ public:
                 [this](const QString &message) { error = message; overlay = Overlay::Error; view.update(); });
             next->layout(int(view.width()) - 2 * margin, int(view.height()) - 2 * margin - footer_height() - ime_height());
             next->ime.set_method(prefs.input_method());
+            next->text_darkness(darkness);
             next->start(index + 1, demo, shell, prefs.caps_control());
             sessions[index] = std::move(next);
         }
@@ -396,7 +411,7 @@ public:
             if (selected == 0) set_caps(!prefs.caps_control());
             else if (selected == 1) toggle_bar();
             else if (selected == 3) { overlay = Overlay::Methods; selected = prefs.input_method(); }
-            else if (selected == 4) overlay = Overlay::None;
+            else if (selected == 5) overlay = Overlay::None;
         } else if (overlay == Overlay::Methods) {
             if (selected < InputMethod::COUNT) set_method(selected);
             else { overlay = Overlay::Settings; selected = 3; }
@@ -416,9 +431,13 @@ public:
             if (selected == 0) set_caps(key == Qt::Key_Left);
             else if (selected == 1) set_bar(key == Qt::Key_Left);
             else if (selected == 2) zoom(pixels + (key == Qt::Key_Left ? -2 : 2));
+            else if (selected == 4) set_darkness(darkness + (key == Qt::Key_Left ? -5 : 5));
             return;
         }
-        const int choices = overlay == Overlay::Settings ? 5 : overlay == Overlay::Methods ? InputMethod::COUNT + 1 : overlay == Overlay::Quit ? 2 : 1;
+        if (overlay == Overlay::Settings && selected == 4 && (key == Qt::Key_Home || key == Qt::Key_End)) {
+            set_darkness(key == Qt::Key_Home ? 0 : 100); return;
+        }
+        const int choices = overlay == Overlay::Settings ? 6 : overlay == Overlay::Methods ? InputMethod::COUNT + 1 : overlay == Overlay::Quit ? 2 : 1;
         if (key == Qt::Key_Tab || key == Qt::Key_Down || key == Qt::Key_Right) selected = (selected + 1) % choices;
         else if (key == Qt::Key_Backtab || key == Qt::Key_Up || key == Qt::Key_Left) selected = (selected + choices - 1) % choices;
         else if ((key == Qt::Key_Return || key == Qt::Key_Enter || key == Qt::Key_Space) && !event.repeat) activate();
@@ -458,10 +477,11 @@ public:
     }
     QRectF panel() const {
         const qreal w = std::min<qreal>(840, view.width() - 48);
-        const qreal h = std::min<qreal>(overlay == Overlay::Settings || overlay == Overlay::Methods ? 650 : 360, view.height() - 48);
+        const qreal h = std::min<qreal>(overlay == Overlay::Settings ? 720 : overlay == Overlay::Methods ? 650 : 360, view.height() - 48);
         return {(view.width() - w) / 2, (view.height() - h) / 2, w, h};
     }
-    QRectF row(int index) const { const auto p = panel(); return {p.x() + 22, p.y() + 78 + index * 102, p.width() - 44, 90}; }
+    QRectF row(int index) const { const auto p = panel(); return {p.x() + 22, p.y() + 78 + index * 92, p.width() - 44, 90}; }
+    QRectF darkness_track() const { const auto r = row(4); return {r.left() + 100, r.y() + 50, r.width() - 200, 4}; }
     QRectF choice(int group, int index) const { const auto r = row(group); const qreal w = (r.width() - 18) / 2; return {r.x() + index * (w + 18), r.y() + 32, w, 54}; }
     QRectF method_row(int index) const { const auto p = panel(); return {p.x() + 22, p.y() + 78 + index * 64, p.width() - 44, 54}; }
     QRectF font_button(int index) const { const auto r = row(2); return {index ? r.right() - 90 : r.left(), r.y() + 32, 90, 54}; }
@@ -528,14 +548,15 @@ public:
             const QRectF box((view.width() - w) / 2, 14, w, 48); p.fillRect(box, Qt::white); p.drawRect(box); p.drawText(box, Qt::AlignCenter, notice);
         }
         if (overlay == Overlay::None) return;
-        p.fillRect(view.boundingRect(), QColor(255, 255, 255, 205));
+        // Keep the terminal around Settings visible as a live darkness preview.
+        if (overlay != Overlay::Settings) p.fillRect(view.boundingRect(), QColor(255, 255, 255, 205));
         const auto box = panel(); p.fillRect(box, Qt::white); p.setPen(QPen(Qt::black, 2)); p.drawRect(box);
         font(p, 30, true);
         p.drawText(box.adjusted(22, 20, -22, -box.height() + 65), Qt::AlignLeft | Qt::AlignVCenter,
                    overlay == Overlay::Settings ? "Inkline settings" : overlay == Overlay::Methods ? "Input method" : overlay == Overlay::Quit ? "Quit Inkline?" : "Inkline");
         if (overlay == Overlay::Settings) {
-            const QString labels[] = {"Caps Lock key", "Bottom bar", "Text size", "Input method"};
-            for (int i = 0; i < 4; ++i) {
+            const QString labels[] = {"Caps Lock key", "Bottom bar", "Text size", "Input method", "Text darkness"};
+            for (int i = 0; i < 5; ++i) {
                 const auto r = row(i); font(p, 22); p.drawText(r.adjusted(0, 0, 0, -r.height() + 28), Qt::AlignLeft | Qt::AlignVCenter, labels[i]);
                 if (selected == i) focus(p, r);
             }
@@ -546,10 +567,19 @@ public:
             button(p, font_button(0), "−", false); button(p, font_button(1), "+", false);
             font(p, 28, true); p.drawText(row(2).adjusted(110, 32, -110, -4), Qt::AlignCenter, QString("%1 px").arg(pixels));
             const auto r = row(3); button(p, r.adjusted(0, 32, 0, -4), InputMethod::name(prefs.input_method()) + "  ›", false);
+            const auto track = darkness_track();
+            p.fillRect(track, Qt::black);
+            const QPointF knob(track.left() + darkness * track.width() / 100, track.center().y());
+            p.setBrush(Qt::white); p.drawEllipse(knob, 15, 15); p.setBrush(Qt::NoBrush);
+            font(p, 20);
+            p.drawText(row(4).adjusted(0, 32, -row(4).width() + 90, -4), Qt::AlignVCenter, "Lighter");
+            p.drawText(row(4).adjusted(row(4).width() - 90, 32, 0, -4), Qt::AlignVCenter | Qt::AlignRight, "Darker");
+            p.drawText(row(4).adjusted(220, 0, 0, -62), Qt::AlignRight | Qt::AlignVCenter,
+                       QString("%1%  ·  50% = normal").arg(darkness));
             font(p, 19);
-            p.drawText(box.adjusted(22, 490, -22, -76), Qt::AlignLeft | Qt::AlignTop | Qt::TextWordWrap,
-                       "Solid fill = active setting. Dashed outline = keyboard focus.\nTab / ↑↓: focus   ←→: change   Enter: choose\nPinch: text size   Ctrl+Shift+B: bottom bar");
-            button(p, close_button(), "Done", selected == 4);
+            p.drawText(box.adjusted(22, 546, -22, -76), Qt::AlignLeft | Qt::AlignTop | Qt::TextWordWrap,
+                       "Solid fill = active setting. Dashed outline = keyboard focus.\nTab / ↑↓: focus   ←→: change   Enter: choose\nDarkness stays in RAM until Inkline closes; no settings writes.");
+            button(p, close_button(), "Done", selected == 5);
         } else if (overlay == Overlay::Methods) {
             const QString names[] = {"Off — direct keyboard", "Romaji — Japanese hiragana", "US-International — accented letters", "Pinyin — Chinese", "Zhuyin — Chinese (basic layout)", "Wubi 86 — Chinese"};
             for (int i = 0; i < InputMethod::COUNT; ++i)
@@ -575,7 +605,7 @@ public:
                 if (font_button(i).contains(point)) { selected = 2; zoom(pixels + (i ? 2 : -2)); }
             }
             if (row(3).contains(point)) { selected = 3; activate(); }
-            else if (close_button().contains(point)) { selected = 4; activate(); }
+            else if (close_button().contains(point)) { selected = 5; activate(); }
         } else if (overlay == Overlay::Methods) {
             for (int i = 0; i < InputMethod::COUNT; ++i) if (method_row(i).contains(point)) { set_method(i); return; }
             if (close_button().contains(point)) { overlay = Overlay::Settings; selected = 3; view.update(); }
@@ -601,12 +631,17 @@ public:
     void pointer_press(const QPointF &point) {
         cancel_pointer();
         press_point = last_point = point; pointer_down = true; dragging = false; press_overlay = overlay;
+        if (overlay == Overlay::Settings && row(4).contains(point)) {
+            selected = 4; darkness_drag = true; press_darkness = darkness;
+            slide_darkness(point);
+        }
         text_drag = overlay == Overlay::None && text_area().contains(point) && bool(sessions[active]);
         if (text_drag) sessions[active]->select(point - QPointF(margin, margin), true);
     }
     void pointer_move(const QPointF &point) {
         if (!pointer_down) return;
         last_point = point;
+        if (darkness_drag) { slide_darkness(point); return; }
         if (QLineF(press_point, point).length() >= 8) dragging = true;
         if (dragging && text_drag && sessions[active]) {
             sessions[active]->select(point - QPointF(margin, margin), false);
@@ -617,6 +652,10 @@ public:
     void pointer_release(const QPointF &point) {
         if (!pointer_down) return;
         pointer_move(point);
+        if (darkness_drag) {
+            darkness_drag = pointer_down = false;
+            return;
+        }
         const bool tap = !dragging && press_overlay == overlay;
         pointer_down = false; autoscroll.stop();
         if (text_drag && sessions[active]) sessions[active]->selection_end(!dragging);
@@ -624,6 +663,9 @@ public:
         text_drag = false;
     }
     void cancel_pointer() {
+        if (darkness_drag) {
+            darkness_drag = false; set_darkness(press_darkness);
+        }
         if (pointer_down && text_drag && sessions[active]) sessions[active]->selection_end(true);
         pointer_down = dragging = text_drag = false; autoscroll.stop();
     }
@@ -750,6 +792,7 @@ bool TerminalView::event(QEvent *event) {
     return QQuickPaintedItem::event(event);
 }
 int TerminalView::font_pixels() const { return d_->pixels; }
+int TerminalView::text_darkness() const { return d_->darkness; }
 int TerminalView::input_method() const { return d_->prefs.input_method(); }
 QByteArray TerminalView::clipboard_text() const { return d_->clipboard.text(); }
 }

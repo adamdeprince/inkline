@@ -21,14 +21,34 @@ int main(int argc, char **argv) {
         const QImage empty = renderer.frame();
         stream.write("Inkline \033[1mBOLD\033[0m\r\n");
         CHECK(renderer.frame() != empty);
+        const auto normal = renderer.frame();
+        const auto cols = renderer.cols(), rows = renderer.rows();
+        renderer.set_text_darkness(100); const auto dark = renderer.frame();
+        renderer.set_text_darkness(0); const auto light = renderer.frame();
+        int darker = 0, lighter = 0;
+        for (int y = 0; y < normal.height(); ++y) for (int x = 0; x < normal.width(); ++x) {
+            const int n = qGray(normal.pixel(x, y)), d = qGray(dark.pixel(x, y)), l = qGray(light.pixel(x, y));
+            CHECK(d <= n && n <= l);
+            if (n == 0 || n == 255) CHECK(d == n && l == n);
+            darker += d < n; lighter += l > n;
+        }
+        CHECK(darker > 0 && lighter > 0);
+        CHECK(renderer.cols() == cols && renderer.rows() == rows);
+        renderer.set_text_darkness(50); CHECK(renderer.frame() == normal);
         stream.write("\033[2J\033[H\033_Ga=T,f=32,s=1,v=1,c=4,r=3,i=1,C=1;AAAA/w==\033\\");
         const QImage kitty = renderer.frame();
         CHECK(qGray(kitty.pixel(2, 2)) == 0);
+        renderer.set_text_darkness(100); CHECK(renderer.frame() == kitty);
+        renderer.set_text_darkness(0); CHECK(renderer.frame() == kitty);
+        renderer.set_text_darkness(50);
         stream.write("\033_Ga=d,d=A\033\\");
         CHECK(qGray(renderer.frame().pixel(2, 2)) == 255);
         stream.write("\033P0;1q\"1;1;30;6#0;2;0;0;0#0!30~\033\\");
         CHECK(renderer.sixel_bytes() == 30 * 6 * 4);
         CHECK(qGray(renderer.frame().pixel(2, 2)) == 0);
+        const auto sixel_frame = renderer.frame();
+        renderer.set_text_darkness(100); CHECK(renderer.frame() == sixel_frame);
+        renderer.set_text_darkness(50);
         for (const char c : std::string("\033[2J")) stream.write({&c, 1});
         CHECK(renderer.sixel_bytes() == 0);
         rmt::Keyboard keyboard(*core);

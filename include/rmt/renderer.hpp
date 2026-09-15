@@ -6,6 +6,7 @@
 #include <QImage>
 #include <QPainter>
 #include <deque>
+#include <array>
 
 namespace rmt {
 // All terminal access and drawing occur on the GUI thread. Images are RAM only.
@@ -17,6 +18,7 @@ public:
     Renderer &operator=(const Renderer &) = delete;
     void resize(int width, int height);
     void set_font_size(int pixels);
+    void set_text_darkness(int value);
     QImage frame();
     void sixel(sixel::Bitmap &&bitmap);
     void clear_sixel();
@@ -35,6 +37,8 @@ private:
     GhosttyRenderStateRowCells cells_ = nullptr;
     GhosttyKittyGraphicsPlacementIterator placements_ = nullptr;
     QFont font_;
+    int darkness_ = 50;
+    std::array<uchar, 256> coverage_{};
     int cw_, ch_, ascent_;
     uint16_t cols_ = 80, rows_ = 24;
     std::deque<Overlay> sixels_;

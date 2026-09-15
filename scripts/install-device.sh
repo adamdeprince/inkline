@@ -22,6 +22,7 @@ for required in /usr/lib/plugins/platforms/libepaper.so /usr/lib/plugins/scenegr
     test -r "$required" || fail "Missing firmware dependency: $required"
 done
 for command in systemctl systemd-inhibit sha256sum mktemp tar flock; do command -v "$command" >/dev/null || fail "Missing command: $command"; done
+test -x /bin/bash || fail 'Bash is required to load ~/.bashrc for interactive shells.'
 test -w /etc/systemd/system || fail '/etc/systemd/system must be writable to install the keyboard launcher.'
 if [ -e /etc/systemd/system/inkline-hotkey.service ] || [ -L /etc/systemd/system/inkline-hotkey.service ]; then
     test -L /etc/systemd/system/inkline-hotkey.service && test "$(readlink /etc/systemd/system/inkline-hotkey.service)" = "$root/current/inkline-hotkey.service" || fail 'An unrelated keyboard launcher service already exists.'

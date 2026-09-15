@@ -7,7 +7,6 @@ from pathlib import Path
 import shutil
 import subprocess
 import tarfile
-import zipfile
 
 ROOT = Path(__file__).resolve().parent.parent
 CACHE = ROOT / ".cache/utilities"
@@ -50,7 +49,7 @@ utility_root=$(CDPATH= cd -- "$(dirname -- "$(readlink -f -- "$0")")/.." && pwd)
 ''' + body.replace("exec ", "utility_exec ") + "\n", True)
 
 
-def prepare(name, version, group=None):
+def prepare(name, version, group=None, release=None):
     package = STAGE / name
     if package.exists():
         shutil.rmtree(package)
@@ -77,7 +76,7 @@ if [ -d "$utility_root/runtime/debian" ]; then
 fi
 ''')
     metadata = {"name": name, "version": version, "model": "reMarkable 2", "architecture": "armv7-hard-float",
-                "firmware_line": "3.27", "tested_firmware": "3.27.3.0", "release": "2026-09-14.1" if name == "goblin-purrfect" else "2026-09-14" if name == "goblin-view" else "2026-09-13"}
+                "firmware_line": "3.27", "tested_firmware": "3.27.3.0", "release": release or ("2026-09-14.1" if name == "goblin-purrfect" else "2026-09-14" if name == "goblin-view" else "2026-09-13")}
     if group:
         lock = json.loads((CACHE / "debian/lock.json").read_text())
         metadata["debian_packages"] = {p: lock["packages"][p] for p in lock["groups"][group]}
@@ -173,6 +172,28 @@ def build_goblin_purrfect():
     finish(package, ["goblin-purrfect"], '"$utility_root/bin/goblin-purrfect" --help | grep -q "epaper: black text on white"')
 
 
+def build_python():
+    package = prepare("python3", "3.15.0rc2+20260901.rm2.3", release="2026-09-15")
+    # Preserve the upstream interpreter, standard library, pip and ensurepip.
+    # Cache preferences belong in the user's shell configuration.
+    tree(CACHE / "python-3.15/python", package / "runtime/python")
+    tree(CACHE / "python-full-metadata/python/licenses", package / "licenses/python")
+    shutil.copy2(CACHE / "python-full-metadata/python/PYTHON.json", package / "licenses/python/PYTHON.json")
+    shutil.copy2(ROOT / "docs/python.md", package / "PYTHON.md")
+    for command in ("python3", "python3.15", "pip3", "pip3.15"):
+        argument = " -m pip" if command.startswith("pip") else ""
+        wrapper(package, command, '''export TERMINFO_DIRS="$utility_root/runtime/python/share/terminfo:/etc/terminfo:/usr/share/terminfo"
+if [ -z "${SSL_CERT_FILE:-}" ] && [ -z "${SSL_CERT_DIR:-}" ]; then
+    export SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+fi
+exec "$utility_root/runtime/python/bin/python3.15"''' + argument + ' "$@"')
+    metadata = json.loads((package / "manifest.json").read_text())
+    metadata["python_input"] = json.loads((ROOT / "scripts/utilities/inputs.lock.json").read_text())["inputs"]["python"]
+    metadata["cache_policy"] = "Unmodified upstream Python; configure preferences in ~/.bashrc."
+    write(package / "manifest.json", json.dumps(metadata, indent=2) + "\n")
+    finish(package, ["python3", "python3.15", "pip3", "pip3.15"], '''"$utility_root/bin/python3.15" -c 'import sys, ssl, sqlite3, ctypes, readline, decimal, zlib, bz2, lzma, venv, pip; assert sys.version_info[:2] == (3, 15); assert ssl.create_default_context().cert_store_stats()["x509_ca"] > 0; print(sys.version)' ''')
+
+
 def build():
     lock = json.loads((CACHE / "debian/lock.json").read_text())
     package = prepare("goblin-mosh", "1.4.0+e4e8afbb.rm2.1", "perl")
@@ -217,32 +238,7 @@ export GIT_TEMPLATE_DIR="$utility_debian/usr/share/git-core/templates"
 exec "$utility_debian/usr/bin/git" "$@"''')
     finish(package, ["git"], '"$utility_root/bin/git" --version')
 
-    package = prepare("python3", "3.15.0rc2+20260901.rm2.2")
-    tree(CACHE / "python-3.15/python", package / "runtime/python")
-    python_lib = package / "runtime/python/lib"
-    # encodings is imported before sitecustomize. Loading it from the standard
-    # library zip prevents startup itself from creating bytecode, including
-    # when a virtual environment invokes the interpreter without our wrapper.
-    # Store entries uncompressed: encoding initialization must not import zlib.
-    with zipfile.ZipFile(python_lib / "python315.zip", "w", compression=zipfile.ZIP_STORED) as startup:
-        for source in sorted((python_lib / "python3.15/encodings").glob("*.py")):
-            text = source.read_text()
-            if source.name == "__init__.py":
-                text = "import sys\nsys.dont_write_bytecode = True\n" + text
-            startup.writestr("encodings/" + source.name, text)
-        startup.write(ROOT / "scripts/utilities/python-sitecustomize.py", "sitecustomize.py")
-    ensurepip = python_lib / "python3.15/ensurepip/__init__.py"
-    text = ensurepip.read_text()
-    original = "if sys.implementation.cache_tag is None:"
-    if text.count(original) != 1:
-        raise RuntimeError("Review ensurepip's bytecode policy for this Python release.")
-    ensurepip.write_text(text.replace(original, "if sys.implementation.cache_tag is None or sys.dont_write_bytecode:"))
-    tree(CACHE / "python-full-metadata/python/licenses", package / "licenses/python")
-    shutil.copy2(CACHE / "python-full-metadata/python/PYTHON.json", package / "licenses/python/PYTHON.json")
-    for command in ("python3", "python3.15", "pip3", "pip3.15"):
-        argument = " -m pip" if command.startswith("pip") else ""
-        wrapper(package, command, 'export PYTHONDONTWRITEBYTECODE=1 PIP_COMPILE=0\nexport TERMINFO_DIRS="$utility_root/runtime/python/share/terminfo:/etc/terminfo:/usr/share/terminfo"\nexec "$utility_root/runtime/python/bin/python3.15"' + argument + ' "$@"')
-    finish(package, ["python3", "python3.15", "pip3", "pip3.15"], '''"$utility_root/bin/python3.15" -c 'import sys, ssl, sqlite3, ctypes, readline, decimal, zlib, bz2, lzma, venv, pip; assert sys.version_info[:2] == (3, 15); assert ssl.create_default_context().cert_store_stats()["x509_ca"] > 0; print(sys.version)' ''')
+    build_python()
     package = prepare("texlive", "2026+20260913.rm2.1", "texlive")
     tree(CACHE / "texlive-installer/install-tl-20260913", package / "runtime/texlive-installer")
     for script in ("install-texlive.sh", "remove-texlive.sh"):
@@ -298,9 +294,12 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--archive", nargs="*", choices=["goblin-mosh", "mosh", "emacs", "goblin-view", "goblin-purrfect", "git", "python3", "texlive"], help="Archive all staged packages, or only the names listed.")
+    parser.add_argument("--only", choices=["python3"], help="Stage only the selected utility.")
     parser.add_argument("--release", default="2026-09-13", help="New versioned output directory; existing archives are never replaced.")
     args = parser.parse_args()
     if args.archive is not None:
         archive(args.archive, args.release)
+    elif args.only == "python3":
+        build_python()
     else:
         build()

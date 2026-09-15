@@ -4,6 +4,9 @@ ulimit -c 0
 umask 077
 # System services may omit HOME even though they run as root.
 export HOME=/home/root
+# Bash invoked as sh skips ~/.bashrc. Use Bash's interactive startup path so
+# user preferences (including Python and pip cache settings) stay in that file.
+export SHELL=/bin/bash
 # systemd owns and removes this RAM directory even after SIGKILL.
 runtime=/run/inkline
 test -d "$runtime"

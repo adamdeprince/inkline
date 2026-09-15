@@ -1,6 +1,6 @@
 # Keyboard and terminal settings
 
-These controls are included in **Inkline 0.3.3**. All nine host and ARM test
+These controls are included in **Inkline 0.3.4**. All nine host and ARM test
 suites pass; physical Folio and USB checks for the new controls are pending.
 
 Each new terminal prints a short shortcut guide with a small Goblin logo and the
@@ -76,7 +76,8 @@ works throughout the panel.
   Hiding the bar gives its rows back to the terminal. Right Alt+Space remains
   available while it is hidden.
 
-Preferences are stored in `~/.config/inkline/settings.ini` and survive restarts.
+Keyboard, input-method, font-size, and bottom-bar preferences are stored in
+`~/.config/inkline/settings.ini` and survive restarts. Text darkness stays in RAM.
 Font changes are saved after the pinch ends, or 700 ms after a Settings adjustment.
 Only a changed preference writes this file; typing, graphics and switching
 terminals do not save it. Ordinary Caps Lock's on/off state starts off each time.
@@ -167,3 +168,16 @@ When the keyboard occupies the USB port, use the tablet's Wi-Fi address for SSH.
 The installer preserves open terminals during an update.
 Quit and reopen Inkline once to start the new version. The older release stays
 on storage for the existing process and rollback.
+
+## Text darkness
+
+In Settings (right Alt/Option+Space), drag **Text darkness** with a finger, pen
+or mouse. Keyboard users can focus the slider with Tab or Up/Down and adjust
+with Left/Right; Home/End selects the endpoints. 50% preserves the original
+rendering. Normal text is already black; higher values darken its smoothed
+edges without changing glyph positions, graphics, backgrounds, or app colors.
+
+The surrounding terminal previews the change. The value stays in RAM when you
+lift your finger, close Settings, or switch terminals. It never writes a
+contrast preference to flash and resets to 50% when Inkline closes. Other
+existing saved preferences retain their behavior.
