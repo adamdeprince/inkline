@@ -4,6 +4,8 @@ After=systemd-udevd.service
 
 [Service]
 Type=simple
+RuntimeDirectory=inkline-shortcuts
+RuntimeDirectoryMode=0700
 ExecStart=/home/root/.local/share/inkline/current/inkline-hotkey
 Restart=on-failure
 RestartSec=3

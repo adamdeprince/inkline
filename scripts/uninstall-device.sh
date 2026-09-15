@@ -7,6 +7,8 @@ flock -x 9
 test ! -L "$root"
 test "$(cat "$root/.inkline-managed")" = inkline-v1
 systemctl stop inkline-hotkey.service 2>/dev/null || :
+systemctl stop inkline-shortcut-app.service 2>/dev/null || :
+systemctl kill --kill-whom=all --signal=CONT inkline.service 2>/dev/null || :
 if [ -L /etc/systemd/system/inkline-hotkey.service ] &&
     [ "$(readlink /etc/systemd/system/inkline-hotkey.service)" = "$root/current/inkline-hotkey.service" ]; then
     systemctl disable inkline-hotkey.service

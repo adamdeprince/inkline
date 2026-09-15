@@ -1,6 +1,8 @@
 #include "rmt/keyboard.hpp"
+#include "rmt/mouse.hpp"
 #include "rmt/renderer.hpp"
 #include "rmt/stream.hpp"
+#include "rmt/unicode_keyboard.hpp"
 #include <QGuiApplication>
 #include <algorithm>
 #include <cstdio>
@@ -17,7 +19,7 @@ int main(int argc, char **argv) {
         rmt::Renderer renderer(*core, 24);
         renderer.resize(640, 480);
         rmt::Stream stream(*core, [&](rmt::sixel::Bitmap &&bitmap) { renderer.sixel(std::move(bitmap)); });
-        stream.set_control_handler([&](std::string_view control) { if (control == "\033[2J") renderer.clear_sixel(); });
+        stream.set_control_handler([&](std::string_view control) { if (control == "\033[2J") renderer.clear_graphics(); });
         stream.write("\033[?25l");
         const QRect initial_dirty = renderer.render();
         CHECK(initial_dirty == renderer.image().rect());
@@ -63,6 +65,12 @@ int main(int argc, char **argv) {
         renderer.set_text_darkness(100); CHECK(renderer.frame() == kitty);
         renderer.set_text_darkness(0); CHECK(renderer.frame() == kitty);
         renderer.set_text_darkness(50);
+        stream.write("\033[3J"); // history-only erase preserves visible graphics
+        CHECK(qGray(renderer.frame().pixel(2, 2)) == 0);
+        stream.write("\033[2J");
+        CHECK(qGray(renderer.frame().pixel(2, 2)) == 255);
+        stream.write("\033[H\033_Ga=T,f=32,s=1,v=1,c=4,r=3,i=1,C=1;AAAA/w==\033\\");
+        CHECK(qGray(renderer.frame().pixel(2, 2)) == 0);
         stream.write("\033_Ga=d,d=A\033\\");
         CHECK(qGray(renderer.frame().pixel(2, 2)) == 255);
         stream.write("\033P0;1q\"1;1;30;6#0;2;0;0;0#0!30~\033\\");
@@ -87,6 +95,13 @@ int main(int argc, char **argv) {
         stream.write("\033[>3u"); // Disambiguation and press/repeat/release reports.
         QKeyEvent release(QEvent::KeyRelease, Qt::Key_Up, Qt::NoModifier);
         CHECK(keyboard.encode(release).find(":3") != std::string::npos);
+        rmt::Mouse mouse(*core); mouse.resize(800, 480, 10, 20);
+        stream.write("\033[?1000h\033[?1006h");
+        CHECK(mouse.encode(rmt::Mouse::Action::Press, {15, 25}) == "\033[<0;2;2M");
+        CHECK(mouse.encode(rmt::Mouse::Action::Motion, {25, 25}).empty());
+        CHECK(mouse.encode(rmt::Mouse::Action::Release, {25, 25}) == "\033[<0;3;2m");
+        stream.write("\033[?1003h");
+        CHECK(mouse.encode(rmt::Mouse::Action::Motion, {35, 45}) == "\033[<35;4;3M");
     }
     rmt_core_free(core);
     core = rmt_core_new(80, 24, nullptr); CHECK(core);
@@ -110,5 +125,13 @@ int main(int argc, char **argv) {
         renderer.reclaim(false); CHECK(renderer.sixel_bytes() == 0);
     }
     rmt_core_free(core);
-    std::puts("UI: text, kitty drawing/deletion, sixel drawing/clear, Ctrl-C, cursor mode and kitty key release passed.");
+    CHECK(rmt::UnicodeKeyboard::category_for(U'A') == rmt::UnicodeKeyboard::Letters);
+    CHECK(rmt::UnicodeKeyboard::category_for(U'\u0301') == rmt::UnicodeKeyboard::Marks);
+    CHECK(rmt::UnicodeKeyboard::category_for(U'\U0001f642') == rmt::UnicodeKeyboard::Symbols);
+    CHECK(rmt::UnicodeKeyboard::category_for(U'\u200d') == rmt::UnicodeKeyboard::Format);
+    CHECK(rmt::UnicodeKeyboard::category_for(U'\ue000') == rmt::UnicodeKeyboard::PrivateUse);
+    CHECK(!rmt::UnicodeKeyboard::selectable(0x1b) && !rmt::UnicodeKeyboard::selectable(0xd800));
+    CHECK(rmt::UnicodeKeyboard::utf8(U'\U0001f642') == QString::fromUtf8("🙂").toUtf8());
+    CHECK(rmt::UnicodeKeyboard::index_of(rmt::UnicodeKeyboard::Symbols, U'\U0001f642') >= 0);
+    std::puts("UI: incremental text, graphics, keyboard, pen mouse encoding and categorized Unicode passed.");
 }

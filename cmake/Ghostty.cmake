@@ -7,7 +7,12 @@ endif()
 
 set(_ghostty_prefix "${CMAKE_BINARY_DIR}/ghostty")
 set(_ghostty_archive "${_ghostty_prefix}/lib/libghostty-vt.a")
-set(_ghostty_flags -Demit-lib-vt -Demit-xcframework=false -Dsimd=false -Doptimize=ReleaseSafe)
+set(RMT_GHOSTTY_OPTIMIZE ReleaseSafe CACHE STRING "Ghostty build mode (ReleaseSmall is an experimental size comparison and disables runtime safety)")
+set_property(CACHE RMT_GHOSTTY_OPTIMIZE PROPERTY STRINGS ReleaseSafe ReleaseSmall)
+if(NOT RMT_GHOSTTY_OPTIMIZE MATCHES "^(ReleaseSafe|ReleaseSmall)$")
+    message(FATAL_ERROR "Unsupported RMT_GHOSTTY_OPTIMIZE")
+endif()
+set(_ghostty_flags -Demit-lib-vt -Demit-xcframework=false -Dsimd=false "-Doptimize=${RMT_GHOSTTY_OPTIMIZE}")
 set(_ghostty_target)
 if(RMT_ZIG_TARGET)
     list(APPEND _ghostty_target "-Dtarget=${RMT_ZIG_TARGET}")
@@ -17,13 +22,14 @@ if(RMT_ZIG_CPU)
 endif()
 
 # Always ask Zig to check its own cache: CMake cannot track all Zig inputs or
-# flag changes. ReleaseSafe remains enabled even in a CMake Release build.
+# flag changes. The default stays ReleaseSafe independently of CMake's mode;
+# the explicit ReleaseSmall override exists for measured size comparisons.
 add_custom_target(rmt_ghostty_build
     COMMAND "${CMAKE_COMMAND}" -E env "ZIG_GLOBAL_CACHE_DIR=${PROJECT_SOURCE_DIR}/.cache/zig-global"
         "${ZIG_EXECUTABLE}" build ${_ghostty_flags} ${_ghostty_target} --prefix "${_ghostty_prefix}"
     WORKING_DIRECTORY "${ghostty_SOURCE_DIR}"
     BYPRODUCTS "${_ghostty_archive}"
-    COMMENT "Building libghostty-vt (ReleaseSafe)" VERBATIM USES_TERMINAL
+    COMMENT "Building libghostty-vt (${RMT_GHOSTTY_OPTIMIZE})" VERBATIM USES_TERMINAL
 )
 add_library(ghostty-vt-static STATIC IMPORTED GLOBAL)
 set_target_properties(ghostty-vt-static PROPERTIES

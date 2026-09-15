@@ -23,6 +23,8 @@ case "${1:-help}" in
         exec 9>/run/inkline-manage.lock
         flock -x 9
         if systemctl is-active --quiet inkline.service; then
+            systemctl kill --kill-whom=all --signal=CONT inkline.service 2>/dev/null || :
+            "$bundle/current/inkline" --redraw 2>/dev/null || :
             echo 'Inkline is already running.'; exit 0
         fi
         umask 077
@@ -43,12 +45,27 @@ case "${1:-help}" in
     status)
         systemctl status inkline.service --no-pager
         ;;
+    shortcut)
+        shift
+        if [ "$#" -eq 0 ]; then set -- help; fi
+        exec "$bundle/current/inkline-hotkey" "$@"
+        ;;
+    run)
+        shift
+        test "$#" -gt 0 || { echo 'Usage: ~/inkline run PROGRAM [ARG ...]' >&2; exit 2; }
+        exec "$bundle/current/shortcut-launch.sh" terminal "$@"
+        ;;
+    manual)
+        exec "$bundle/current/install-manual.sh"
+        ;;
     uninstall)
         exec "$bundle/current/uninstall-device.sh"
         ;;
     help|--help|-h)
         echo 'Usage: ~/inkline start|demo [--rotate 0|90|270] [--font-size 6..48] [--quit-after 1..60]'
-        echo '       ~/inkline stop|status|uninstall'
+        echo '       ~/inkline stop|status|manual|uninstall'
+        echo '       ~/inkline run PROGRAM [ARG ...]'
+        echo '       ~/inkline shortcut register|deregister|list|help'
         ;;
     *) echo 'Run ~/inkline --help for usage.' >&2; exit 2 ;;
 esac

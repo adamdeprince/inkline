@@ -157,3 +157,45 @@ timer has also been replaced by profile-specific adaptive batching. All nine ARM
 suites pass, including checks that an unchanged frame performs no drawing and a
 normal text update covers at most two terminal rows. Physical waveform response,
 ghosting, and battery behavior still need interactive observation.
+
+## 0.3.6 Unicode, shortcuts, and recovery — September 15
+
+Eleven host suites and ten ARM suites pass. Coverage includes the Unicode
+keyboard, nine terminal slots and actual open counts, native and synthesized
+pen mouse events at three rotations, Shift selection, graphics clearing, and
+control-socket requests. The installed build passes its startup preflight on
+firmware 3.27.3.0.
+
+The explicit `tests/shortcut_services.sh` device test creates a temporary
+kernel keyboard and test programs in `/tmp`. It verified registration and
+deregistration, literal arguments containing shell syntax, Bash cache
+preferences, and the permanent Ctrl+Alt+T binding. A deliberately hung native
+app was stopped with Ctrl+Alt+T while existing PTYs survived. Holding
+Ctrl+Alt+Backspace for two seconds killed the test programs and started a fresh
+terminal. A native app exiting with an error also restored Inkline. Cleanup
+returned the device to notebooks and removed the temporary binding.
+
+Device testing found that stock BusyBox `flock` lacks `-w`. The shortcut
+launcher now uses bounded nonblocking attempts. The service test waits through
+the full deactivating state before checking that a hung app is gone.
+
+The eight-page PDF manual is bundled. Automatic My files import was unavailable
+with this tablet's current USB web interface setting; the installer left the
+PDF available and printed retry instructions. Actual document import remains
+an acceptance check after enabling that interface. New physical pen gestures,
+Folio combinations and USB hotplug remain separate acceptance checks.
+
+## GNU Emacs 31.1 in terminal mode — September 15
+
+GNU Emacs 31.1 replaces the earlier Debian Emacs 28 bundle. The Linux build
+uses the matching ARM SDK and excludes graphical backends and native
+compilation. The `emacs` wrapper selects terminal mode. Org, TRAMP, TeX mode,
+Unicode editing, JSON, TLS, SQLite and tree-sitter pass checks on the tablet.
+An actual PTY session edited and saved Unicode text and exited with C-x C-c.
+
+The existing personal Emacs configuration was preserved and loaded successfully.
+The updated ghostty-tex integration handles Emacs without native compilation;
+its LaTeX, BibTeX, PDF/DVI and configuration-preservation checks pass with build
+files in RAM. AUCTeX 12.2 still emits upstream deprecation warnings.
+The installed Emacs release occupies 138.1 MiB, versus about 185.4 MiB for the
+old bundle. Older retained releases use additional storage.

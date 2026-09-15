@@ -61,7 +61,7 @@ def main():
         shutil.copy2(binary, stage / "inkline")
         shutil.copy2(ROOT / "build/tablet/inkline-hotkey", stage / "inkline-hotkey")
         copy_repository_tree("assets", stage / "assets", tracked_files)
-        for name in ["install-device.sh", "uninstall-device.sh", "run-session.sh", "inkline-launcher", "inkline.service", "inkline-hotkey.service"]:
+        for name in ["install-device.sh", "uninstall-device.sh", "install-manual.sh", "run-session.sh", "inkline-launcher", "inkline.service", "inkline-hotkey.service", "shortcut-launch.sh", "shortcut-epaper.sh", "shortcut-restore.sh"]:
             shutil.copy2(ROOT / "scripts" / name, stage / name)
         for name in ["README.md", "LICENSE", "THIRD_PARTY.md"]:
             shutil.copy2(ROOT / name, stage / name)

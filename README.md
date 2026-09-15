@@ -4,14 +4,14 @@ Inkline is a terminal for **reMarkable 2**, built with **libghostty-vt** and the
 stock Qt e-paper backend. It is designed for Type Folio and external USB
 keyboards, with kitty graphics and an initial sixel implementation.
 
-**Version 0.3.5 is a preview.** The main artifact is the repeatable
+**Version 0.3.6 is a preview.** The main artifact is the repeatable
 [installation procedure](docs/install.md), including preflight, launch, recovery
 and uninstall. It targets firmware **3.27**, tested on **3.27.3.0**. Other models
 and firmware lines are not supported by this installer.
 
 ## Install
 
-Download the **[Inkline 0.3.5 preview](https://github.com/adamdeprince/inkline/releases/tag/v0.3.5)**
+Download the **[Inkline 0.3.6 preview](https://github.com/adamdeprince/inkline/releases/tag/v0.3.6)**
 and follow the [installation procedure](docs/install.md). The prebuilt ARM bundle
 includes the installer, launcher, uninstall script, checksums, source archives
 and licenses. No compiler, SDK or third-party package manager is needed to install it.
@@ -32,10 +32,14 @@ The package is generated at `build/dist/inkline-rm2.tar.gz`. The
 After installation, press **Ctrl+Alt+T on the tablet’s Type Folio or USB keyboard**
 to open Inkline. No second computer is needed for subsequent launches. Tap
 **Quit**, press **Ctrl+Shift+Q**, or exit the shell to return to notebooks.
-In 0.3.5, Quit asks for confirmation and `exit` closes only the current terminal.
+In 0.3.6, Quit asks for confirmation and `exit` closes only the current terminal.
 The launcher temporarily switches from `xochitl` to Inkline and restores it when
 Inkline stops. A small keyboard shortcut service starts at boot; the terminal itself opens only
 on request, and the usual notebook interface remains the default.
+
+The bundle includes a [PDF user guide](docs/Inkline%20Manual.pdf), and can import it
+into My files through an already enabled USB web interface. See
+[program shortcuts and emergency recovery](docs/global-shortcuts.md).
 
 ## Optional utilities
 
@@ -50,7 +54,7 @@ Build recipes, pinned inputs, and device checks are documented in
 Compact TeX Live is installed on the tablet and Purrfect PDF export passes.
 The full collection is optional and too large to recommend for internal storage.
 
-## Keyboard controls in 0.3.5
+## Keyboard controls in 0.3.6
 
 Hold the separate **Opt** key (between Ctrl and Alt on the Folio) and press
 **1 through 0** for **F1 through F10**. The shortcut uses the keyboard's Meta
@@ -62,8 +66,9 @@ Hold the **right Alt/Option** key for the other Folio and USB keyboard shortcuts
 | --- | --- |
 | Tab | Escape |
 | Up / Down | PageUp / PageDown |
-| Left / Right | Previous / next terminal, across six slots |
-| Space | Open or close Settings |
+| Left / Right | Previous / next terminal, across nine slots |
+| Space | Open or close the Unicode keyboard (either Alt key) |
+| 1–9 | Select terminal slot 1–9 |
 | Backspace | Confirm quitting all terminals |
 | C / V | Copy selected text / paste the RAM clipboard |
 
@@ -81,7 +86,7 @@ The size is saved after the adjustment. Each terminal has its own
 shell and scrollback; switching to an unused slot opens a shell there.
 Drag two fingers down to reveal older output, or up to return toward the prompt.
 Swipe two fingers left for the next terminal, or right for the previous one.
-Single-finger and pen drags still select text.
+Single-finger drags select text; the pen reports mouse events to applications that enable them. Shift+pen forces selection.
 New terminals print a short guide with a tiny Goblin logo and the current
 Caps Lock setting. The logo is displayed through inline kitty graphics in RAM.
 Settings also selects **Romaji, Pinyin, Zhuyin, Wubi**, or **US-International**
@@ -93,15 +98,16 @@ the minus key immediately left of Backspace** types `=`. Keyboard zoom
 combinations have been removed. With input
 method **Off**, Shift+6 types a literal `^`, so `c^2` stays `c^2`.
 
-Drag a finger, pen, or mouse across terminal text, then use right Option+C/V.
-The 128 KiB clipboard is shared by all six terminals, supports OSC 52, and stays
+Drag a finger across terminal text, then use right Option+C/V. Hold Shift while
+using the pen or mouse if the application has enabled terminal mouse reporting.
+The 128 KiB clipboard is shared by all nine terminals, supports OSC 52, and stays
 in RAM. Terminal output is read-only: Option+X copies the selection and explains
 that deletion must be performed by the running editor.
 See [keyboard and session instructions](docs/keyboard.md) for details.
 
 ## Current source features
 
-- Up to six local interactive shells with controlling PTYs, resizing, scrollback and
+- Up to nine local interactive shells with controlling PTYs, resizing, scrollback and
   alternate-screen terminal state supplied by libghostty.
 - Qt keyboard events encoded through libghostty, including Ctrl/Alt combinations,
   cursor modes and negotiated kitty key events. Touch controls provide Escape,
@@ -122,8 +128,7 @@ See [keyboard and session instructions](docs/keyboard.md) for details.
 
 This is not yet a complete replacement for a desktop kitty terminal. The first
 renderer does not implement Unicode placeholder placements, animation playback,
-all image z-order cases, or gray+alpha image rendering. Mouse
-reporting to terminal applications is still unfinished. Inkline handles pointer drags as text selection.
+all image z-order cases, or gray+alpha image rendering.
 
 Sixel still needs DEC display modes, partial erasure, scrolling-region edge cases
 and reflow refinements. It is therefore **not advertised in device attributes**
@@ -143,7 +148,7 @@ at **64 MiB** and kitty image storage at **16 MiB per screen**. Sixel retains at
 most **16 MiB** and 128 placements per terminal, plus at most 8 MiB of encoded
 staging and a bounded decoded image. Slots allocate memory only when opened.
 Qt display buffers, libpng scratch memory and programs running in the shells
-need additional RAM. These limits do not reserve memory for six large programs.
+need additional RAM. These limits do not reserve memory for nine large programs.
 Each opened terminal also retains a grayscale display surface, about 2.3 MiB at
 the usual landscape size, so incremental updates do not allocate and rasterize
 the full screen for every character.
@@ -169,9 +174,10 @@ supplies the account's home directory when HOME is missing or empty.
 
 ## Validation
 
-All **nine** suites pass on the development Mac and reMarkable 2: core graphics, sixel decoding,
-mixed-stream parsing, shell PTY, renderer/keyboard integration, shortcut mapping,
-terminal sessions, clipboard/selection, and input methods. The startup guide and logo render correctly
+For 0.3.6, all **ten ARM suites** pass on reMarkable 2, with the corresponding
+host suites and an additional local control-socket integration test on macOS.
+They cover graphics, sixel, stream parsing, PTYs, rendering, keyboard and global
+shortcut configuration, sessions, clipboard, and input methods. The startup guide and logo render correctly
 using the tablet's stock Qt libraries. Physical checks for the new shortcuts,
 keyboard LEDs, physical pinch/pen behavior and USB hotplug remain outstanding.
 
@@ -179,6 +185,10 @@ On the reMarkable 2, a dense 1840 × 1280 diagnostic frame took about 554 ms to
 rasterize in full. Updating a normal dirty text row on the retained surface took
 about 0.37 ms. This removes the main application-side source of typing lag; the
 selected e-paper waveform still determines the physical screen response.
+
+See the [PDF manual](docs/Inkline%20Manual.pdf), [global shortcut guide](docs/global-shortcuts.md),
+and [size-optimization measurements](docs/size-comparison.md) for the new controls,
+recovery behavior and the measured limits of `-Os` savings.
 
 The original five suites passed on reMarkable 2 running 3.27.3.0 for 0.1.0.
 The device graphics suite measured **zero Linux

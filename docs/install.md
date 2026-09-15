@@ -29,7 +29,7 @@ a convenience in the development setup, not an installer requirement.
 
 On your computer, download `inkline-rm2.tar.gz` and
 `inkline-rm2.tar.gz.sha256` from the
-[0.3.5 preview release](https://github.com/adamdeprince/inkline/releases/tag/v0.3.5).
+[0.3.6 preview release](https://github.com/adamdeprince/inkline/releases/tag/v0.3.6).
 Use the attached Inkline bundle; GitHub's automatically generated source-code
 archives do not contain the compiled application. The bundle is about 79 MiB
 and includes the installer, uninstall script, source archives and licenses.
@@ -39,12 +39,12 @@ additional tablet package manager.
 Alternatively, download both files from a terminal on your computer:
 
 ```sh
-curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.3.5/inkline-rm2.tar.gz
-curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.3.5/inkline-rm2.tar.gz.sha256
+curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.3.6/inkline-rm2.tar.gz
+curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.3.6/inkline-rm2.tar.gz.sha256
 ```
 
 The same files are mirrored under
-[`inkline.goblinreactor.com/downloads/v0.3.5/`](https://inkline.goblinreactor.com/downloads/v0.3.5/inkline-rm2.tar.gz).
+[`inkline.goblinreactor.com/downloads/v0.3.6/`](https://inkline.goblinreactor.com/downloads/v0.3.6/inkline-rm2.tar.gz).
 To compile the application yourself, see [building from source](#building-from-source).
 
 ## 3. Check, then install
@@ -136,20 +136,38 @@ Useful controls:
 - Tap **Esc** or use **Ctrl+[** when your Folio has no Escape key.
 - **Shift+PageUp/PageDown**, or the bottom touch buttons, scroll history.
 - Drag two fingers vertically to scroll the 500-line history; swipe them left
-  or right to switch terminals. One finger or the pen selects text.
+  or right to switch terminals. One finger selects text. The pen reports mouse
+  events to applications that request them; hold Shift to select text instead.
 - `~/inkline start --rotate 270` reverses landscape orientation; `--rotate 0` uses portrait.
 - `~/inkline start --font-size 32` overrides the saved text size for this launch (6–48 pixels).
 - Pinching and Settings adjust text size inside the terminal. Pinch in one-pixel
   steps for finer control; keyboard zoom combinations have been removed.
-- Option+Space also selects Asian input methods; Option+C/V uses the RAM clipboard.
+- Alt+Space opens the Unicode keyboard; tap Settings there to select Asian input methods; Option+C/V uses the RAM clipboard.
 - `~/inkline stop` restores notebooks from another SSH session.
 
-Inkline 0.3.5 includes right Alt/Option shortcuts, six terminal slots,
+Inkline 0.3.6 includes right Alt/Option shortcuts, nine terminal slots,
 quit confirmation, a Settings button, and a saved Caps Lock/Control toggle.
 Each new terminal shows a brief guide and a tiny Goblin logo.
 Inkline sets `HOME=/home/root` for tablet sessions, including shells opened by
 the keyboard shortcut, so `cd` without arguments returns home.
 See [keyboard settings](keyboard.md) for the complete controls.
+
+### Program shortcuts and the manual
+
+Register a program with `~/inkline shortcut register e emacs`, then launch it
+with Ctrl+Alt+E. Use `~/inkline shortcut list` and `~/inkline shortcut deregister e`
+to manage bindings. Ctrl+Alt+T is permanent. Hold Ctrl+Alt+Backspace for two
+seconds to stop a malfunctioning shortcut app and restart Inkline; emergency
+recovery closes all terminal sessions. See [global shortcuts](global-shortcuts.md)
+for native e-paper apps, session preservation, and recovery limits.
+
+The bundle includes [Inkline Manual.pdf](Inkline%20Manual.pdf). Installation
+tries to import it into **My files** through the USB web interface when that
+interface is enabled and notebooks are running. Otherwise the PDF stays in the
+bundle. Enable the tablet's USB web interface, quit Inkline, and run
+`~/inkline manual` from SSH to retry. The same PDF can be imported through the
+USB browser interface or reMarkable's apps. Installation never writes notebook
+metadata directly, and removal keeps an imported manual.
 
 Opening Inkline temporarily stops `xochitl`, the notebook interface. A service
 loaded only into `/run` restores it on normal exit and process failure. The
@@ -158,7 +176,7 @@ notebook interface with the shortcut available in the background.
 
 ### Display response, contrast, and shell preferences
 
-Open Settings with right Alt/Option+Space and drag **Text darkness**, or focus
+Open Settings with Alt+Space followed by F2 and drag **Text darkness**, or focus
 it with Tab and use Left/Right. 50% is the original rendering; darker values
 strengthen antialiased letter edges. Text colors and graphics retain their
 original values. **Minimum contrast** keeps foreground and background luminance
@@ -168,7 +186,7 @@ The **E-paper updates** row offers five tradeoffs. Fast is the default and uses
 the firmware's low-latency animation mode. Balanced uses its normal UI mode,
 Crisp uses the higher-quality content mode, Mono favors black-and-white text,
 and Saver batches command output for 120 ms so bursts request fewer screen updates. Text darkness, minimum
-contrast, and update profile stay in RAM across all six terminals and Settings
+contrast, and update profile stay in RAM across all nine terminals and Settings
 visits. Changing them does not write to flash; closing Inkline resets them.
 
 Normal typing redraws only libghostty's dirty rows on a retained grayscale
@@ -226,3 +244,8 @@ installer. It also fetches the pinned libghostty-vt source and applies the
 included ARM/libc patches. The result is `build/dist/inkline-rm2.tar.gz`, with an
 adjacent SHA-256 file. The host-side script uploads this bundle into a fresh RAM
 directory and uses the same included device installer as the prebuilt release.
+
+The PDF manual is generated from `docs/manual.md` with
+`python3 scripts/build-manual.py` in a host Python environment containing
+PyQt6. The finished PDF is committed so installers do not need Qt development
+tools or a PDF generator.

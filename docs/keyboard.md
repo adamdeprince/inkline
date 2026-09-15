@@ -1,7 +1,8 @@
 # Keyboard and terminal settings
 
-These controls are included in **Inkline 0.3.5**. All nine host and ARM test
-suites pass; physical Folio and USB checks for the new controls are pending.
+These controls are included in **Inkline 0.3.6**. Host and ARM integration tests
+pass. Physical Folio/USB shortcut and touch checks for the new controls remain
+separate from those automated tests.
 
 Each new terminal prints a short shortcut guide with a small Goblin logo and the
 current Caps Lock setting before starting the shell. Switching back to an open
@@ -21,14 +22,15 @@ Hold the **right Alt/Option** key for these other shortcuts:
 | Tab | Escape |
 | Up / Down | PageUp / PageDown, sent to the program |
 | Left / Right | Previous / next terminal |
-| Space | Open or close Settings |
+| Space | Open or close the Unicode keyboard (either Alt key) |
+| 1–9 | Select terminal slot 1–9 |
 | Backspace | Ask to quit Inkline |
 | C / V | Copy selection / paste clipboard |
 | X | Copy selection and explain how to cut in the editor |
 
 The number shortcuts use the physical top number row. USB numeric keypads keep
 their usual behavior. Left Alt remains available for ordinary terminal input,
-including Emacs Meta commands. Ctrl, Shift, and Alt can combine with Opt's
+including Emacs Meta commands, except for Alt+Space. Ctrl, Shift, and Alt can combine with Opt's
 function keys.
 Right Alt is reserved for the listed shortcuts, including on layouts that call
 it AltGr; other keys retain their layout's normal input.
@@ -43,16 +45,16 @@ literal punctuation before Inkline's selected input method processes them.
 US-International still composes accents when explicitly selected; pasted and
 committed Unicode text is preserved.
 
-## Six terminals
+## Nine terminals
 
-Left and Right wrap through six numbered slots. Visiting an empty slot starts a
+Left and Right wrap through nine numbered slots. Visiting an empty slot starts a
 shell. Each slot keeps its own programs, working directory, screen, graphics and
 scrollback, and background terminals continue receiving output. The Settings
-button shows the active slot; when the bar is hidden, a brief label appears after
+button shows the active terminal among the number currently open, with a slot label when slots are nonconsecutive; when the bar is hidden, a brief label appears after
 switching terminals.
 
 Swipe **two fingers left** for the next terminal or **right** for the previous
-one. Each swipe changes one slot and wraps through the same six slots as the
+one. Each swipe changes one slot and wraps through the same nine slots as the
 keyboard. One-finger dragging remains text selection.
 
 Type `exit` or press Ctrl+D at a shell prompt to close that terminal. Inkline
@@ -63,7 +65,7 @@ cancel, or select Quit with Tab/Right and press Enter to confirm.
 
 ## Caps Lock and the bottom bar
 
-Tap the fifth button, **Settings**, or press **Right Alt+Space**. Tab or Up/Down
+Tap the fifth button, **Settings**, or press **Alt+Space**, then **F2** in the Unicode keyboard. Tab or Up/Down
 moves keyboard focus; Left/Right changes a value, and Enter or Space activates it.
 A **solid black fill and filled circle** mark the active choice. A **dashed outline**
 marks keyboard focus, independently of the chosen value. Escape closes Settings. Touch also
@@ -102,7 +104,7 @@ the live prompt, and full-screen applications keep their usual alternate screen.
 **Pinch with two fingers** to resize text from **6 to 48 pixels**. Pinching has
 about half its previous proportional response and moves in **one-pixel steps**
 for finer control. Settings' minus and plus buttons still adjust by two pixels.
-The size applies to all six terminals, and existing shells receive a resize
+The size applies to all nine terminals, and existing shells receive a resize
 without restarting. A cancelled pinch restores the previous size.
 
 Keyboard zoom combinations have been removed from both Alt keys. Punctuation
@@ -110,11 +112,13 @@ and ordinary Alt input now reach the running program.
 
 ## Text selection and clipboard
 
-Drag one finger, the pen, or a mouse across text. The selected cells invert.
+Drag one finger, the pen, or a mouse across text. When an application requests
+mouse input, hold Shift to select locally with the pen or mouse instead.
+The selected cells invert.
 Dragging past the top or bottom scrolls history; a tap clears the selection.
 Hold **right Alt/Option+C** to copy and **right Alt/Option+V** to paste. Soft-wrapped
 lines copy as one line, and Unicode characters remain intact. The clipboard is
-shared by all six terminals and is cleared when Inkline exits. It is private to
+shared by all nine terminals and is cleared when Inkline exits. It is private to
 Inkline, not the notebook application's clipboard.
 
 Applications can set or query this clipboard through **OSC 52**. The clipboard
@@ -134,7 +138,7 @@ to Inkline. OSC 52 itself does not request deletion.
 
 ## Asian and accented input
 
-Open **Option+Space → Input method**. Tap a method or select it with Up/Down and
+Open **Alt+Space → Settings → Input method**. Tap a method or select it with Up/Down and
 Enter. **Off** restores direct keyboard input. The selection is saved for all
 terminals; each terminal keeps its own unfinished composition.
 
@@ -182,7 +186,7 @@ waveform used for Inkline's full-screen region:
 | Mono | Mono | Fast black-and-white text with 24 ms output batching. Graphics lose their gray shades. |
 | Saver | UI | 40 ms interactive delay and 120 ms batching, requesting fewer updates during bursts. |
 
-The setting applies to the whole Inkline window and all six terminals. It stays
+The setting applies to the whole Inkline window and all nine terminals. It stays
 in RAM and returns to Fast when Inkline closes. Fast or Balanced suits typing;
 Crisp suits static graphics and dense pages; Saver suits long command output
 when immediate feedback matters less.
@@ -195,7 +199,7 @@ about 554 ms. The physical e-paper update follows that application render.
 
 ## Text darkness and minimum contrast
 
-In Settings (right Alt/Option+Space), drag **Text darkness** with a finger, pen
+In Settings (Alt+Space, then F2), drag **Text darkness** with a finger, pen
 or mouse. Keyboard users can focus the slider with Tab or Up/Down and adjust
 with Left/Right; Home/End selects the endpoints. 50% preserves the original
 rendering. Normal text is already black; higher values darken its smoothed
@@ -210,3 +214,20 @@ The surrounding terminal previews both changes. The values stay in RAM when
 you lift your finger, close Settings, or switch terminals. They never write a
 contrast preference to flash. Closing Inkline resets text darkness to 50% and
 minimum contrast to 35%. Other existing saved preferences retain their behavior.
+
+## Unicode keyboard and pen mouse
+
+**Either Alt+Space** opens a category-based Unicode keyboard. Tap a character
+to type it; drag vertically or use the wheel, arrows and page keys to browse.
+Tab changes category. Typing a hexadecimal codepoint followed by Enter inserts
+that character. F2 opens Settings; Escape or Done closes the keyboard.
+The catalog follows Qt's Unicode version and excludes control characters,
+unassigned values, surrogates and noncharacters. Font coverage varies.
+
+The pen sends left-button mouse events when the program has enabled terminal
+mouse reporting. Hold Shift to select local text instead. Otherwise pen drags
+select text normally. Switching sessions or losing focus releases a held
+button in the original terminal.
+
+See [global program shortcuts](global-shortcuts.md) for Ctrl+Alt bindings and
+emergency recovery, and the [PDF manual](Inkline%20Manual.pdf) for a complete guide.

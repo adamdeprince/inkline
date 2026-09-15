@@ -6,10 +6,69 @@
 #include <QQuickWindow>
 #include <QScreen>
 #include <QTimer>
+#include <QLocalServer>
+#include <QLocalSocket>
+#include <QFile>
+#include <QHttpMultiPart>
+#include <QNetworkAccessManager>
+#include <QNetworkProxy>
+#include <QNetworkReply>
+#include <QEventLoop>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <cstring>
 #include <cstdio>
 #include <exception>
+#include <stdexcept>
 
 int main(int argc, char **argv) {
+    // The 64 KiB literal shortcut format can expand up to sixfold in JSON.
+    constexpr qsizetype control_max_packet = 512 * 1024;
+    if (argc >= 2 && std::strcmp(argv[1], "--import-manual") == 0) {
+        if (argc != 3) { std::fputs("Usage: inkline --import-manual FILE.pdf\n", stderr); return 2; }
+        QCoreApplication app(argc, argv);
+        QFile pdf(QString::fromLocal8Bit(argv[2]));
+        if (!pdf.open(QIODevice::ReadOnly)) return 1;
+        QNetworkAccessManager manager;
+        manager.setProxy(QNetworkProxy(QNetworkProxy::NoProxy));
+        QNetworkRequest request(QUrl("http://10.11.99.1/upload"));
+        request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::ManualRedirectPolicy);
+        QHttpMultiPart form(QHttpMultiPart::FormDataType);
+        QHttpPart file;
+        file.setHeader(QNetworkRequest::ContentDispositionHeader, "form-data; name=\"file\"; filename=\"Inkline Manual.pdf\"");
+        file.setHeader(QNetworkRequest::ContentTypeHeader, "application/pdf");
+        file.setBodyDevice(&pdf); form.append(file);
+        auto *reply = manager.post(request, &form);
+        QEventLoop loop;
+        QTimer timeout; timeout.setSingleShot(true);
+        QObject::connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+        QObject::connect(&timeout, &QTimer::timeout, reply, &QNetworkReply::abort);
+        timeout.start(15000);
+        if (!reply->isFinished()) loop.exec();
+        timeout.stop();
+        const auto status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        const bool ok = reply->error() == QNetworkReply::NoError && status >= 200 && status < 300;
+        delete reply;
+        return ok ? 0 : 1;
+    }
+    const auto control_path = qEnvironmentVariable("INKLINE_CONTROL_SOCKET", "/run/inkline/control");
+    // Control clients need only Qt Core/Network; never connect to the display.
+    if (argc >= 2 && (std::strcmp(argv[1], "--open-program") == 0 || std::strcmp(argv[1], "--redraw") == 0)) {
+        QCoreApplication app(argc, argv);
+        QJsonArray request; request.append(QString::fromLocal8Bit(argv[1]));
+        for (int i = 2; i < argc; ++i) request.append(QString::fromLocal8Bit(argv[i]));
+        QLocalSocket socket; socket.connectToServer(control_path);
+        if (!socket.waitForConnected(3000)) { std::fputs("Inkline is not ready; quit and reopen after upgrading.\n", stderr); return 1; }
+        const auto packet = QJsonDocument(request).toJson(QJsonDocument::Compact) + '\n';
+        if (packet.size() > control_max_packet) { std::fputs("Encoded program arguments exceed 512 KiB.\n", stderr); return 2; }
+        socket.write(packet);
+        if (socket.bytesToWrite() && !socket.waitForBytesWritten(3000)) return 1;
+        if (!socket.bytesAvailable() && !socket.waitForReadyRead(5000)) return 1;
+        QByteArray reply = socket.readAll();
+        while (!reply.contains('\n') && socket.waitForReadyRead(1000)) reply += socket.readAll();
+        if (reply != "OK\n") { std::fwrite(reply.constData(), 1, size_t(reply.size()), stderr); return 1; }
+        return 0;
+    }
     qputenv("QSG_RENDER_LOOP", "basic");
     QGuiApplication app(argc, argv);
     app.setApplicationName("Inkline");
@@ -67,6 +126,42 @@ int main(int argc, char **argv) {
         QObject::connect(&window, &QQuickWindow::heightChanged, &item, layout);
         if (tablet) window.showFullScreen(); else window.show();
         item.start();
+        QLocalServer control;
+        if (tablet || qEnvironmentVariableIsSet("INKLINE_CONTROL_SOCKET")) {
+            control.setSocketOptions(QLocalServer::UserAccessOption);
+            QLocalServer::removeServer(control_path);
+            if (!control.listen(control_path)) throw std::runtime_error("Cannot open Inkline control socket");
+            QObject::connect(&control, &QLocalServer::newConnection, &item, [&] {
+                while (auto *socket = control.nextPendingConnection()) {
+                    socket->setReadBufferSize(control_max_packet + 1);
+                    QObject::connect(socket, &QLocalSocket::disconnected, socket, &QObject::deleteLater);
+                    QTimer::singleShot(5000, socket, &QLocalSocket::disconnectFromServer);
+                    QObject::connect(socket, &QLocalSocket::readyRead, &item, [&, socket] {
+                        if (socket->bytesAvailable() > control_max_packet) { socket->disconnectFromServer(); return; }
+                        if (!socket->canReadLine()) return;
+                        const auto request = QJsonDocument::fromJson(socket->readLine()).array();
+                        bool ok = false;
+                        if (request.size() == 1 && request[0] == "--redraw") {
+                            try { item.redraw(); ok = true; } catch (...) { ok = false; }
+                        }
+                        // Up to 64 registered argv entries, plus the four
+                        // literal Bash wrapper entries used by the launcher.
+                        else if (request.size() >= 2 && request.size() <= 69 && request[0] == "--open-program") {
+                            std::vector<std::string> command;
+                            bool valid_command = true;
+                            for (qsizetype i = 1; i < request.size(); ++i) {
+                                if (!request[i].isString() || request[i].toString().contains(QChar(0))) { valid_command = false; break; }
+                                command.push_back(request[i].toString().toStdString());
+                            }
+                            if (valid_command && !command.empty() && !command[0].empty())
+                                try { ok = item.open_program(command); } catch (...) { ok = false; }
+                        }
+                        socket->write(ok ? "OK\n" : "Cannot open program; all nine terminals may be in use.\n");
+                        socket->disconnectFromServer();
+                    });
+                }
+            });
+        }
         if (args.isSet("settings")) item.settings();
         if (args.isSet("snapshot") && !item.snapshot().save(args.value("snapshot"), "PNG")) return 1;
         if (duration) QTimer::singleShot(duration * 1000, &app, &QCoreApplication::quit);

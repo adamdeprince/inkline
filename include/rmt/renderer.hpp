@@ -25,6 +25,7 @@ public:
     QImage frame();
     void sixel(sixel::Bitmap &&bitmap);
     void clear_sixel();
+    void clear_graphics();
     void reclaim(bool memory_pressure);
     int cell_width() const { return cw_; }
     int cell_height() const { return ch_; }
@@ -46,6 +47,7 @@ private:
     int cw_, ch_, ascent_;
     uint16_t cols_ = 80, rows_ = 24;
     QImage surface_;
+    uint64_t kitty_generation_ = 0;
     std::deque<Overlay> sixels_;
     size_t sixel_bytes_ = 0;
     size_t sixel_budget_;

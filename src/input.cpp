@@ -1,4 +1,5 @@
 #include "rmt/input.hpp"
+#include <QFile>
 
 namespace rmt {
 namespace {
@@ -19,6 +20,13 @@ int number_function_key(const QKeyEvent &e) {
         if (!scan && e.key() == Qt::Key_0) return Qt::Key_F10;
     }
     return 0;
+}
+int number_terminal(const QKeyEvent &e) {
+    if (e.modifiers() & Qt::KeypadModifier) return -1;
+    const auto scan = e.nativeScanCode();
+    if (scan >= 10 && scan <= 18) return int(scan - 10);
+    if (!scan && e.key() >= Qt::Key_1 && e.key() <= Qt::Key_9) return e.key() - Qt::Key_1;
+    return -1;
 }
 int physical_key(const QKeyEvent &e) {
     switch (e.nativeScanCode()) {
@@ -47,6 +55,17 @@ int literal_accent(const QKeyEvent &e) {
     case Qt::Key_Dead_Diaeresis: return mark == 0x0308 ? Qt::Key_QuoteDbl : 0;
     default: return 0;
     }
+}
+bool global_shortcut(const QKeyEvent &e) {
+    if (e.key() == Qt::Key_T || e.key() == Qt::Key_Backspace || e.nativeScanCode() == 28 || e.nativeScanCode() == 22) return true;
+    // This file lives in tmpfs and contains only evdev key numbers. Reading it
+    // on a Ctrl+Alt press makes registration changes immediate without polling.
+    if (e.nativeScanCode() < 8) return false;
+    QFile file("/run/inkline-shortcuts/keys");
+    if (!file.open(QIODevice::ReadOnly)) return false;
+    const auto wanted = QByteArray::number(e.nativeScanCode() - 8);
+    for (const auto &line : file.read(512).split('\n')) if (line == wanted) return true;
+    return false;
 }
 }
 
@@ -83,21 +102,31 @@ MappedInput InputMapper::map(const QKeyEvent &e, int terminal) {
         held.input.key = e.key();
         held.input.scan = e.nativeScanCode();
         held.input.terminal = terminal;
-        if (caps(e)) held.input.key = caps_control_ ? Qt::Key_Control : Qt::Key_CapsLock;
+        if ((e.modifiers() & Qt::ControlModifier) && (right_alt_ || left_alt_ || (e.modifiers() & Qt::AltModifier)) && global_shortcut(e))
+            held.input.action = InputAction::Ignore;
+        else if (caps(e)) held.input.key = caps_control_ ? Qt::Key_Control : Qt::Key_CapsLock;
+        else if (!(mods & (Qt::ControlModifier | Qt::MetaModifier)) && physical_key(e) == Qt::Key_Space &&
+                 (right_alt_ || left_alt_ || (mods & Qt::AltModifier))) {
+            held.input.action = InputAction::UnicodeKeyboard;
+            held.consumes_alt = true;
+        }
         else if (const auto function = number_function_key(e); function && (mods & Qt::MetaModifier)) {
             // The Folio's separate Opt key is Qt Meta (evdev 107, scan 115).
             // Right Alt/Opt must keep the number row's printed symbols, e.g. +.
             held.input.key = function;
             held.consumes_meta = true;
         }
-        else if (right_alt_ && !right_alt(e)) {
+        else if (right_alt_ && !right_alt(e) && !(mods & Qt::ControlModifier)) {
             const auto key = physical_key(e);
-            switch (key) {
+            if (const int target = number_terminal(e); target >= 0) {
+                held.input.action = InputAction::SelectTerminal;
+                held.input.target_terminal = target;
+            } else switch (key) {
             case Qt::Key_Tab: held.input.key = Qt::Key_Escape; break;
             case Qt::Key_Up: held.input.key = Qt::Key_PageUp; break;
             case Qt::Key_Down: held.input.key = Qt::Key_PageDown; break;
             case Qt::Key_Backspace: held.input.action = InputAction::Quit; break;
-            case Qt::Key_Space: held.input.action = InputAction::Settings; break;
+            case Qt::Key_Space: held.input.action = InputAction::UnicodeKeyboard; break;
             case Qt::Key_Left: held.input.action = InputAction::Previous; break;
             case Qt::Key_Right: held.input.action = InputAction::Next; break;
             case Qt::Key_C: held.input.action = InputAction::Copy; break;

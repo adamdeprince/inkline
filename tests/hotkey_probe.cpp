@@ -1,5 +1,5 @@
 // Manual on-device integration probe. Creates a temporary kernel keyboard and
-// sends Ctrl+Alt+T to exercise discovery and launching through actual evdev.
+// sends Ctrl+Alt+T (or a numeric evdev key code) through actual evdev.
 // Intentionally not part of CTest: this switches the tablet's visible UI.
 #include <linux/uinput.h>
 #include <fcntl.h>
@@ -8,7 +8,14 @@
 #include <cstdio>
 #include <cstring>
 #include <initializer_list>
-int main() {
+#include <cstdlib>
+int main(int argc, char **argv) {
+    if (argc > 3) return 2;
+    char *end = nullptr;
+    const long code = argc > 1 ? std::strtol(argv[1], &end, 10) : KEY_T;
+    if ((argc > 1 && (!end || *end)) || code < KEY_ESC || code > KEY_F12) return 2;
+    const long hold_ms = argc > 2 ? std::strtol(argv[2], &end, 10) : 150;
+    if ((argc > 2 && (!end || *end)) || hold_ms < 1 || hold_ms > 5000) return 2;
     int fd = open("/dev/uinput", O_WRONLY | O_CLOEXEC);
     if (fd < 0) return 1;
     if (ioctl(fd, UI_SET_EVBIT, EV_KEY) < 0) return 1;
@@ -23,10 +30,10 @@ int main() {
         return write(fd, &event, sizeof(event)) == sizeof(event);
     };
     bool ok = true;
-    for (int key : {KEY_LEFTCTRL, KEY_LEFTALT, KEY_T}) ok &= send(EV_KEY, key, 1);
+    for (int key : {KEY_LEFTCTRL, KEY_LEFTALT, int(code)}) ok &= send(EV_KEY, key, 1);
     ok &= send(EV_SYN, SYN_REPORT, 0);
-    usleep(150000);
-    for (int key : {KEY_T, KEY_LEFTALT, KEY_LEFTCTRL}) ok &= send(EV_KEY, key, 0);
+    usleep(static_cast<unsigned>(hold_ms) * 1000);
+    for (int key : {int(code), KEY_LEFTALT, KEY_LEFTCTRL}) ok &= send(EV_KEY, key, 0);
     ok &= send(EV_SYN, SYN_REPORT, 0);
     usleep(2000000);
     ioctl(fd, UI_DEV_DESTROY); close(fd);

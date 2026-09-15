@@ -5,7 +5,7 @@
 #include <vector>
 
 namespace rmt {
-enum class InputAction { Send, Ignore, Settings, Quit, Previous, Next, ToggleBar, HistoryUp, HistoryDown, Copy, Paste, Cut };
+enum class InputAction { Send, Ignore, UnicodeKeyboard, Quit, Previous, Next, SelectTerminal, ToggleBar, HistoryUp, HistoryDown, Copy, Paste, Cut };
 struct MappedInput {
     InputAction action = InputAction::Ignore;
     QEvent::Type type = QEvent::KeyPress;
@@ -16,6 +16,7 @@ struct MappedInput {
     bool repeat = false;
     bool caps_locked = false;
     int terminal = -1;
+    int target_terminal = -1;
     QKeyEvent event() const { return QKeyEvent(type, key, modifiers, scan, 0, 0, text, repeat); }
 };
 

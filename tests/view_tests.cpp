@@ -10,6 +10,7 @@
 #include <QTemporaryDir>
 #include <QThread>
 #include <QTouchEvent>
+#include <QTabletEvent>
 #include <QPointingDevice>
 #include <QFontMetrics>
 #include <cstdio>
@@ -27,6 +28,12 @@ void alt(rmt::TerminalView &view, int code, quint32 scan) {
     press(view, code, scan, Qt::AltModifier);
     key(view, QEvent::KeyRelease, Qt::Key_AltGr, 108);
 }
+void click(rmt::TerminalView &view, qreal x, qreal y) {
+    QMouseEvent down(QEvent::MouseButtonPress, QPointF(x, y), QPointF(x, y), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+    QCoreApplication::sendEvent(&view, &down);
+    QMouseEvent up(QEvent::MouseButtonRelease, QPointF(x, y), QPointF(x, y), Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
+    QCoreApplication::sendEvent(&view, &up);
+}
 void pump(int ms) {
     QElapsedTimer timer; timer.start();
     while (timer.elapsed() < ms) { QCoreApplication::processEvents(); QThread::msleep(5); }
@@ -39,6 +46,21 @@ void touch(rmt::TerminalView &view, QEvent::Type type, std::initializer_list<QEv
 }
 QEventPoint point(rmt::TerminalView &view, int id, QEventPoint::State state, int x, int y) {
     return QEventPoint(id, state, view.mapToScene(QPointF(x, y)), view.mapToScene(QPointF(x, y)));
+}
+void pen(rmt::TerminalView &view, QEvent::Type type, QPointF pos, Qt::KeyboardModifiers mods = Qt::NoModifier, bool synthesized = false) {
+    static QPointingDevice device("test pen", 124, QInputDevice::DeviceType::Stylus,
+        QPointingDevice::PointerType::Pen, QInputDevice::Capability::Position | QInputDevice::Capability::Pressure, 1, 1);
+    const bool up = type == QEvent::TabletRelease;
+    if (synthesized) {
+        const auto mouse_type = up ? QEvent::MouseButtonRelease : type == QEvent::TabletMove ? QEvent::MouseMove : QEvent::MouseButtonPress;
+        QMouseEvent event(mouse_type, pos, view.mapToScene(pos), view.mapToScene(pos),
+                          type == QEvent::TabletMove ? Qt::NoButton : Qt::LeftButton,
+                          up ? Qt::NoButton : Qt::LeftButton, mods, &device);
+        QCoreApplication::sendEvent(&view, &event); return;
+    }
+    QTabletEvent event(type, &device, pos, view.mapToScene(pos), up ? 0 : 0.5, 0, 0, 0, 0, 0, mods,
+                       type == QEvent::TabletMove ? Qt::NoButton : Qt::LeftButton, up ? Qt::NoButton : Qt::LeftButton);
+    QCoreApplication::sendEvent(&view, &event);
 }
 int main(int argc, char **argv) {
     QGuiApplication app(argc, argv); app.setApplicationVersion("test");
@@ -91,14 +113,14 @@ int main(int argc, char **argv) {
         const auto first = view.snapshot(); CHECK(!first.isNull());
         // Keep Right Alt held across switches: the modifier belongs to the view.
         key(view, QEvent::KeyPress, Qt::Key_AltGr, 108, Qt::GroupSwitchModifier);
-        for (int index = 1; index < 6; ++index) {
+        for (int index = 1; index < rmt::TerminalView::TERMINALS; ++index) {
             press(view, Qt::Key_Right, 114, Qt::AltModifier);
             CHECK(view.active_terminal() == index && view.terminal_count() == index + 1);
         }
         press(view, Qt::Key_Right, 114, Qt::AltModifier);
-        CHECK(view.active_terminal() == 0 && view.terminal_count() == 6);
+        CHECK(view.active_terminal() == 0 && view.terminal_count() == rmt::TerminalView::TERMINALS);
         key(view, QEvent::KeyRelease, Qt::Key_AltGr, 108);
-        CHECK(view.snapshot() == first);
+        CHECK(view.snapshot().copy(0, 0, 1000, 690) == first.copy(0, 0, 1000, 690)); // footer now counts open shells
         // Sideways two-finger swipes switch once, even with more motion.
         using S = QEventPoint::State;
         for (int rotation : {0, 90, 270}) {
@@ -112,10 +134,12 @@ int main(int argc, char **argv) {
             touch(view, QEvent::TouchBegin, {point(view, 1, S::Pressed, 400, 300), point(view, 2, S::Pressed, 600, 300)});
             touch(view, QEvent::TouchUpdate, {point(view, 1, S::Updated, 490, 300), point(view, 2, S::Updated, 690, 300)});
             touch(view, QEvent::TouchEnd, {});
-            CHECK(view.active_terminal() == 0 && view.terminal_count() == 6);
+            CHECK(view.active_terminal() == 0 && view.terminal_count() == rmt::TerminalView::TERMINALS);
         }
         view.setRotation(0);
-        alt(view, Qt::Key_Space, 65); CHECK(view.settings_open());
+        alt(view, Qt::Key_Space, 65); CHECK(view.unicode_keyboard_open());
+        if (const char *path = std::getenv("INKLINE_TEST_SNAPSHOTS")) CHECK(view.snapshot().save(QString::fromUtf8(path) + "/terminal-unicode.png"));
+        click(view, 100, 695); CHECK(view.settings_open());
         if (const char *path = std::getenv("INKLINE_TEST_SNAPSHOTS")) CHECK(view.snapshot().save(QString::fromUtf8(path) + "/terminal-settings.png"));
         press(view, Qt::Key_Space, 65); // Caps Lock row: Control -> Caps Lock.
         CHECK(!rmt::Preferences(settings).caps_control());
@@ -124,7 +148,8 @@ int main(int argc, char **argv) {
         CHECK(!view.bottom_bar() && !rmt::Preferences(settings).bottom_bar());
         alt(view, Qt::Key_Tab, 23); CHECK(!view.settings_open());
         // Settings can still open while the entire bottom bar is hidden.
-        alt(view, Qt::Key_Space, 65); CHECK(view.settings_open());
+        alt(view, Qt::Key_Space, 65); CHECK(view.unicode_keyboard_open());
+        click(view, 100, 695); CHECK(view.settings_open());
         press(view, Qt::Key_Escape, 9); CHECK(!view.settings_open());
         press(view, Qt::Key_B, 56, Qt::ControlModifier | Qt::ShiftModifier);
         CHECK(view.bottom_bar());
@@ -138,7 +163,7 @@ int main(int argc, char **argv) {
         press(view, Qt::Key_Return, 36); CHECK(!view.quit_confirmation_open()); // Cancel is the default.
         alt(view, Qt::Key_Backspace, 22); CHECK(view.quit_confirmation_open());
         press(view, Qt::Key_Escape, 9); CHECK(!view.quit_confirmation_open());
-        CHECK(view.terminal_count() == 6);
+        CHECK(view.terminal_count() == rmt::TerminalView::TERMINALS);
         // Neither Alt key intercepts punctuation to resize the terminal.
         for (const auto modifier : {Qt::Key_Alt, Qt::Key_AltGr}) {
             const quint32 scan = modifier == Qt::Key_Alt ? 64 : 108;
@@ -149,7 +174,7 @@ int main(int argc, char **argv) {
             CHECK(view.font_pixels() == 24);
         }
         pump(800); CHECK(rmt::Preferences(settings).font_pixels() == 26); // default, no font write
-        CHECK(view.terminal_count() == 6);
+        CHECK(view.terminal_count() == rmt::TerminalView::TERMINALS);
         // Pinch coordinates must work under the tablet's rotated view as well.
         view.setRotation(90);
         touch(view, QEvent::TouchBegin, {point(view, 1, S::Pressed, 400, 300)});
@@ -160,15 +185,15 @@ int main(int argc, char **argv) {
         CHECK(view.font_pixels() == 29); CHECK(rmt::Preferences(settings).font_pixels() == 26);
         touch(view, QEvent::TouchEnd, {point(view, 1, S::Released, 350, 300), point(view, 2, S::Released, 650, 300)});
         CHECK(rmt::Preferences(settings).font_pixels() == 29);
-        CHECK(view.terminal_count() == 6); // resizing preserves all PTYs
+        CHECK(view.terminal_count() == rmt::TerminalView::TERMINALS); // resizing preserves all PTYs
         touch(view, QEvent::TouchBegin, {point(view, 1, S::Pressed, 400, 300), point(view, 2, S::Pressed, 600, 300)});
         touch(view, QEvent::TouchUpdate, {point(view, 1, S::Updated, 480, 300), point(view, 2, S::Updated, 520, 300)});
         CHECK(view.font_pixels() == 13);
         touch(view, QEvent::TouchCancel, {}); CHECK(view.font_pixels() == 29);
         CHECK(rmt::Preferences(settings).font_pixels() == 29);
         view.setRotation(0);
-        // Input methods are selected through Option+Space, and persist.
-        alt(view, Qt::Key_Space, 65);
+        // Input methods are selected through Settings, and persist.
+        view.settings();
         for (int n = 0; n < 3; ++n) press(view, Qt::Key_Tab, 23);
         press(view, Qt::Key_Return, 36); // method chooser
         for (int n = 0; n < 3; ++n) press(view, Qt::Key_Down, 116);
@@ -179,7 +204,7 @@ int main(int argc, char **argv) {
         press(view, Qt::Key_N, 57, Qt::NoModifier, "n"); press(view, Qt::Key_I, 31, Qt::NoModifier, "i");
         if (const char *path = std::getenv("INKLINE_TEST_SNAPSHOTS")) CHECK(view.snapshot().save(QString::fromUtf8(path) + "/terminal-input-method.png"));
         // Return to direct input for the following shell test.
-        alt(view, Qt::Key_Space, 65);
+        view.settings();
         for (int n = 0; n < 3; ++n) press(view, Qt::Key_Tab, 23);
         press(view, Qt::Key_Return, 36);
         for (int n = 0; n < 3; ++n) press(view, Qt::Key_Up, 111);
@@ -248,7 +273,7 @@ int main(int argc, char **argv) {
         view.send_text("first-shell\n"); pump(150); const auto first = view.snapshot();
         view.select_terminal(1); pump(100); view.send_text("second-shell\n"); pump(150);
         const auto second = view.snapshot(); CHECK(second != first);
-        view.select_terminal(0); CHECK(view.snapshot() == first);
+        view.select_terminal(0); CHECK(view.snapshot().copy(0, 0, 1000, 690) == first.copy(0, 0, 1000, 690));
         view.send_text("background-one\n"); view.select_terminal(1); pump(150);
         CHECK(view.snapshot() == second); // Background output stays in its own terminal.
         view.select_terminal(0); CHECK(view.snapshot() != first);
@@ -295,5 +320,57 @@ int main(int argc, char **argv) {
         CHECK(view.snapshot() != before); CHECK(view.clipboard_text() == "hello");
         CHECK(view.terminal_count() == 2);
     }
-    std::puts("View: six slots, independent PTYs, background output, saved settings, hidden bar and safe quit confirmation passed.");
+    {
+        QQuickWindow window;
+        const std::vector<std::string> shell = {"/bin/sh", "-c", "stty -echo; printf '\\033]52;c;cmVhZHk=\\007'; IFS= read -r line; [ \"$line\" = 'λ' ] && printf '\\033]52;c;dW5pY29kZQ==\\007'; while read line; do :; done"};
+        rmt::TerminalView view(window.contentItem(), 24, false, temporary.filePath("unicode.ini"), shell);
+        view.setSize(QSizeF(1000, 750)); view.layout(); view.start(); pump(200);
+        CHECK(view.clipboard_text() == "ready");
+        press(view, Qt::Key_Space, 65, Qt::AltModifier); CHECK(view.unicode_keyboard_open());
+        for (const auto c : QString("03bb")) press(view, c.toUpper().unicode(), 0, Qt::NoModifier, QString(c));
+        press(view, Qt::Key_Return); CHECK(view.unicode_keyboard_open());
+        press(view, Qt::Key_Escape); view.send_text("\n"); pump(200);
+        CHECK(view.clipboard_text() == "unicode");
+        alt(view, Qt::Key_9, 18); CHECK(view.active_terminal() == 8 && view.terminal_count() == 2);
+        // The new background shell publishes its own readiness clipboard.
+        // Wait for it before a different program publishes its result.
+        for (int attempt = 0; attempt < 40 && view.clipboard_text() != "ready"; ++attempt) pump(50);
+        CHECK(view.clipboard_text() == "ready");
+        view.select_terminal(0);
+        CHECK(!view.open_program({"/inkline-program-that-does-not-exist"}));
+        CHECK(view.terminal_count() == 2);
+        CHECK(view.open_program({"sh", "-c", "printf '\\033]52;c;cHJvZ3JhbQ==\\007'; while read line; do :; done"}));
+        for (int attempt = 0; attempt < 40 && view.clipboard_text() != "program"; ++attempt) pump(50);
+        CHECK(view.active_terminal() == 1 && view.terminal_count() == 3 && view.clipboard_text() == "program");
+    }
+    {
+        // Direct tablet events and Qt Quick's synthesized mouse delivery both
+        // reach a raw PTY using negotiated SGR mouse mode.
+        // Switching terminals or losing focus releases in the original PTY.
+        for (const bool synthesized : {false, true})
+        for (const int rotation : {0, 90, 270}) {
+            QQuickWindow window;
+            const std::vector<std::string> shell = {"/bin/sh", "-c",
+                "stty raw -echo; printf '\\033[?1002h\\033[?1006h\\033]52;c;cmVhZHk=\\007'; "
+                "got=$(dd bs=1 count=18 2>/dev/null); "
+                "[ \"$got\" = \"$(printf '\\033[<0;2;2M\\033[<0;2;2m')\" ] && printf '\\033]52;c;bW91c2U=\\007'; "
+                "while read line; do :; done"};
+            rmt::TerminalView view(window.contentItem(), 24, false, temporary.filePath("pen.ini"), shell);
+            view.setSize(QSizeF(1000, 750)); view.layout(); view.start(); pump(200);
+            view.setRotation(rotation);
+            if (rotation == 270) { view.select_terminal(1); pump(200); view.select_terminal(0); }
+            CHECK(view.clipboard_text() == "ready");
+            QFont font; font.setFamilies({"Noto Mono", "Noto Sans Mono CJK SC"}); font.setPixelSize(24);
+            const QPointF pos(13 + QFontMetrics(font).horizontalAdvance('M'), 15 + QFontMetrics(font).height());
+            pen(view, QEvent::TabletPress, pos, Qt::ShiftModifier, synthesized);
+            pen(view, QEvent::TabletRelease, pos, Qt::ShiftModifier, synthesized); // Shift forces selection; no mouse bytes
+            pen(view, QEvent::TabletPress, pos, Qt::NoModifier, synthesized);
+            if (rotation == 90) {
+                QFocusEvent lost(QEvent::FocusOut); QCoreApplication::sendEvent(&view, &lost);
+            } else if (rotation == 270) view.select_terminal(1);
+            else pen(view, QEvent::TabletRelease, pos, Qt::NoModifier, synthesized);
+            pump(250); CHECK(view.clipboard_text() == "mouse");
+        }
+    }
+    std::puts("View: Unicode input, pen mouse, nine slots, program launch, PTYs, settings and gestures passed.");
 }

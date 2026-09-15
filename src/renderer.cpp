@@ -101,6 +101,13 @@ void Renderer::clear_sixel() {
     while (!sixels_.empty()) drop_sixel(sixels_.begin());
     invalidate();
 }
+
+void Renderer::clear_graphics() {
+    // Ghostty applies Kitty erase semantics when the pending ED/RIS reaches
+    // its parser. Sixel overlays are ours, and both layers need a repaint.
+    clear_sixel();
+    invalidate();
+}
 bool Renderer::visible(const Overlay &overlay) const {
     GhosttyTerminalScreen screen{};
     GhosttyTerminalScrollbar scrollbar{};
@@ -267,6 +274,15 @@ QRect Renderer::render() {
     check(ghostty_render_state_update(render_, terminal_));
     GhosttyRenderStateDirty dirty = GHOSTTY_RENDER_STATE_DIRTY_FALSE;
     check(ghostty_render_state_get(render_, GHOSTTY_RENDER_STATE_DATA_DIRTY, &dirty));
+    GhosttyKittyGraphics graphics = nullptr;
+    uint64_t generation = 0;
+    if (ghostty_terminal_get(terminal_, GHOSTTY_TERMINAL_DATA_KITTY_GRAPHICS, &graphics) == GHOSTTY_SUCCESS)
+        ghostty_kitty_graphics_get(graphics, GHOSTTY_KITTY_GRAPHICS_DATA_GENERATION, &generation);
+    if (generation != kitty_generation_) {
+        kitty_generation_ = generation;
+        dirty = GHOSTTY_RENDER_STATE_DIRTY_FULL;
+        check(ghostty_render_state_set(render_, GHOSTTY_RENDER_STATE_OPTION_DIRTY, &dirty));
+    }
     const QSize size(cols_ * cw_, rows_ * ch_);
     if (surface_.size() != size || surface_.format() != QImage::Format_Grayscale8) {
         surface_ = QImage(size, QImage::Format_Grayscale8);
