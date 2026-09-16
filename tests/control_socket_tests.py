@@ -28,6 +28,8 @@ with tempfile.TemporaryDirectory(prefix="inkline-control-") as directory:
         for invalid in ([], ["unknown"], ["--open-program", None], ["--open-program", ""], ["--open-program", "a\0b"], ["--open-program", "/missing-inkline-test-program"], ["--open-program", "/bin/echo", *(["x"] * 68)]):
             assert request(invalid) != b"OK\n", invalid
         assert request(["--redraw"]) == b"OK\n"
+        assert request(["--pause-usb"]) == b"OK\n"
+        assert request(["--pause-usb", "unexpected"]) != b"OK\n"
         # A maximum-length binding plus Bash's four fixed argv entries.
         assert request(["--open-program", "/bin/bash", "-ic", 'exec "$@"', "inkline-shortcut", "echo", *(["x"] * 63)]) == b"OK\n"
         for _ in range(7):

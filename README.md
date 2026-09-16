@@ -4,14 +4,14 @@ Inkline is a terminal for **reMarkable 2**, built with **libghostty-vt** and the
 stock Qt e-paper backend. It is designed for Type Folio and external USB
 keyboards, with kitty graphics and an initial sixel implementation.
 
-**Version 0.4.1 is a preview.** The main artifact is the repeatable
+**Version 0.4.2 is a preview.** The main artifact is the repeatable
 [installation procedure](docs/install.md), including preflight, launch, recovery
 and uninstall. It targets firmware **3.27**, tested on **3.27.3.0**. Other models
 and firmware lines are not supported by this installer.
 
 ## Install
 
-Download the **[Inkline 0.4.1 preview](https://github.com/adamdeprince/inkline/releases/tag/v0.4.1)**
+Download the **[Inkline 0.4.2 preview](https://github.com/adamdeprince/inkline/releases/tag/v0.4.2)**
 and follow the [installation procedure](docs/install.md). The prebuilt ARM bundle
 includes the installer, launcher, uninstall script, checksums, source archives
 and licenses. No compiler, SDK or third-party package manager is needed to install it.
@@ -185,9 +185,23 @@ The tablet launcher sets `HOME=/home/root`, so bare `cd`, `~`, and programs that
 use the home directory work in every shell. A directly launched terminal also
 supplies the account's home directory when HOME is missing or empty.
 
+## USB keyboard and typewriter
+
+Settings → USB (page 3) switches between USB Ethernet, outgoing keyboard and
+USB host mode. Typewriter sends Folio input to a connected computer, including
+committed text from the existing Japanese, Chinese and international input
+methods. Choose US/ASCII, Mac, Linux or Windows (WinCompose) output. Escape or
+Stop pauses; leaving Inkline restores networking, including after a crash.
+
+Install the Python utility for outgoing keyboard mode. `inkline-usb` controls
+the port; `inkline-type --file notes.txt --profile windows` types a UTF-8 file.
+The sender streams files without a fixed size limit, spool files or bytecode
+caches. The [PDF manual](docs/Inkline%20Manual.pdf), built from LaTeX and included
+in installation, covers host setup, recovery and the `~/inkline usb/type` commands.
+
 ## Validation
 
-For 0.4.1, shortcut configuration, keyboard and Settings tests pass on macOS
+For 0.4.2, shortcut configuration, keyboard and Settings tests pass on macOS
 and reMarkable 2. ARM evdev tests exercise Opt plus right Alt, held
 recovery, repeats and dropped events. T stays protected in the UI and CLI;
 Ctrl+Alt input matches its normal terminal encoding. Physical testing of the

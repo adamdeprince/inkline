@@ -17,9 +17,12 @@ public:
     void paint(QPainter *painter) override;
     QImage snapshot();
     void settings();
+    void usb_settings();
+    bool usb_settings_open() const;
     void select_terminal(int index);
     bool open_program(const std::vector<std::string> &command);
     void redraw();
+    void pause_usb();
     void send_text(std::string_view text);
     int active_terminal() const;
     int terminal_count() const;

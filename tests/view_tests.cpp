@@ -71,6 +71,21 @@ int main(int argc, char **argv) {
     QTemporaryDir temporary; CHECK(temporary.isValid());
     const auto settings = temporary.filePath("settings.ini");
     {
+        QQuickWindow window;
+        rmt::TerminalView view(window.contentItem(), 24, true, temporary.filePath("usb-pages.ini"));
+        view.setSize(QSizeF(1000, 750)); view.layout(); view.start(); view.settings();
+        press(view, Qt::Key_PageDown); press(view, Qt::Key_PageDown);
+        CHECK(view.usb_settings_open());
+        view.snapshot();
+        // Returning through the launcher with a key held in a dialog must not
+        // index the terminal array with the dialog's -1 target.
+        key(view, QEvent::KeyPress, Qt::Key_Meta, 115, Qt::MetaModifier);
+        view.redraw(); CHECK(view.usb_settings_open());
+        press(view, Qt::Key_PageUp); CHECK(view.settings_open() && !view.usb_settings_open());
+        press(view, Qt::Key_PageUp); CHECK(view.settings_open());
+        press(view, Qt::Key_Escape); CHECK(!view.settings_open());
+    }
+    {
         // Darkness and minimum contrast stay in RAM through finger lifts,
         // Settings exit, and are saved once at terminal shutdown.
         const auto path = temporary.filePath("darkness.ini");

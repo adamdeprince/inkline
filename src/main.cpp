@@ -96,7 +96,7 @@ int main(int argc, char **argv) {
     }
     const auto control_path = qEnvironmentVariable("INKLINE_CONTROL_SOCKET", "/run/inkline/control");
     // Control clients need only Qt Core/Network; never connect to the display.
-    if (argc >= 2 && (std::strcmp(argv[1], "--open-program") == 0 || std::strcmp(argv[1], "--redraw") == 0)) {
+    if (argc >= 2 && (std::strcmp(argv[1], "--open-program") == 0 || std::strcmp(argv[1], "--redraw") == 0 || std::strcmp(argv[1], "--pause-usb") == 0)) {
         QCoreApplication app(argc, argv);
         QJsonArray request; request.append(QString::fromLocal8Bit(argv[1]));
         for (int i = 2; i < argc; ++i) request.append(QString::fromLocal8Bit(argv[i]));
@@ -194,6 +194,8 @@ int main(int argc, char **argv) {
                         bool ok = false;
                         if (request.size() == 1 && request[0] == "--redraw") {
                             try { item.redraw(); ok = true; } catch (...) { ok = false; }
+                        } else if (request.size() == 1 && request[0] == "--pause-usb") {
+                            try { item.pause_usb(); ok = true; } catch (...) { ok = false; }
                         }
                         // Up to 64 registered argv entries, plus the four
                         // literal Bash wrapper entries used by the launcher.

@@ -60,7 +60,7 @@ void ShortcutSettings::paint(QPainter &p, const QRectF &panel) {
     panel_ = panel;
     p.fillRect(panel, Qt::white); p.setPen(QPen(Qt::black, 2)); p.drawRect(panel);
     font(p, 30, true);
-    p.drawText(panel.adjusted(22, 20, -22, -panel.height() + 65), Qt::AlignVCenter, "Command shortcuts · 2/2");
+    p.drawText(panel.adjusted(22, 20, -22, -panel.height() + 65), Qt::AlignVCenter, "Command shortcuts · 2/3");
     font(p, 19);
     p.drawText(panel.adjusted(22, 72, -22, -panel.height() + 110), Qt::AlignVCenter,
                "Opt+RightAlt + letter     • = assigned     T = locked");
@@ -103,7 +103,7 @@ void ShortcutSettings::paint(QPainter &p, const QRectF &panel) {
     p.drawText(QRectF(panel.left() + 22, panel.top() + 548, panel.width() - 44, panel.height() - 630), Qt::TextWordWrap,
                message_.isEmpty() ? "Only Save and Remove write to storage. Hold Opt+RightAlt+Backspace for 2 seconds to recover; this closes all terminals." : message_);
     font(p, 21);
-    button(p, control(7), "‹ Settings · 1/2", false, focus_ == 7);
+    button(p, control(7), "‹ Settings · 1/3", false, focus_ == 7);
     button(p, control(8), "Done", false, focus_ == 8);
 }
 void ShortcutSettings::notify() {
@@ -171,6 +171,7 @@ ShortcutSettings::Result ShortcutSettings::key(const MappedInput &event) {
     if (event.type != QEvent::KeyPress) return Stay;
     const int key = event.key;
     if (key == Qt::Key_Escape || key == Qt::Key_PageUp) return leave(Back);
+    if (key == Qt::Key_PageDown) return leave(Next);
     if (key == Qt::Key_Tab || key == Qt::Key_Backtab) {
         const bool back = key == Qt::Key_Backtab || (event.modifiers & Qt::ShiftModifier);
         focus_ = (focus_ + (back ? 8 : 1)) % 9; removing_ = false; return Stay;

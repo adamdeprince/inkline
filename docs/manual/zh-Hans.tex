@@ -136,6 +136,61 @@ OSC 52 无法删除编辑器里的文字。
 \code{clear} 和全屏擦除会同时清除可见图像与文字。内存不足时会回收屏幕外的图像。
 没有磁盘图像缓存，但大图仍会占用设备有限的 RAM。
 
+\topic{USB 键盘与打字机}
+打开\key{Settings → USB（第 3 页）}。\key{Network} 恢复 USB 以太网；
+\key{Send keyboard} 让平板成为另一台电脑的键盘；\key{Receive keyboard}
+通过有供电的 OTG 转接器接收有线键盘。Type Folio 在各模式下均可使用。
+输出键盘模式需要先安装网站提供的 Python 工具，无需额外的 Python 模块。
+
+选择 Send keyboard，用 USB-C 连接电脑，设置下列接收端配置，然后打开
+\key{Open typewriter}。在电脑上选中文档输入位置，再点平板上的\key{Start}。
+打字机始终以暂停状态打开。\key{Escape} 或\key{Stop} 暂停并释放按键。
+离开打字机、切换终端、窗口失焦、打开原生应用或休眠时也会暂停。
+断线重连后不会自动重发。
+
+\begin{choices}
+US / ASCII & 美式布局，关闭 Caps Lock。拒绝非 ASCII 文本。 \\
+Mac & 在键盘输入源中选择 Unicode Hex Input，关闭 Caps Lock。
+只支持到 U+FFFF，拒绝补充平面字符。 \\
+Linux & 美式布局，关闭 Caps Lock。接收应用／输入法必须支持 Ctrl+Shift+U、
+十六进制数字、Enter；并非每个应用都支持。 \\
+Windows & 在 PC 上安装 WinCompose，将 Compose 设为 Right Alt，启用 Unicode 输入。
+使用美式布局并关闭 Caps Lock。发送 Compose、u、六位十六进制数字、Enter。 \\
+\end{choices}
+从 \url{https://wincompose.info/} 获取 WinCompose。自定义规则不可覆盖此 Unicode 序列。
+HID 没有通用的 Unicode 文本通道；结果取决于接收端配置和字体。先用短文本试验。
+
+\key{Input method} 与终端共用输入引擎：Off／直接美式、Romaji、Pinyin、Zhuyin、
+Wubi 86 和 US-International。只有已确认字符才会发送。更换输入法后需点 Start 继续。
+选择\key{Off} 返回普通美式输入。\key{Unicode} 或 Alt+Space 打开的字符面板也向 USB 接收端输入。
+
+最近输入的预览仅存在 RAM 中，并非保存的文档或接收编辑器的副本。
+方向键和编辑快捷键操作接收端。右 Alt/Opt+C 复制预览，V 发送 Inkline 剪贴板。
+剪切应在接收编辑器中完成。USB 确认不能证明编辑器实际显示了哪些内容。
+
+\topic{发送文件与恢复网络}
+安装器将命令放入 \path{~/.local/bin}。普通 SSH 中也可使用
+\code{~/inkline usb} 和 \code{~/inkline type}。Outpost 的独立工具保持原样。
+\UsbExamples
+UTF-8 文件\key{没有固定大小上限}。发送器分块读取，不在 RAM 中保存整个文档，
+也不创建中转文件。可回读的普通文件会先完整验证再重新读取发送；发送时不要修改源文件。
+管道按到达顺序验证，因此后续错误出现时前面的内容可能已经发出。
+可选的 UTF-8 BOM 会被去除，CRLF／CR 转为换行。Enter 和 Tab 会操作当前应用。
+
+\code{--cps}（默认 20）或 \code{--delay-ms} 设置速度；Unicode 需要更多按键报告。
+\code{--start-delay} 留出切换输入焦点的时间。Dry-run 只打印报告，不发送 USB 按键。
+Ctrl+C 或 \code{--stop} 取消并释放按键。一次只能有一个发送器。
+交互队列满时会暂停；中断后重试前先检查接收文档。文本和临时状态不写入闪存。
+接收端配置与其他设置一起在正常退出时保存。
+
+点\key{Network} 或运行 \code{inkline-usb network} 恢复以太网。
+Inkline 退出、崩溃或紧急重启时也会恢复网络。USB 模式不会保存为开机偏好。
+\UsbRecoveryExample
+定时器独立于 shell 运行。从网络模式切换出去应使用平板或 Wi-Fi SSH，不能使用 USB SSH。
+切换失败会尝试恢复以太网。Inkline 不会抢占活动的卫星 PPP 或未知 USB 设备功能；
+退出清理也遵循此规则。Opt+RightAlt+Backspace 紧急重启仍然可用，
+但会关闭所有终端并丢失其中未保存的工作。
+
 \topic{用快捷键启动程序}
 在 Inkline shell 中注册快捷键。参数按字面传递；如需 shell 语法，请显式调用 shell。
 快捷键程序通过 Bash 读取 \code{~/.bashrc}。

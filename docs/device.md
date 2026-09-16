@@ -325,3 +325,19 @@ installation and automated tests are not a substitute for that physical test.
 USB/typewriter development is separate and was not included in this bundle.
 The PDF wording was subsequently clarified to remove an obsolete instruction
 to hold physical Ctrl; application binaries are unchanged by that clarification.
+# USB/typewriter validation — 2026-09-16
+
+The 0.4.2 ARM build passed the 18 USB encoder/streaming tests under `/tmp`,
+including a virtual file beyond 8 MiB, bounded reads, UTF-8 and newline chunk
+boundaries, late invalid input, and pidfd cancellation with key release.
+The six mode-switch tests use disposable fixtures and passed on the tablet.
+Qt USB profile/typewriter tests and terminal-view tests passed offscreen in
+tablet RAM. Settings remain unwritten until normal exit.
+
+Real transitions from Outpost's `rm_keyboard` to Inkline's FunctionFS keyboard,
+then Ethernet, host mode and Ethernet passed over Wi-Fi on firmware 3.27.3.0.
+Independent test services with the release's network cleanup restored both
+USB SSH listeners after normal stop and SIGKILL. No live terminals were closed.
+The tablet was left in networking mode. The Mac found the new HID identity
+but denied exclusive capture (`0xe00002e2`), so no test text was transmitted.
+This verifies enumeration and mode recovery, not receiver application text entry.

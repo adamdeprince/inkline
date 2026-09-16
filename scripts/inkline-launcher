@@ -50,6 +50,14 @@ case "${1:-help}" in
         if [ "$#" -eq 0 ]; then set -- help; fi
         exec "$bundle/current/inkline-hotkey" "$@"
         ;;
+    usb)
+        shift
+        exec "$bundle/current/usb/inkline-usb" "$@"
+        ;;
+    type)
+        shift
+        exec "$bundle/current/usb/inkline-type" "$@"
+        ;;
     run)
         shift
         test "$#" -gt 0 || { echo 'Usage: ~/inkline run PROGRAM [ARG ...]' >&2; exit 2; }
@@ -71,6 +79,8 @@ case "${1:-help}" in
         echo '       ~/inkline run PROGRAM [ARG ...]'
         echo '       ~/inkline cleanup UTILITY [--check]'
         echo '       ~/inkline shortcut register|deregister|list|help'
+        echo '       ~/inkline usb network|send-keyboard|receive-keyboard|status'
+        echo '       ~/inkline type --file FILE --profile us|mac|linux|windows'
         ;;
     *) echo 'Run ~/inkline --help for usage.' >&2; exit 2 ;;
 esac

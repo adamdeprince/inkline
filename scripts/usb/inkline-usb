@@ -1,0 +1,160 @@
+#!/bin/sh
+# Inkline managed USB modes, adapted from Inkline Outpost (see README.md).
+set -eu
+umask 077
+BASE=$(CDPATH= cd -- "$(dirname -- "$(readlink -f "$0")")" && pwd)
+PATH="/home/root/.local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+export PATH
+G=/sys/kernel/config/usb_gadget
+NET=$G/g_ether
+HID=$G/inkline_keyboard
+OLD=$G/rm_keyboard
+RUN=/run/inkline-usb
+FFS=$RUN/ffs
+ROLE=/sys/bus/platform/devices/ci_hdrc.0/role
+UDC=ci_hdrc.0
+fail() { echo "inkline-usb: $*" >&2; exit 1; }
+usage() {
+    cat <<'HELP'
+Usage: inkline-usb network          Restore USB Ethernet and USB SSH
+       inkline-usb send-keyboard    Act as a USB keyboard for another computer
+       inkline-usb receive-keyboard Accept a USB keyboard via powered OTG
+       inkline-usb status|state     Inspect USB; state prints one mode name
+       inkline-usb recover-after SECONDS  Schedule Ethernet recovery (10..3600)
+Use the tablet screen or Wi-Fi SSH when changing away from network mode.
+Modes are temporary; reboot returns to stock USB Ethernet.
+Use inkline-type --help to send a UTF-8 file. No modem operations are included.
+HELP
+}
+role() { cat "$ROLE"; }
+bound() { [ -f "$1/UDC" ] && [ -n "$(cat "$1/UDC")" ]; }
+state() {
+    if [ ! -r "$ROLE" ]; then echo unavailable
+    elif [ "$(role)" = host ]; then echo host
+    elif bound "$HID" && [ -f "$RUN/ready" ]; then echo keyboard
+    elif bound "$NET"; then echo network
+    else echo other; fi
+}
+set_role() {
+    [ "$(role)" = "$1" ] || printf '%s\n' "$1" > "$ROLE"
+    [ "$(role)" = "$1" ] || fail "Controller did not enter $1 mode."
+}
+unbind() { if bound "$1"; then printf '\n' > "$1/UDC"; fi; }
+stop_keyboard() {
+    unbind "$HID"
+    systemctl stop inkline-usb-keyboard.service 2>/dev/null || :
+    # Outpost may have left its keyboard gadget running. Preserve its files.
+    if bound "$OLD"; then
+        unbind "$OLD"
+        systemctl stop rm-usb-keyboard.service 2>/dev/null || :
+    fi
+    rm -f "$RUN/ready" "$RUN/enabled"
+}
+network() {
+    stop_keyboard
+    set_role gadget
+    [ -d "$NET" ] || fail 'Stock g_ether is missing; reboot to recreate it.'
+    [ "$(cat "$NET/UDC")" = "$UDC" ] || printf '%s\n' "$UDC" > "$NET/UDC"
+    for interface in usb0 usb1; do
+        [ -r "/sys/class/net/$interface/uevent" ] || fail "USB $interface has missing kernel records; save work and reboot."
+    done
+    systemctl start dropbear-usb0.socket dropbear-usb1.socket
+    for interface in usb0 usb1; do
+        systemctl is-active --quiet "dropbear-$interface.socket" || fail "USB SSH on $interface did not start."
+    done
+}
+host() { stop_keyboard; unbind "$NET"; set_role host; }
+keyboard() {
+    command -v python3 >/dev/null || fail 'Install the Python utility from the Inkline website first.'
+    python3 -B -c 'import sys; sys.exit(sys.version_info < (3, 9))' || fail 'Python 3.9 or later is required.'
+    stop_keyboard
+    mkdir -p "$HID"
+    printf '0x1d6b\n' > "$HID/idVendor"
+    printf '0x0104\n' > "$HID/idProduct"
+    printf '0x0200\n' > "$HID/bcdUSB"
+    printf '0x0100\n' > "$HID/bcdDevice"
+    mkdir -p "$HID/strings/0x409" "$HID/configs/c.1/strings/0x409"
+    printf 'inkline-local-keyboard\n' > "$HID/strings/0x409/serialnumber"
+    printf 'Inkline\n' > "$HID/strings/0x409/manufacturer"
+    printf 'Inkline Keyboard\n' > "$HID/strings/0x409/product"
+    printf 'Keyboard\n' > "$HID/configs/c.1/strings/0x409/configuration"
+    printf '250\n' > "$HID/configs/c.1/MaxPower"
+    mkdir -p "$HID/functions/ffs.inklinekeys" "$FFS"
+    [ -L "$HID/configs/c.1/ffs.inklinekeys" ] || ln -s "$HID/functions/ffs.inklinekeys" "$HID/configs/c.1/ffs.inklinekeys"
+    mountpoint -q "$FFS" || mount -t functionfs inklinekeys "$FFS"
+    systemctl reset-failed inkline-usb-keyboard.service 2>/dev/null || :
+    systemctl start inkline-usb-keyboard.service
+    count=0
+    until [ -f "$RUN/ready" ]; do
+        systemctl is-active --quiet inkline-usb-keyboard.service || fail 'Keyboard daemon failed to start.'
+        count=$((count+1)); [ "$count" -lt 100 ] || fail 'Keyboard daemon timed out.'
+        sleep .1
+    done
+    unbind "$NET"
+    set_role gadget
+    printf '%s\n' "$UDC" > "$HID/UDC"
+}
+action=${1:-help}; [ "$#" -eq 0 ] || shift
+case "$action" in
+    help|--help|-h) usage; exit 0;;
+    state) state; exit 0;;
+    status)
+        printf 'USB mode: '; state
+        printf 'Computer connection: '; cat /sys/class/udc/ci_hdrc.0/state 2>/dev/null || :
+        printf 'Inkline sender: '; systemctl is-active inkline-usb-keyboard.service || :
+        printf 'Wi-Fi: '; ip -4 addr show dev wlan0 | sed -n '/inet /p'
+        exit 0;;
+    keyboard) action=send-keyboard;;
+    host) action=receive-keyboard;;
+esac
+[ "$(id -u)" = 0 ] || fail 'Run on the tablet as root.'
+[ -r "$ROLE" ] && [ -d "$NET" ] || fail 'The stock reMarkable 2 USB controller is unavailable.'
+mkdir -p "$RUN" /run/rm-usb
+if [ "$action" = recover-after ]; then
+    [ "$#" -eq 1 ] || fail 'Usage: inkline-usb recover-after SECONDS'
+    case "$1" in ''|*[!0-9]*) fail 'SECONDS must be an integer.';; esac
+    [ "$1" -ge 10 ] && [ "$1" -le 3600 ] || fail 'Use 10..3600 seconds.'
+    exec systemd-run --unit="inkline-usb-recover-$$" --on-active="${1}s" "$BASE/inkline-usb" network
+fi
+[ "$#" -eq 0 ] || fail 'Unexpected arguments.'
+case "$action" in network|send-keyboard|receive-keyboard) ;; *) usage >&2; exit 2;; esac
+if [ "$action" != network ] && [ -n "${SSH_CONNECTION:-}" ]; then
+    server=$(printf '%s\n' "$SSH_CONNECTION" | awk '{print $3}')
+    for interface in usb0 usb1; do
+        addresses=$(ip addr show dev "$interface" 2>/dev/null | awk '$1 == "inet" || $1 == "inet6" {split($2,a,"/"); print a[1]}')
+        for address in $addresses; do
+            [ "$server" != "$address" ] || fail 'Use the tablet screen or Wi-Fi SSH before changing USB mode.'
+        done
+    done
+fi
+# Coordinate with the existing Outpost scripts without modifying their bundle.
+exec 9>/run/rm-usb/mode.lock
+attempts=0
+until flock -n -x 9; do
+    attempts=$((attempts + 1))
+    [ "$attempts" -lt 80 ] || fail 'Another USB mode change is in progress.'
+    sleep .1
+done
+systemctl is-active --quiet rm-usb-ppp.service && fail 'Disconnect the satellite PPP session before changing USB mode.'
+for gadget in "$G"/*; do
+    case "$gadget" in "$NET"|"$HID"|"$OLD") ;; *)
+        if bound "$gadget"; then fail "Another gadget is using USB: ${gadget##*/}"; fi;;
+    esac
+done
+rollback() {
+    rc=$?
+    trap - EXIT HUP INT TERM
+    if [ "$rc" -ne 0 ]; then
+        echo 'USB switch failed; attempting to restore USB Ethernet.' >&2
+        (network) || echo 'Ethernet recovery failed; use the screen or Wi-Fi to retry, or reboot.' >&2
+    fi
+    exit "$rc"
+}
+trap rollback EXIT
+trap 'exit 130' INT
+trap 'exit 143' HUP TERM
+case "$action" in
+    network) network; echo 'USB Ethernet and USB SSH restored (10.11.99.1).';;
+    receive-keyboard) host; echo 'USB host mode. Attach a keyboard through a powered OTG adapter.';;
+    send-keyboard) keyboard; echo 'USB keyboard ready. Connect to a computer; use Typewriter or inkline-type.';;
+esac

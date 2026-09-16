@@ -158,6 +158,73 @@ kitty, le animazioni e alcune modalità sixel sono ancora incompleti.
 visibili. Le immagini fuori schermo vengono liberate quando la memoria scarseggia.
 Non esiste una cache su disco; le immagini grandi consumano comunque la RAM limitata.
 
+\topic{Tastiera USB e macchina da scrivere}
+Apri \key{Settings → USB (pagina 3)}. \key{Network} ripristina Ethernet USB;
+\key{Send keyboard} trasforma il tablet in tastiera per un computer;
+\key{Receive keyboard} riceve una tastiera tramite adattatore OTG alimentato.
+Type Folio resta disponibile. Installa l'utilità Python del sito per inviare
+pressioni di tasti; non servono moduli Python aggiuntivi.
+
+Scegli Send keyboard, collega USB-C, scegli il profilo e apri
+\key{Open typewriter}. Porta il cursore in un documento sul computer e tocca
+\key{Start}. La modalità si apre sempre in pausa. \key{Escape} o \key{Stop}
+ferma l'invio e rilascia i tasti. Anche uscire dalla schermata, cambiare terminale,
+perdere il focus, aprire un'app nativa o sospendere mette in pausa.
+Dopo la riconnessione non viene reinviato nulla automaticamente.
+
+\begin{choices}
+US / ASCII & Layout US, Bloc Maiusc disattivato. Rifiuta testo non ASCII. \\
+Mac & Sorgente Unicode Hex Input, Bloc Maiusc disattivato. Fino a U+FFFF;
+rifiuta caratteri dei piani supplementari. \\
+Linux & Layout US, Bloc Maiusc disattivato. L'app deve accettare Ctrl+Shift+U,
+codice esadecimale, Invio. Non tutte lo supportano. \\
+Windows & Installa WinCompose sul PC, imposta Compose su Right Alt e attiva
+l'immissione Unicode. Layout US, Bloc Maiusc disattivato. Invia Compose, u,
+sei cifre esadecimali, Invio. \\
+\end{choices}
+WinCompose: \url{https://wincompose.info/}. Le regole personali non devono sostituire
+questa sequenza. HID non offre un canale universale di testo Unicode; contano
+configurazione e font del destinatario. Prova prima un breve testo.
+
+\key{Input method} offre Off/US diretto, Romaji, Pinyin, Zhuyin, Wubi 86 e
+US-International. Invia solo i caratteri confermati. Cambiare metodo mette in
+pausa: riprendi con Start. \key{Off} ripristina la normale tastiera US.
+\key{Unicode} o Alt+Space apre il selettore di caratteri per l'uscita USB.
+
+L'anteprima recente rimane in RAM; non è un documento salvato né una copia
+dell'editor ricevente. Frecce e comandi di modifica agiscono su quell'editor.
+Alt/Opt destro+C copia l'anteprima, V invia gli appunti Inkline. Taglia nell'editor
+ricevente. Una conferma USB non garantisce il contenuto mostrato.
+
+\topic{Inviare file e ripristinare la rete}
+I comandi sono in \path{~/.local/bin}. Nelle sessioni SSH standard puoi usare anche
+\code{~/inkline usb} e \code{~/inkline type}. Gli strumenti Outpost rimangono intatti.
+\UsbExamples
+I file UTF-8 \key{non hanno un limite fisso di dimensione}. Si leggono piccoli
+blocchi senza conservare il documento intero in RAM o creare file temporanei.
+I file riposizionabili vengono verificati interamente prima dell'invio e poi
+riletti: non modificare la sorgente durante l'operazione. Le pipe si verificano
+man mano; un errore può seguire testo già inviato. Il BOM UTF-8 iniziale viene
+rimosso e CRLF/CR diventano nuove righe. Invio e Tab agiscono sull'app attiva.
+
+\code{--cps} (predefinito 20) o \code{--delay-ms} regola la velocità; Unicode
+richiede più rapporti. \code{--start-delay} lascia tempo per spostare il focus.
+Dry-run mostra i rapporti senza USB. Ctrl+C o \code{--stop} annulla e rilascia
+i tasti. Funziona un solo mittente alla volta. Una coda interattiva piena mette
+in pausa. Controlla il documento prima di riprovare un invio interrotto.
+Testo e stato temporaneo non scrivono sulla memoria flash. Il profilo si salva
+con le altre impostazioni all'uscita normale.
+
+\key{Network} o \code{inkline-usb network} ripristina Ethernet. Anche l'uscita da
+Inkline, un arresto anomalo o un riavvio di emergenza ripristinano la rete.
+La modalità USB non viene salvata come preferenza di avvio.
+\UsbRecoveryExample
+Il timer è indipendente dalla shell. Cambia modalità sul tablet o tramite SSH
+Wi-Fi, mai tramite SSH USB. In caso di errore si tenta il ripristino di Ethernet.
+Una sessione PPP satellitare attiva o un gadget sconosciuto mantiene la porta;
+vale anche per la pulizia all'uscita. Opt+RightAlt+Backspace riavvia Inkline,
+ma chiude tutti i terminali e perde il lavoro non salvato.
+
 \topic{Avviare programmi con scorciatoie}
 Registra le scorciatoie da una shell Inkline. Gli argomenti sono letterali;
 chiama esplicitamente una shell per usarne la sintassi. I programmi avviati

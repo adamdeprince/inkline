@@ -18,6 +18,12 @@ if [ "$1" = resume ]; then
 fi
 exec 8>/run/inkline-power.lock
 flock -n -x 8 || exit 0
+if ! systemctl is-active --quiet inkline-shortcut-app.service; then
+    "$bundle/inkline" --pause-usb >/dev/null 2>&1 || :
+fi
+if [ -f /run/inkline-usb/type.lock ]; then
+    "$bundle/usb/inkline-type" --stop >/dev/null 2>&1 || :
+fi
 # Respect other programs' sleep inhibitors. Our session inhibits idle and
 # logind's key handling, but deliberately permits explicit system suspend.
 systemctl --no-ask-password --check-inhibitors=yes suspend

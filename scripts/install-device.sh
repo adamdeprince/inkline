@@ -36,6 +36,7 @@ fi
 cd "$payload"
 sha256sum -c SHA256SUMS >/dev/null || fail 'Bundle checksum verification failed.'
 sh "$payload/hotkey-service.sh" check
+sh "$payload/usb/install.sh" check
 scratch=$(mktemp -d /tmp/inkline-check.XXXXXX)
 trap 'rm -rf -- "$scratch"' EXIT
 trap 'exit 130' HUP INT TERM
@@ -74,6 +75,7 @@ chmod 700 /home/root/.inkline-launcher.new
 mv -f /home/root/.inkline-launcher.new /home/root/inkline
 if systemctl is-active --quiet inkline-hotkey.service; then systemctl stop inkline-hotkey.service; fi
 sh "$root/current/hotkey-service.sh" install
+sh "$root/current/usb/install.sh" install
 systemctl daemon-reload
 systemctl start inkline-hotkey.service
 systemctl is-active --quiet inkline-hotkey.service || fail 'The keyboard launcher did not start.'

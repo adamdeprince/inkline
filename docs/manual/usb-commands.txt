@@ -1,0 +1,8 @@
+inkline-usb status
+inkline-usb send-keyboard
+inkline-type --file notes.txt --profile windows --dry-run
+inkline-type --file notes.txt --profile windows --start-delay 3
+inkline-type --stdin --profile linux < notes.txt
+inkline-type --key ctrl+a --key backspace
+inkline-type --stop
+inkline-usb network

@@ -158,6 +158,73 @@ Kitty-Platzhalter, Animationen und einige Sixel-Modi sind noch unvollständig.
 und Text. Bei Speicherdruck werden Bilder außerhalb des Bildschirms freigegeben.
 Es gibt keinen Bildcache auf dem Datenträger; große Bilder benötigen dennoch RAM.
 
+\topic{USB-Tastatur und Schreibmodus}
+Öffnen Sie \key{Settings → USB (Seite 3)}. \key{Network} stellt USB-Ethernet
+wieder her; \key{Send keyboard} macht das Tablet zur Tastatur für einen Computer;
+\key{Receive keyboard} empfängt eine Tastatur über einen OTG-Adapter mit Stromversorgung.
+Type Folio bleibt nutzbar. Installieren Sie zum Senden das Python-Paket der
+Website. Weitere Python-Module sind nicht erforderlich.
+
+Wählen Sie Send keyboard, verbinden Sie USB-C, wählen Sie das Empfängerprofil
+und öffnen Sie \key{Open typewriter}. Setzen Sie am Computer den Fokus in ein
+Dokument und tippen Sie auf \key{Start}. Der Schreibmodus startet immer pausiert.
+\key{Escape} oder \key{Stop} hält an und lässt die Tasten los. Verlassen des
+Bildschirms, Terminalwechsel, Fokusverlust, native Apps und Ruhezustand pausieren
+ebenfalls. Nach Wiederverbindung wird nichts automatisch erneut gesendet.
+
+\begin{choices}
+US / ASCII & US-Belegung, Feststelltaste aus. Nicht-ASCII-Text wird abgewiesen. \\
+Mac & Unicode Hex Input als Eingabequelle, Feststelltaste aus. Bis U+FFFF;
+Zeichen zusätzlicher Ebenen werden abgewiesen. \\
+Linux & US-Belegung, Feststelltaste aus. Die Ziel-App muss Ctrl+Shift+U,
+Hexadezimalzahl, Enter unterstützen. Das gilt nicht für jede App. \\
+Windows & WinCompose auf dem PC installieren, Compose auf Right Alt setzen,
+Unicode-Eingabe aktivieren. US-Belegung, Feststelltaste aus. Folge: Compose, u,
+sechs Hexadezimalziffern, Enter. \\
+\end{choices}
+WinCompose: \url{https://wincompose.info/}. Eigene Regeln dürfen diese Folge nicht
+überschreiben. HID hat keinen universellen Unicode-Textkanal; Einrichtung und
+Schriften des Empfängers entscheiden. Testen Sie zunächst einen kurzen Text.
+
+\key{Input method} bietet Off/direktes US, Romaji, Pinyin, Zhuyin, Wubi 86 und
+US-International. Nur bestätigte Zeichen werden gesendet. Ein Wechsel pausiert;
+Start setzt fort. \key{Off} stellt normale US-Eingabe wieder her. \key{Unicode}
+oder Alt+Space öffnet die Zeichenauswahl für den USB-Empfänger.
+
+Die jüngste Vorschau bleibt im RAM. Sie ist kein gespeichertes Dokument und kein
+Abbild des Ziel-Editors. Pfeile und Bearbeitungsbefehle wirken dort.
+Rechtes Alt/Opt+C kopiert die Vorschau, V sendet die Inkline-Zwischenablage.
+Ausschneiden erfolgt im Ziel-Editor. Eine USB-Bestätigung belegt nicht dessen Inhalt.
+
+\topic{Dateien senden und Netzwerk wiederherstellen}
+Die Befehle liegen in \path{~/.local/bin}. Über gewöhnliches SSH funktionieren
+auch \code{~/inkline usb} und \code{~/inkline type}. Outpost-Werkzeuge bleiben erhalten.
+\UsbExamples
+UTF-8-Dateien haben \key{keine feste Größenobergrenze}. Kleine Leseblöcke vermeiden
+eine vollständige Kopie im RAM und temporäre Dateien. Rückspulbare Dateien werden
+vor dem Senden vollständig geprüft und erneut gelesen; ändern Sie die Quelle
+währenddessen nicht. Pipes werden beim Eintreffen geprüft: Ein später Fehler kann
+auf bereits gesendeten Text folgen. Ein führendes UTF-8-BOM wird entfernt;
+CRLF/CR werden zu Zeilenumbrüchen. Enter und Tab wirken auf die aktive App.
+
+\code{--cps} (Standard 20) oder \code{--delay-ms} legt das Tempo fest; Unicode
+braucht mehr Berichte. \code{--start-delay} lässt Zeit für den Fokuswechsel.
+Dry-run zeigt Berichte ohne USB. Ctrl+C oder \code{--stop} bricht ab und lässt
+Tasten los. Nur ein Sender läuft gleichzeitig. Eine volle interaktive Warteschlange
+pausiert. Prüfen Sie nach Abbruch das Zieldokument vor erneutem Senden.
+Text und Laufzeitdaten schreiben nicht in den Flash-Speicher. Das Profil wird
+beim normalen Beenden mit den übrigen Einstellungen gespeichert.
+
+\key{Network} oder \code{inkline-usb network} stellt Ethernet wieder her.
+Beim Beenden von Inkline, auch nach Absturz oder Notfall-Neustart, wird das
+Netzwerk wiederhergestellt. Der USB-Modus wird nicht als Startvorgabe gespeichert.
+\UsbRecoveryExample
+Der Timer läuft unabhängig von der Shell. Wechseln Sie am Tablet oder über WLAN-SSH,
+nicht über USB-SSH. Bei Fehlschlag wird Ethernet wiederhergestellt, soweit möglich.
+Aktive Satelliten-PPP-Sitzungen und unbekannte Gadgets behalten den Port; das gilt
+auch beim Beenden. Opt+RightAlt+Backspace startet Inkline neu, schließt aber alle
+Terminals und verliert deren ungesicherte Arbeit.
+
 \topic{Programme mit Tastenkürzeln starten}
 Kürzel in einer Inkline-Shell registrieren. Argumente werden wörtlich übergeben;
 für Shellsyntax eine Shell ausdrücklich aufrufen. Kürzelprogramme lesen

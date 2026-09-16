@@ -2,6 +2,13 @@
 set -eu
 ulimit -c 0
 umask 077
+bundle=/home/root/.local/share/inkline/current
+if systemctl is-active --quiet inkline.service; then
+    "$bundle/inkline" --pause-usb >/dev/null 2>&1 || :
+fi
+if [ -f /run/inkline-usb/type.lock ]; then
+    "$bundle/usb/inkline-type" --stop >/dev/null 2>&1 || :
+fi
 # Pause the full cgroup so child programs cannot keep painting behind the app.
 # ExecStopPost always resumes it, including after a crash or forced termination.
 systemctl kill --kill-whom=all --signal=STOP inkline.service 2>/dev/null || :

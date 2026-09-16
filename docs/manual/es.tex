@@ -159,6 +159,71 @@ siguen incompletos.
 Los gráficos fuera de pantalla se liberan cuando falta memoria. No hay caché
 de imágenes en disco; las imágenes grandes siguen consumiendo la RAM limitada.
 
+\topic{Teclado USB y máquina de escribir}
+Abra \key{Settings → USB (página 3)}. \key{Network} restaura Ethernet USB;
+\key{Send keyboard} convierte la tableta en teclado para otro ordenador;
+\key{Receive keyboard} recibe un teclado por un adaptador OTG con alimentación.
+Type Folio sigue disponible. Instale la utilidad Python de la web para enviar
+pulsaciones; no hacen falta módulos Python adicionales.
+
+Elija Send keyboard, conecte USB-C, seleccione el perfil y abra
+\key{Open typewriter}. Enfoque un documento en el ordenador y toque \key{Start}.
+Siempre se abre en pausa. \key{Escape} o \key{Stop} detiene el envío y libera las
+teclas. Salir de esta pantalla, cambiar de terminal, perder el foco, abrir una
+aplicación nativa o suspender también pausa. No hay reenvío automático al reconectar.
+
+\begin{choices}
+US / ASCII & Distribución US, Bloq Mayús desactivado. Rechaza texto no ASCII. \\
+Mac & Fuente Unicode Hex Input, Bloq Mayús desactivado. Hasta U+FFFF;
+rechaza caracteres de planos suplementarios. \\
+Linux & Distribución US, Bloq Mayús desactivado. La aplicación debe aceptar
+Ctrl+Shift+U, hexadecimal, Enter. No funciona en todas. \\
+Windows & Instale WinCompose en el PC, Compose en Right Alt y entrada Unicode
+activada. Distribución US, Bloq Mayús desactivado. Envía Compose, u, seis dígitos hexadecimales, Enter. \\
+\end{choices}
+WinCompose: \url{https://wincompose.info/}. Las reglas personalizadas no deben
+sustituir esa secuencia. HID no tiene un canal universal de texto Unicode:
+importan la configuración y las fuentes del receptor. Pruebe un texto corto.
+
+\key{Input method} ofrece Off (US directo), Romaji, Pinyin, Zhuyin, Wubi 86
+y US-International. Solo se envían caracteres confirmados. Cambiar de método pausa;
+reanude con Start. \key{Off} devuelve la entrada US normal. \key{Unicode} o
+Alt+Space abre el selector de caracteres para la salida USB.
+
+La vista previa reciente está en RAM; no es un documento guardado ni una copia
+del editor receptor. Flechas y atajos de edición actúan allí. Alt/Opt derecho+C
+copia la vista previa; V envía el portapapeles de Inkline. Corte en el editor
+receptor. Una confirmación USB no demuestra qué mostró el editor.
+
+\topic{Enviar archivos y restaurar la red}
+Las órdenes están en \path{~/.local/bin}. En SSH estándar también puede usar
+\code{~/inkline usb} y \code{~/inkline type}. Se conservan las herramientas Outpost.
+\UsbExamples
+Los archivos UTF-8 \key{no tienen un límite fijo de tamaño}. Se leen en bloques
+pequeños, sin conservar el documento completo en RAM ni crear archivos temporales.
+Los archivos que permiten rebobinar se validan enteros antes de enviar y se releen;
+no los modifique durante el envío. Una tubería se valida al llegar: un error puede
+ocurrir tras haber enviado parte del texto. Se quita el BOM UTF-8 inicial y
+CRLF/CR pasan a saltos de línea. Enter y Tab actúan en la aplicación enfocada.
+
+\code{--cps} (20 por defecto) o \code{--delay-ms} ajusta la velocidad; Unicode
+requiere más informes. \code{--start-delay} deja tiempo para enfocar. Dry-run
+muestra informes sin USB. Ctrl+C o \code{--stop} cancela y libera teclas.
+Solo funciona un emisor a la vez. Si se llena la cola interactiva, se pausa.
+Revise el documento antes de reintentar un envío parcial. El texto y el estado
+temporal no se escriben en flash. El perfil se guarda con los demás ajustes al
+salir normalmente.
+
+\key{Network} o \code{inkline-usb network} restaura Ethernet. Salir de Inkline,
+incluso tras un fallo o reinicio de emergencia, restaura la red. El modo USB no
+se guarda como preferencia de arranque.
+\UsbRecoveryExample
+El temporizador es independiente del shell. Cambie de modo en la tableta o por
+SSH Wi-Fi, nunca por SSH USB. Si falla, se intenta recuperar Ethernet. No se
+quita el puerto a una sesión PPP satelital activa ni a un gadget desconocido;
+también se aplica al salir. Opt+RightAlt+Backspace reinicia Inkline, pero cierra
+todos sus terminales y pierde el trabajo sin guardar.
+
 \topic{Abrir programas mediante atajos}
 Registre atajos desde una shell de Inkline. Los argumentos son literales;
 invoque una shell expresamente para usar su sintaxis. Estos programas leen

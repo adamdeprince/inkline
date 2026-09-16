@@ -158,6 +158,91 @@ animation playback and some sixel modes remain unfinished.
 Off-screen graphics are reclaimed under memory pressure. There is no disk
 image cache; large images still consume the tablet's limited RAM.
 
+\topic{USB keyboard and typewriter}
+Open \key{Settings → USB (page 3)}. \key{Network} restores USB Ethernet;
+\key{Send keyboard} makes the tablet a keyboard for another computer;
+\key{Receive keyboard} accepts a wired keyboard through a powered OTG adapter.
+Type Folio stays available in every mode. Install the website's Python utility
+for outgoing keyboard mode; no extra Python modules are needed.
+
+Choose Send keyboard, connect USB-C to the receiving computer, select a host
+profile below, then tap \key{Open typewriter}. Focus a document on the computer
+and tap \key{Start} on the tablet. The typewriter always starts paused.
+\key{Escape} or \key{Stop} pauses and releases keys. Leaving the typewriter,
+switching terminals, losing window focus, opening a native app or sleeping
+also pauses output. Nothing is replayed automatically after reconnection.
+
+\begin{choices}
+US / ASCII & US keyboard layout, Caps Lock off. Non-ASCII text is rejected. \\
+Mac & Select Unicode Hex Input in Keyboard → Input Sources; Caps Lock off.
+Characters through U+FFFF only; supplementary characters are rejected. \\
+Linux & US layout, Caps Lock off. The destination app/input method must accept
+Ctrl+Shift+U, hexadecimal digits, Enter. This does not work in every app. \\
+Windows & US layout, Caps Lock off. Install WinCompose on the PC, use Right Alt
+as Compose and enable Unicode input. Inkline sends Compose, u, six hex digits, Enter. \\
+\end{choices}
+
+Get WinCompose from \url{https://wincompose.info/}. Custom compose rules must
+not override the Unicode sequence. There is no universal HID Unicode text
+channel: host setup and fonts determine the result. Test a short sample first.
+
+\key{Input method} uses the same engine as the terminal: Off/direct US,
+Romaji, Pinyin, Zhuyin, Wubi 86 or US-International. Only committed characters
+leave the tablet. Changing the method pauses typing; tap Start again.
+Choose \key{Off} to return to normal US input. \key{Unicode} or Alt+Space
+opens the character picker and sends selected characters to the USB host.
+
+The recent-text preview stays in RAM; it is not a saved document or a copy of
+the receiving editor. Arrow keys and editing shortcuts act on that editor.
+Right Alt/Opt+C copies the preview; V sends Inkline's clipboard. Cut belongs
+in the receiving editor. A USB acknowledgement cannot confirm the editor's
+actual contents.
+
+\topic{Send a file; restore networking}
+The installer adds \code{inkline-usb} and \code{inkline-type} to
+\path{~/.local/bin}. Stock SSH sessions can use \code{~/inkline usb} and
+\code{~/inkline type} instead. The separate Outpost tools remain installed.
+
+\begin{shell}
+inkline-usb status
+inkline-usb send-keyboard
+inkline-type --file notes.txt --profile windows --dry-run
+inkline-type --file notes.txt --profile windows --start-delay 3
+inkline-type --stdin --profile linux < notes.txt
+inkline-type --key ctrl+a --key backspace
+inkline-type --stop
+inkline-usb network
+\end{shell}
+
+UTF-8 files have \key{no fixed size limit}. The sender reads small chunks,
+without storing the document in RAM or creating a spool file. Ordinary,
+seekable files are checked completely before any keys are sent, then read
+again; keep the source unchanged while sending. A pipe is validated as it
+arrives, so an error can follow already-sent text. An optional UTF-8 BOM is
+removed and CRLF/CR become newlines. Enter and Tab act on the focused app.
+
+\code{--cps} (default 20) and \code{--delay-ms} select typing speed;
+Unicode needs more reports per character. \code{--start-delay} gives time
+to focus the destination. Dry-run prints reports without using USB.
+Ctrl+C and \code{--stop} cancel the sender and release keys. Only one sender
+can run at once. The interactive queue is bounded; overflow pauses typing.
+After interruption, inspect the destination before retrying a partial send.
+Text, runtime files and helper caches do not write to flash; the host profile
+is saved with other settings on normal exit.
+
+Tap \key{Network} or run \code{inkline-usb network} to restore USB Ethernet.
+Leaving Inkline restores networking, including after a crash or emergency
+restart. Mode changes are not saved for boot. To schedule independent recovery:
+\begin{shell}
+inkline-usb recover-after 90
+inkline-usb send-keyboard
+\end{shell}
+Switch away from networking on the tablet or through Wi-Fi SSH, not USB SSH.
+A failed transition attempts Ethernet recovery. Inkline refuses to take USB
+from an active satellite PPP session or an unknown gadget; this also applies
+to exit cleanup. The emergency Opt+RightAlt+Backspace chord still works,
+but restarting Inkline closes its terminals and loses unsaved work.
+
 \topic{Launch programs with keys}
 Register shortcuts in an Inkline shell. Arguments are literal; use an explicit
 shell for shell syntax. Shortcut programs read \code{~/.bashrc} through Bash.

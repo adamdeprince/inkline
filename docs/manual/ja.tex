@@ -148,6 +148,71 @@ OSC 52 にはエディターの文字を削除する機能はありません。
 メモリー不足時は画面外の画像を解放します。ディスクへの画像キャッシュはありませんが、
 大きな画像は本体の限られた RAM を使います。
 
+\topic{USB キーボードとタイプライター}
+\key{Settings → USB（3 ページ目）}で USB の用途を選びます。
+\key{Network} は USB Ethernet、\key{Send keyboard} は他のコンピューターへの
+キーボード出力、\key{Receive keyboard} は給電可能な OTG アダプター経由の
+有線キーボード入力です。Type Folio はどのモードでも使えます。
+出力にはウェブサイトの Python ユーティリティをインストールしてください。
+追加の Python モジュールは不要です。
+
+Send keyboard を選び、USB-C で接続し、受信側のプロファイルを設定して
+\key{Open typewriter} を開きます。コンピューターで文書にフォーカスし、
+タブレットの \key{Start} を押します。起動時は必ず一時停止状態です。
+\key{Escape} または \key{Stop} で送信を止め、キーを離します。
+画面を閉じる、別の端末に移る、フォーカスを失う、ネイティブアプリを開く、
+スリープする場合も停止します。再接続後の自動再送はありません。
+
+\begin{choices}
+US / ASCII & US 配列、Caps Lock オフ。ASCII 以外は拒否します。 \\
+Mac & 入力ソースで Unicode Hex Input を選び、Caps Lock をオフにします。
+U+FFFF まで。補助平面の文字は拒否します。 \\
+Linux & US 配列、Caps Lock オフ。受信アプリ／入力方式が Ctrl+Shift+U、
+16 進数、Enter に対応している必要があります。全アプリ共通ではありません。 \\
+Windows & PC に WinCompose を入れ、Compose を Right Alt に設定し、Unicode 入力を
+有効にします。US 配列、Caps Lock オフ。Compose、u、6 桁の 16 進数、Enter を送ります。 \\
+\end{choices}
+WinCompose は \url{https://wincompose.info/} から入手します。
+独自の規則で Unicode シーケンスを上書きしないでください。HID に共通の
+Unicode テキスト送信方式はなく、受信側の設定とフォントが必要です。まず短い文で試します。
+
+\key{Input method} は端末と同じ Off／通常 US、Romaji、Pinyin、Zhuyin、
+Wubi 86、US-International を使います。確定した文字だけを送信します。
+方式の変更後は Start で再開し、通常の US 入力には \key{Off} を選びます。
+\key{Unicode} または Alt+Space で開く文字パレットも USB 出力に使えます。
+
+最近の入力は RAM に表示されます。保存文書でも受信エディターの複製でもありません。
+矢印や編集キーは受信側を操作します。右 Alt/Opt+C はプレビューをコピー、V は
+Inkline のクリップボードを送信します。切り取りは受信エディターで行います。
+USB の応答だけでは実際に表示された内容は確認できません。
+
+\topic{ファイル送信とネットワーク復旧}
+コマンドは \path{~/.local/bin} に入ります。通常の SSH では
+\code{~/inkline usb} と \code{~/inkline type} も使えます。
+Outpost の既存ツールはそのまま残ります。
+\UsbExamples
+UTF-8 ファイルに\key{固定のサイズ上限はありません}。小さなバッファで読み、文書全体を
+RAM に保存せず、一時ファイルも作りません。巻き戻せるファイルは送信前に全体を検証し、
+再読込します。送信中は元ファイルを変更しないでください。パイプは到着順に検証するため、
+途中のエラーまでに一部が送信済みになることがあります。先頭の UTF-8 BOM は除き、
+CRLF／CR は改行にします。Enter と Tab は受信アプリを操作します。
+
+\code{--cps}（既定 20）または \code{--delay-ms} で速度を指定します。
+Unicode は複数のレポートが必要です。\code{--start-delay} はフォーカス移動の猶予です。
+Dry-run は USB を使わずレポートを表示します。Ctrl+C または \code{--stop} で中止します。
+同時に送信できるのは 1 プロセスです。対話キューが満杯になると停止します。
+再試行前に受信文書を確認してください。本文や一時状態をフラッシュに書きません。
+プロファイルは正常終了時に設定と一緒に保存します。
+
+\key{Network} または \code{inkline-usb network} で Ethernet に戻ります。
+Inkline の終了、クラッシュ、緊急再起動でもネットワークを復旧します。
+USB モードは起動時の設定として保存しません。
+\UsbRecoveryExample
+このタイマーはシェルから独立して動きます。ネットワーク以外への切り替えはタブレットか
+Wi-Fi SSH から行います。USB SSH からは拒否します。失敗時は Ethernet の復旧を試みます。
+使用中の衛星 PPP や未知のガジェットからは USB を奪いません。終了時の復旧も同様です。
+Opt+RightAlt+Backspace の緊急再起動は全端末を閉じ、未保存の作業を失います。
+
 \topic{キーでプログラムを起動する}
 Inkline のシェルで登録します。引数はそのまま渡されるので、シェル構文にはシェルを明示してください。
 起動したプログラムの環境は Bash 経由で \code{~/.bashrc} を読み込みます。

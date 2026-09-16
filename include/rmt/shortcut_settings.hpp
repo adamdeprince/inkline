@@ -9,7 +9,7 @@ namespace rmt {
 // Page two of Settings. Draft text stays in RAM; only Save/Remove write files.
 class ShortcutSettings {
 public:
-    enum Result { Stay, Back, Done };
+    enum Result { Stay, Back, Done, Next };
     ShortcutSettings(QObject &owner, Clipboard &clipboard);
     void open();
     void paint(QPainter &p, const QRectF &panel);

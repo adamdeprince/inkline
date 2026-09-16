@@ -1,0 +1,2 @@
+inkline-usb recover-after 90
+inkline-usb send-keyboard

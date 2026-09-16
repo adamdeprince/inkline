@@ -39,6 +39,9 @@
 \lstnewenvironment{shell}{\lstset{basicstyle=\small\ttfamily,columns=fullflexible,keepspaces=true,breaklines=true,frame=single,framerule=0.3pt,aboveskip=6pt,belowskip=6pt,xleftmargin=4pt,xrightmargin=4pt}}{}
 \newcommand{\ProjectLinks}{\small\url{https://inkline.goblinreactor.com/}\par\url{https://github.com/adamdeprince/inkline}\normalsize}
 \newcommand{\InstallLink}{\url{https://inkline.goblinreactor.com/install.html}}
+% Listings must be read from files, not embedded in a macro argument.
+\newcommand{\UsbExamples}{\lstinputlisting[basicstyle=\small\ttfamily,columns=fullflexible,keepspaces=true,breaklines=true,frame=single,framerule=0.3pt,xleftmargin=4pt,xrightmargin=4pt]{docs/manual/usb-commands.txt}}
+\newcommand{\UsbRecoveryExample}{\lstinputlisting[basicstyle=\small\ttfamily,columns=fullflexible,keepspaces=true,breaklines=true,frame=single,framerule=0.3pt,xleftmargin=4pt,xrightmargin=4pt]{docs/manual/usb-recovery.txt}}
 \newcommand{\IndexRow}[2]{\hyperref[lang:#1]{#2}\hfill\pageref{lang:#1}\par\vspace{3mm}}
 
 \begin{document}

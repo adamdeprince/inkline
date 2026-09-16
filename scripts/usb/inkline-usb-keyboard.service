@@ -1,0 +1,14 @@
+[Unit]
+# Inkline managed USB keyboard service
+Description=Inkline USB keyboard using the stock FunctionFS driver
+
+[Service]
+Type=simple
+ExecStart=/home/root/.local/share/inkline/current/usb/inkline-usb-daemon
+KillMode=control-group
+TimeoutStopSec=5
+SuccessExitStatus=130 143
+UMask=0077
+LimitCORE=0
+StandardOutput=null
+StandardError=null

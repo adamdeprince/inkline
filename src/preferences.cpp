@@ -16,13 +16,14 @@ Preferences::Preferences(const QString &path)
     contrast_ = std::clamp(settings.value("display/minimumContrast", DEFAULT_MINIMUM_CONTRAST).toInt(), 0, 100);
     update_profile_ = settings.value("display/updateProfile", DEFAULT_UPDATE_PROFILE).toInt();
     if (update_profile_ < 0 || update_profile_ >= UPDATE_PROFILE_COUNT) update_profile_ = DEFAULT_UPDATE_PROFILE;
+    usb_profile_ = std::clamp(settings.value("usb/hostProfile", 0).toInt(), 0, 3);
     initial_ = values();
 }
 QVariantMap Preferences::values() const {
     return {{"keyboard/capsControl", caps_control_}, {"display/bottomBar", bottom_bar_},
             {"display/fontPixels", font_pixels_}, {"keyboard/inputMethod", input_method_},
             {"display/textDarkness", darkness_}, {"display/minimumContrast", contrast_},
-            {"display/updateProfile", update_profile_}};
+            {"display/updateProfile", update_profile_}, {"usb/hostProfile", usb_profile_}};
 }
 void Preferences::persist() {
     const auto current = values();
@@ -44,5 +45,9 @@ void Preferences::set_minimum_contrast(int value) { contrast_ = std::clamp(value
 void Preferences::set_update_profile(int value) {
     if (value < 0 || value >= UPDATE_PROFILE_COUNT) throw std::out_of_range("Update profile");
     update_profile_ = value;
+}
+void Preferences::set_usb_profile(int value) {
+    if (value < 0 || value > 3) throw std::out_of_range("USB host profile");
+    usb_profile_ = value;
 }
 }

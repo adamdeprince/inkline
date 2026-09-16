@@ -1,0 +1,8 @@
+#!/bin/sh
+# Inkline managed USB sender. -B applies only to this helper process.
+set -eu
+BASE=$(CDPATH= cd -- "$(dirname -- "$(readlink -f "$0")")" && pwd)
+PATH="/home/root/.local/bin:$PATH"
+export PATH
+command -v python3 >/dev/null || { echo 'Install the Python utility from the Inkline website first.' >&2; exit 1; }
+exec python3 -B "$BASE/keyboard.py" type "$@"

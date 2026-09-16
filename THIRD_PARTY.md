@@ -45,3 +45,8 @@ must be distributed compatibly with that license, including corresponding source
 - **Noto Sans Mono CJK SC**, SIL Open Font License 1.1, from notofonts/noto-cjk.
   The unmodified font, license, exact source revision and SHA-256 are in
   `assets/fonts/`. It is loaded privately by Inkline.
+- **USB FunctionFS keyboard and mode switching**, adapted from Adam de Prince's
+  local Inkline Outpost `usb-modes` code, snapshot 2026-09-16. The original
+  descriptors and control handler are retained in `scripts/usb/keyboard.py`;
+  Inkline adds host-specific Unicode encoding, streaming, UI integration and
+  recovery. The original modem and satellite tools are not bundled or modified.

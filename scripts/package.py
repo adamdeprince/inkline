@@ -38,7 +38,7 @@ def copy_repository_tree(name, destination, tracked_files):
         shutil.copytree(source, destination)
         return
     destination.mkdir()
-    for relative in sorted(path for path in tracked_files if path.parts and path.parts[0] == name):
+    for relative in sorted(path for path in tracked_files if path.is_relative_to(name)):
         path = ROOT / relative
         if not path.is_file():
             continue
@@ -67,6 +67,7 @@ def main():
         for name in ["README.md", "LICENSE", "THIRD_PARTY.md"]:
             shutil.copy2(ROOT / name, stage / name)
         copy_repository_tree("docs", stage / "docs", tracked_files)
+        copy_repository_tree("scripts/usb", stage / "usb", tracked_files)
         (stage / "INSTALL.md").write_text((ROOT / "docs/install.md").read_text().replace("(keyboard.md)", "(docs/keyboard.md)"))
         (stage / "manifest.json").write_text(json.dumps({
             "name": "Inkline", "version": version, "maturity": "preview",
@@ -106,7 +107,7 @@ def main():
             source.add(ghostty, arcname="ghostty-source", filter=upstream_filter)
         for path in stage.rglob("*"):
             if path.is_file():
-                path.chmod(0o700 if path.name in ("inkline", "inkline-hotkey", "inkline-launcher") or path.suffix == ".sh" else 0o600)
+                path.chmod(0o700 if path.name in ("inkline", "inkline-hotkey", "inkline-launcher", "inkline-usb", "inkline-type", "inkline-usb-daemon") or path.suffix == ".sh" else 0o600)
         files = sorted(p for p in stage.rglob("*") if p.is_file())
         (stage / "SHA256SUMS").write_text("".join(f"{digest(p)}  {p.relative_to(stage)}\n" for p in files))
         archive = dist / "inkline-rm2.tar.gz"
