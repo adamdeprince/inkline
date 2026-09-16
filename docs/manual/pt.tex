@@ -6,7 +6,7 @@ USB, trabalhe no tablet ou ligue-se por SSH ou Goblin Mosh. O texto e as imagens
 são apresentados em tons de cinzento.
 
 \begin{notice}
-\key{Ctrl+Alt+T} abre o Inkline diretamente no tablet.\par
+\key{Ctrl+Opt+Alt+T} abre o Inkline diretamente no tablet.\par
 \key{Botão de alimentação:} prima e solte para suspender; prima novamente
 para retomar. As shells e os buffers do editor ficam na RAM.
 \end{notice}
@@ -20,8 +20,8 @@ confirme. \code{exit} fecha um terminal; fechar o último devolve os cadernos.
 A barra inferior contém Escape, histórico acima/abaixo, Quit e Settings.
 \code{clear} apaga a breve ajuda inicial e o pequeno logótipo Goblin.
 
-Se uma aplicação de atalho ocupar o ecrã, \key{Ctrl+Alt+T} regressa ao Inkline.
-Numa emergência, mantenha \key{Ctrl+Alt+Backspace durante dois segundos}.
+Se uma aplicação de atalho ocupar o ecrã, \key{Ctrl+Opt+Alt+T} regressa ao Inkline.
+Numa emergência, mantenha \key{Ctrl+Opt+Alt+Backspace durante dois segundos}.
 A recuperação fecha todos os terminais e perde o trabalho não guardado nessas
 sessões. Após reiniciar o tablet, a interface inicial continua a ser a dos cadernos.
 
@@ -161,6 +161,10 @@ Registe atalhos numa shell Inkline. Os argumentos são literais; invoque uma
 shell explicitamente para usar a sua sintaxe. Os programas iniciados por atalho
 leem \code{~/.bashrc} através de Bash.
 
+Settings → Command shortcuts (página 2) permite atribuir um comando a uma letra. Escolha Terminal ou Native e-paper app e depois Save. Remove pede confirmação; Reset draft descarta as alterações. T está bloqueado. Só Save e a remoção confirmada escrevem no armazenamento. A ferramenta de linha de comandos gere as mesmas associações.
+
+Todos os atalhos globais usam agora Ctrl+Opt+Alt, incluindo T e a recuperação mantendo Backspace premido. Use a tecla Opt separada do Folio; em teclados USB, use Windows/Command (Super). Ctrl+Alt continua disponível para o Emacs. Feche e reabra o Inkline após atualizar; a instalação preserva os terminais abertos.
+
 \begin{shell}
 ~/inkline shortcut register e emacs
 ~/inkline shortcut register p python3
@@ -168,7 +172,7 @@ leem \code{~/.bashrc} através de Bash.
 ~/inkline shortcut deregister p
 \end{shell}
 
-\key{Ctrl+Alt+E} abre o Emacs numa posição livre.
+\key{Ctrl+Opt+Alt+E} abre o Emacs numa posição livre.
 \code{~/inkline run PROGRAM ARG...} inicia sem registar um atalho.
 Registar novamente substitui a associação; removê-la não afeta programas em
 execução. As teclas seguem posições físicas americanas. Coloque pontuação
@@ -184,12 +188,12 @@ fornece definições Qt e caches em RAM, descarta registos e retoma o Inkline
 quando a aplicação termina. Use entrada Qt sem capturar exclusivamente o teclado.
 
 \begin{notice}
-\key{Ctrl+Alt+T é permanente.} Não pode ser registado nem removido.
+\key{Ctrl+Opt+Alt+T é permanente.} Não pode ser registado nem removido.
 Para a aplicação nativa e regressa aos terminais existentes. Use uma tecla
 Ctrl física; a alteração de Caps Lock só se aplica dentro do Inkline.
 \end{notice}
 
-\key{Emergência:} mantenha Ctrl+Alt+Backspace dois segundos para parar a
+\key{Emergência:} mantenha Ctrl+Opt+Alt+Backspace dois segundos para parar a
 aplicação e os seus descendentes e reiniciar o Inkline. Todos os terminais
 fecham e perde-se trabalho não guardado. Aplicações root podem impedir a
 recuperação capturando entrada, alterando serviços ou esgotando recursos.

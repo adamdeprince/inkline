@@ -5,7 +5,7 @@ Inkline 在 reMarkable 2 上運行本機 shell。使用 Type Folio 或 USB 鍵�
 工作，也可以通過 SSH 或 Goblin Mosh 連線其他計算機。文字和圖像以適合電子紙的灰度顯示。
 
 \begin{notice}
-按 \key{Ctrl+Alt+T}，即可直接在平板上打開 Inkline。\par
+按 \key{Ctrl+Opt+Alt+T}，即可直接在平板上打開 Inkline。\par
 \key{電源鍵：}按下再松開即可休眠，再按一次喚醒。已打開的 shell 和編輯器緩衝區保留在 RAM 中。
 \end{notice}
 休眠會暫停設備，不會退出 Inkline，也不會把設定寫入快閃記憶體。喚醒後，網路連線可能需要重新建立。
@@ -16,8 +16,8 @@ Inkline 在 reMarkable 2 上運行本機 shell。使用 Type Folio 或 USB 鍵�
 底欄包含 Escape、歷史記錄上／下、Quit 和 Settings 按鈕。
 啟動時的簡短說明和小 Goblin 標誌可用 \code{clear} 清除。
 
-如果快捷鍵啟動的應用佔用了屏幕，按 \key{Ctrl+Alt+T} 返回 Inkline。
-緊急恢復時，\key{按住 Ctrl+Alt+Backspace 兩秒}。
+如果快捷鍵啟動的應用佔用了屏幕，按 \key{Ctrl+Opt+Alt+T} 返回 Inkline。
+緊急恢復時，\key{按住 Ctrl+Opt+Alt+Backspace 兩秒}。
 此操作會關閉所有 Inkline 終端，丟失這些會話中尚未儲存的工作。
 設備重新啟動後仍預設進入筆記界面。
 
@@ -138,6 +138,10 @@ OSC 52 無法刪除編輯器里的文字。
 在 Inkline shell 中註冊快捷鍵。參數按字面傳遞；如需 shell 語法，請顯式調用 shell。
 快捷鍵程式通過 Bash 讀取 \code{~/.bashrc}。
 
+Settings → Command shortcuts（第 2 頁）可為字母鍵指定命令。選擇 Terminal 或 Native e-paper app，再按 Save。Remove 需確認後才刪除；Reset draft 放棄編輯。T 已鎖定。只有 Save 和確認刪除會寫入儲存空間。命令列工具管理同一組快捷鍵。
+
+所有全域快捷鍵現在使用 Ctrl+Opt+Alt，包括 T 和長按 Backspace 的緊急復原組合。Folio 使用獨立的 Opt 鍵；USB 鍵盤使用 Windows/Command（Super）鍵。一般 Ctrl+Alt 仍可用於 Emacs。升級後請結束並重新開啟 Inkline；安裝會保留已開啟的終端機。
+
 \begin{shell}
 ~/inkline shortcut register e emacs
 ~/inkline shortcut register p python3
@@ -145,7 +149,7 @@ OSC 52 無法刪除編輯器里的文字。
 ~/inkline shortcut deregister p
 \end{shell}
 
-\key{Ctrl+Alt+E} 在空閒槽位打開 Emacs。
+\key{Ctrl+Opt+Alt+E} 在空閒槽位打開 Emacs。
 \code{~/inkline run PROGRAM ARG...} 可不註冊直接啟動。
 重複註冊會替換綁定；取消註冊不影響正在運行的程式。
 按鍵採用美式鍵盤的物理位置。標點請加引號，自定義程式請使用完整路徑，並先安裝程式。
@@ -158,12 +162,12 @@ OSC 52 無法刪除編輯器里的文字。
 丟棄日誌，並在應用退出後恢復 Inkline。應用應使用 Qt 輸入，不要獨佔鍵盤設備。
 
 \begin{notice}
-\key{Ctrl+Alt+T 是固定快捷鍵，不能註冊或取消註冊。}
+\key{Ctrl+Opt+Alt+T 是固定快捷鍵，不能註冊或取消註冊。}
 它會停止原生快捷鍵應用，並返回現有終端。
 請使用物理 Ctrl 鍵；Caps Lock 映射只在 Inkline 內部生效。
 \end{notice}
 
-\key{緊急恢復：}按住 Ctrl+Alt+Backspace 兩秒，停止快捷鍵應用及其子程序並重新啟動 Inkline。
+\key{緊急恢復：}按住 Ctrl+Opt+Alt+Backspace 兩秒，停止快捷鍵應用及其子程序並重新啟動 Inkline。
 所有終端會關閉，未儲存的工作會丟失。以 root 運行的應用可能通過獨佔輸入、修改服務或耗盡資源
 使恢復失敗；最後的辦法是重新啟動設備。
 

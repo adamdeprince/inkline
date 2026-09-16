@@ -98,7 +98,11 @@ int main(int argc, char **argv) {
         CHECK(map.map(event(QEvent::KeyPress, Qt::Key_Space, 65, Qt::AltModifier), 0).action == InputAction::UnicodeKeyboard);
         CHECK(map.map(event(QEvent::KeyRelease, Qt::Key_Space, 65), 0).action == InputAction::Ignore);
         for (const int key : {Qt::Key_T, Qt::Key_Backspace}) {
-            CHECK(map.map(event(QEvent::KeyPress, key, 0, Qt::ControlModifier | Qt::AltModifier), 0).action == InputAction::Ignore);
+            const auto emacs = event(QEvent::KeyPress, key, 0, Qt::ControlModifier | Qt::AltModifier);
+            CHECK(encode(emacs) == reference.encode(emacs));
+            (void)encode(event(QEvent::KeyRelease, key, 0));
+            CHECK(map.map(event(QEvent::KeyPress, key, 0, Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier), 0).action == InputAction::Ignore);
+            CHECK(map.map(event(QEvent::KeyPress, key, 0, Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier, {}, true), 0).action == InputAction::Ignore);
             CHECK(map.map(event(QEvent::KeyRelease, key, 0), 0).action == InputAction::Ignore);
         }
         const auto left_digit = event(QEvent::KeyPress, Qt::Key_1, 10, Qt::AltModifier, "1");

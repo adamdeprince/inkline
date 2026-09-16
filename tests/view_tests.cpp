@@ -1,5 +1,7 @@
 #include "rmt/view.hpp"
 #include "rmt/preferences.hpp"
+#include "rmt/hotkey_config.hpp"
+#include <QInputMethodEvent>
 #include <QCoreApplication>
 #include <QElapsedTimer>
 #include <QFile>
@@ -401,6 +403,42 @@ int main(int argc, char **argv) {
             else pen(view, QEvent::TabletRelease, pos, Qt::NoModifier, synthesized);
             pump(250); CHECK(view.clipboard_text() == "mouse");
         }
+    }
+    {
+        const auto directory = temporary.filePath("shortcuts");
+        qputenv("INKLINE_SHORTCUT_DIRECTORY", directory.toUtf8());
+        QQuickWindow window;
+        rmt::TerminalView view(window.contentItem(), 24, true, temporary.filePath("shortcut-settings.ini"));
+        view.setSize(QSizeF(1000, 750)); view.layout(); view.start(); view.settings();
+        press(view, Qt::Key_PageDown); CHECK(view.settings_open());
+        press(view, Qt::Key_E); press(view, Qt::Key_Tab);
+        QInputMethodEvent edit; edit.setCommitString("/bin/echo 'two words' '' '$HOME' '*'");
+        QCoreApplication::sendEvent(&view, &edit);
+        CHECK(!QFile::exists(directory)); // No writes while typing or changing focus.
+        press(view, Qt::Key_Return);
+        auto bindings = rmt::hotkeys::load(directory.toStdString());
+        CHECK(bindings.size() == 1 && bindings[0].key == "e");
+        CHECK(bindings[0].command == std::vector<std::string>({"/bin/echo", "two words", "", "$HOME", "*"}));
+        press(view, Qt::Key_PageUp); press(view, Qt::Key_PageDown); press(view, Qt::Key_T);
+        press(view, Qt::Key_Tab); QCoreApplication::sendEvent(&view, &edit); press(view, Qt::Key_Return);
+        CHECK(!QFile::exists(directory + "/t"));
+        press(view, Qt::Key_PageUp); press(view, Qt::Key_PageDown); press(view, Qt::Key_E);
+        view.snapshot(); // Lay out the second page for touch.
+        click(view, 500, 538); // Remove asks for confirmation before writing.
+        CHECK(rmt::hotkeys::load(directory.toStdString()).size() == 1);
+        click(view, 500, 538);
+        CHECK(rmt::hotkeys::load(directory.toStdString()).empty());
+        // Commands registered from the CLI/file API appear on opening the page.
+        rmt::hotkeys::register_binding(directory.toStdString(), "e", {"/bin/echo", "external"}, "epaper");
+        press(view, Qt::Key_PageUp); press(view, Qt::Key_PageDown);
+        press(view, Qt::Key_Tab); press(view, Qt::Key_A, 0, Qt::ControlModifier);
+        press(view, Qt::Key_C, 0, Qt::ControlModifier);
+        CHECK(view.clipboard_text() == "/bin/echo external");
+        // Saving an unchanged command preserves its native-app mode.
+        press(view, Qt::Key_Return);
+        CHECK(rmt::hotkeys::load(directory.toStdString())[0].mode == "epaper");
+        if (const auto path = qgetenv("INKLINE_SHORTCUT_SCREENSHOT"); !path.isEmpty()) CHECK(view.snapshot().save(QString::fromUtf8(path)));
+        qunsetenv("INKLINE_SHORTCUT_DIRECTORY");
     }
     std::puts("View: Unicode input, pen mouse, nine slots, program launch, PTYs, settings and gestures passed.");
 }

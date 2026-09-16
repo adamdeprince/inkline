@@ -268,6 +268,29 @@ with both `Requires=home.mount` and `After=home.mount`. A temporary uinput
 keyboard sent Ctrl+Alt+T through evdev; Inkline started and its control socket
 became ready. The daemon also has the physical Folio input open. The terminal
 was left running, and an interactive Ctrl+Alt+T check also opened Inkline.
-Serial devices were not accessed or reconfigured. Another
-physical reboot remains an acceptance check while separate serial-device work
-is in progress.
+Serial devices were not accessed or reconfigured.
+
+A fresh reboot was subsequently requested and completed. Boot ID changed from
+`56699e52-9beb-445e-915f-caa4976447c7` to
+`aafac064-fde4-4fe1-896b-cda26201c2aa`. Without manually starting it, the launcher
+was enabled and active at 10.82 seconds, after the home mount at 10.65 seconds.
+Notebooks remained the default. I confirmed that the physical keyboard opened
+Inkline after reboot; its control socket was ready and the launcher stayed active.
+
+
+## 0.4.0 Shortcut settings and Ctrl+Opt+Alt — September 16
+
+The shortcut editor, parser and keyboard regression suites pass on macOS and
+reMarkable 2. On ARM, the production evdev state machine also passes ordinary
+Ctrl+Alt non-triggering, Folio Opt and USB Super recognition, repeat suppression,
+recovery at two seconds (once per hold), and dropped-event reset checks.
+The actual ARM CLI registered, listed and removed an isolated binding and
+rejected both registration and removal of T. Tests ran under `/tmp` over Wi-Fi;
+the installed terminal and launcher remained active.
+
+The UI test verifies no binding directory is created while editing, quoted and
+empty arguments survive Save, removal requires confirmation, and the UI reads
+commands and native-app modes registered through the shared CLI storage API.
+The nine-language LuaLaTeX manual builds without missing glyphs, unresolved
+references, or overfull boxes (79 pages). The new three-modifier physical Folio
+and USB checks are still pending.

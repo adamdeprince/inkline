@@ -29,7 +29,7 @@ a convenience in the development setup, not an installer requirement.
 
 On your computer, download `inkline-rm2.tar.gz` and
 `inkline-rm2.tar.gz.sha256` from the
-[0.3.8 preview release](https://github.com/adamdeprince/inkline/releases/tag/v0.3.8).
+[0.4.0 preview release](https://github.com/adamdeprince/inkline/releases/tag/v0.4.0).
 Use the attached Inkline bundle; GitHub's automatically generated source-code
 archives do not contain the compiled application. The bundle is about 79 MiB
 and includes the installer, uninstall script, source archives and licenses.
@@ -39,12 +39,12 @@ additional tablet package manager.
 Alternatively, download both files from a terminal on your computer:
 
 ```sh
-curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.3.8/inkline-rm2.tar.gz
-curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.3.8/inkline-rm2.tar.gz.sha256
+curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.4.0/inkline-rm2.tar.gz
+curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.4.0/inkline-rm2.tar.gz.sha256
 ```
 
 The same files are mirrored under
-[`inkline.goblinreactor.com/downloads/v0.3.8/`](https://inkline.goblinreactor.com/downloads/v0.3.8/inkline-rm2.tar.gz).
+[`inkline.goblinreactor.com/downloads/v0.4.0/`](https://inkline.goblinreactor.com/downloads/v0.4.0/inkline-rm2.tar.gz).
 To compile the application yourself, see [building from source](#building-from-source).
 
 ## 3. Check, then install
@@ -111,7 +111,7 @@ the notebook interface automatically:
 ssh root@10.11.99.1 '~/inkline demo --quit-after 10'
 ```
 
-Then press **Ctrl+Alt+T on your Type Folio or external USB keyboard** to launch
+Then press **Ctrl+Opt+Alt+T on your Type Folio or external USB keyboard** to launch
 a shell directly on the tablet. The shortcut remains available after reboot.
 The small launcher observes the shortcut without grabbing the keyboard or
 recording typed text.
@@ -150,7 +150,7 @@ Useful controls:
   wake. Shells and editor buffers stay in RAM. Network connections may need
   to reconnect. Quit and reopen Inkline after upgrading to activate this behavior.
 
-Inkline 0.3.8 includes right Alt/Option shortcuts, nine terminal slots,
+Inkline 0.4.0 includes right Alt/Option shortcuts, nine terminal slots,
 quit confirmation, a Settings button, and a saved Caps Lock/Control toggle.
 Each new terminal shows a brief guide and a tiny Goblin logo.
 Inkline sets `HOME=/home/root` for tablet sessions, including shells opened by
@@ -160,8 +160,8 @@ See [keyboard settings](keyboard.md) for the complete controls.
 ### Program shortcuts and the manual
 
 Register a program with `~/inkline shortcut register e emacs`, then launch it
-with Ctrl+Alt+E. Use `~/inkline shortcut list` and `~/inkline shortcut deregister e`
-to manage bindings. Ctrl+Alt+T is permanent. Hold Ctrl+Alt+Backspace for two
+with Ctrl+Opt+Alt+E. Use `~/inkline shortcut list` and `~/inkline shortcut deregister e`
+to manage bindings. Ctrl+Opt+Alt+T is permanent. Hold Ctrl+Opt+Alt+Backspace for two
 seconds to stop a malfunctioning shortcut app and restart Inkline; emergency
 recovery closes all terminal sessions. See [global shortcuts](global-shortcuts.md)
 for native e-paper apps, session preservation, and recovery limits.
@@ -266,3 +266,9 @@ chapters with **LuaLaTeX**: `python3 scripts/build-manual.py`. See the
 fonts and temporary cache paths. The finished PDF is committed, so installers
 need no TeX or PDF generation tools. LaTeX utility installation instructions
 remain on the website.
+
+Global launchers use the separate Folio Opt key; on USB keyboards its equivalent
+is Windows/Command (Super). Settings → Command shortcuts is page 2 of Settings.
+The terminal launcher, custom commands and held emergency recovery all require
+Ctrl+Opt+Alt. Ordinary Ctrl+Alt remains available to Emacs. After upgrading, quit
+and reopen Inkline to load the new input handling and Settings page.

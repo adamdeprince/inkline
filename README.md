@@ -4,14 +4,14 @@ Inkline is a terminal for **reMarkable 2**, built with **libghostty-vt** and the
 stock Qt e-paper backend. It is designed for Type Folio and external USB
 keyboards, with kitty graphics and an initial sixel implementation.
 
-**Version 0.3.8 is a preview.** The main artifact is the repeatable
+**Version 0.4.0 is a preview.** The main artifact is the repeatable
 [installation procedure](docs/install.md), including preflight, launch, recovery
 and uninstall. It targets firmware **3.27**, tested on **3.27.3.0**. Other models
 and firmware lines are not supported by this installer.
 
 ## Install
 
-Download the **[Inkline 0.3.8 preview](https://github.com/adamdeprince/inkline/releases/tag/v0.3.8)**
+Download the **[Inkline 0.4.0 preview](https://github.com/adamdeprince/inkline/releases/tag/v0.4.0)**
 and follow the [installation procedure](docs/install.md). The prebuilt ARM bundle
 includes the installer, launcher, uninstall script, checksums, source archives
 and licenses. No compiler, SDK or third-party package manager is needed to install it.
@@ -29,8 +29,9 @@ See the [full procedure](docs/install.md#building-from-source) for build depende
 The package is generated at `build/dist/inkline-rm2.tar.gz`. The
 [project website](https://inkline.goblinreactor.com/) also hosts the preview download.
 
-After installation, press **Ctrl+Alt+T on the tablet’s Type Folio or USB keyboard**
-to open Inkline. No second computer is needed for subsequent launches. Tap
+After installation, press **Ctrl+Opt+Alt+T on the tablet’s Type Folio**
+to open Inkline. On USB keyboards, use Windows/Command (Super) for Opt.
+No second computer is needed for subsequent launches. Tap
 **Quit**, press **Ctrl+Shift+Q**, or exit the shell to return to notebooks.
 Quit asks for confirmation and `exit` closes only the current terminal.
 The launcher temporarily switches from `xochitl` to Inkline and restores it when
@@ -75,6 +76,10 @@ Hold the **right Alt/Option** key for the other Folio and USB keyboard shortcuts
 **Ctrl+Shift+B** hides or shows the bottom bar. Its fifth button opens
 **Settings**, where Caps Lock can act as **Control** (the default) or normal
 **Caps Lock**. Active choices have a solid fill; keyboard focus has a dashed outline.
+**Settings → Command shortcuts (page 2)** assigns commands to
+**Ctrl+Opt+Alt+letter**, with explicit Save and Remove buttons. T is permanently
+reserved. The installed `~/inkline shortcut` tool manages the same bindings.
+Ordinary Ctrl+Alt combinations remain available to Emacs.
 The **E-paper updates** row offers Fast, Balanced, Crisp, Mono, and Saver profiles;
 **Crisp is the default**, while explicitly saved choices are preserved.
 Fast uses the firmware's animation waveform and minimal batching; Crisp uses
@@ -181,11 +186,18 @@ supplies the account's home directory when HOME is missing or empty.
 
 ## Validation
 
+For 0.4.0, shortcut configuration, keyboard and Settings tests pass on macOS
+and reMarkable 2. ARM evdev tests exercise the triple modifier chord, held
+recovery, repeats and dropped events. T stays protected in the UI and CLI;
+Ctrl+Alt input matches its normal terminal encoding. Physical testing of the
+new chords remains separate from these automated checks.
+
 For 0.3.8, eight isolated boot-service tests pass on macOS and reMarkable 2,
 covering installation, legacy-link migration, reinstallation, removal and
 unrelated-file protection. The repaired service launches Inkline through the
 kernel keyboard input path on the tablet.
-A physical reboot check remains pending; see the [device record](docs/device.md).
+A fresh reboot confirmed automatic launcher startup and successful keyboard launch;
+see the [device record](docs/device.md).
 
 For 0.3.7, the graphics, stream and renderer suites pass on macOS and reMarkable 2.
 They verify that the tablet’s BusyBox `clear` sequence removes Kitty and sixel

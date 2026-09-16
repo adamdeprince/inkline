@@ -6,7 +6,7 @@ Inkline は reMarkable 2 上でローカルのシェルを動かします。Type
 接続したりできます。文字と画像は電子ペーパー向けのグレースケールで表示されます。
 
 \begin{notice}
-\key{Ctrl+Alt+T} で本体から Inkline を起動します。\par
+\key{Ctrl+Opt+Alt+T} で本体から Inkline を起動します。\par
 \key{電源ボタン}を押して離すとスリープし、もう一度押すと復帰します。
 開いているシェルやエディターのバッファーは RAM に保持されます。
 \end{notice}
@@ -19,8 +19,8 @@ Inkline は reMarkable 2 上でローカルのシェルを動かします。Type
 下部バーには Escape、履歴の上下、Quit、Settings があります。
 起動時の短い案内と小さな Goblin ロゴは \code{clear} で消せます。
 
-ショートカットアプリが画面を使用している場合は \key{Ctrl+Alt+T} で戻ります。
-緊急時は \key{Ctrl+Alt+Backspace を2秒間}押し続けます。
+ショートカットアプリが画面を使用している場合は \key{Ctrl+Opt+Alt+T} で戻ります。
+緊急時は \key{Ctrl+Opt+Alt+Backspace を2秒間}押し続けます。
 この復旧操作は全ターミナルを閉じるため、セッション内の未保存の作業は失われます。
 本体を再起動すると、通常どおりノート画面が開きます。
 
@@ -150,6 +150,10 @@ OSC 52 にはエディターの文字を削除する機能はありません。
 Inkline のシェルで登録します。引数はそのまま渡されるので、シェル構文にはシェルを明示してください。
 起動したプログラムの環境は Bash 経由で \code{~/.bashrc} を読み込みます。
 
+Settings → Command shortcuts（2ページ目）で、文字キーにコマンドを割り当てられます。Terminal または Native e-paper app を選び、Save を押します。Remove は確認後に削除し、Reset draft は編集を取り消します。T は変更できません。ストレージへの書き込みは Save と削除の確認時だけです。コマンドラインツールでも同じ割り当てを管理できます。
+
+すべてのグローバルショートカットは Ctrl+Opt+Alt を使います。T と、Backspace を長押しする緊急復旧も同じです。Folio では独立した Opt キー、USB キーボードでは Windows/Command（Super）を使います。通常の Ctrl+Alt は Emacs で使えます。更新後は Inkline を終了して開き直してください。インストールは開いているターミナルを維持します。
+
 \begin{shell}
 ~/inkline shortcut register e emacs
 ~/inkline shortcut register p python3
@@ -157,7 +161,7 @@ Inkline のシェルで登録します。引数はそのまま渡されるので
 ~/inkline shortcut deregister p
 \end{shell}
 
-\key{Ctrl+Alt+E} で空きスロットに Emacs を開きます。
+\key{Ctrl+Opt+Alt+E} で空きスロットに Emacs を開きます。
 \code{~/inkline run PROGRAM ARG...} なら登録せずに起動できます。
 再登録は既存の割り当てを置き換え、登録解除は動作中のプログラムには影響しません。
 キーは US 配列の物理位置です。句読点は引用符で囲み、自作プログラムはフルパスを使います。
@@ -172,12 +176,12 @@ Inkline のシェルで登録します。引数はそのまま渡されるので
 アプリはキーボードを排他的に取得せず、Qt の入力を使ってください。
 
 \begin{notice}
-\key{Ctrl+Alt+T は固定です。} 登録も解除もできません。
+\key{Ctrl+Opt+Alt+T は固定です。} 登録も解除もできません。
 ネイティブアプリを終了して既存のターミナルに戻ります。
 物理 Ctrl キーを使ってください。Caps Lock の置き換えは Inkline 内だけに適用されます。
 \end{notice}
 
-\key{緊急時：} Ctrl+Alt+Backspace を2秒間押すと、ショートカットアプリと子プロセスを停止し、
+\key{緊急時：} Ctrl+Opt+Alt+Backspace を2秒間押すと、ショートカットアプリと子プロセスを停止し、
 Inkline を再起動します。全ターミナルが閉じ、未保存の作業は失われます。
 root アプリの入力独占、サービス変更、資源の枯渇により復旧できない場合は、本体を再起動します。
 

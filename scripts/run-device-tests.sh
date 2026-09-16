@@ -7,6 +7,7 @@ cd "$project_dir"
 device_host=${1:-remarkable}
 test_binaries='core_tests sixel_tests stream_tests pty_tests'
 if [ -f build/tablet/hotkey_config_tests ]; then test_binaries="$test_binaries hotkey_config_tests"; fi
+if [ -f build/tablet/hotkey_daemon_tests ]; then test_binaries="$test_binaries hotkey_daemon_tests"; fi
 if [ -f build/tablet/power_key_tests ]; then test_binaries="$test_binaries power_key_tests"; fi
 if [ -f build/tablet/ui_tests ]; then test_binaries="$test_binaries ui_tests"; fi
 if [ -f build/tablet/input_tests ]; then test_binaries="$test_binaries input_tests"; fi
@@ -49,6 +50,7 @@ ssh -T -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=10 \
     if [ -x ./clipboard_tests ]; then ./clipboard_tests; fi
     if [ -x ./input_method_tests ]; then ./input_method_tests; fi
     if [ -x ./hotkey_config_tests ]; then ./hotkey_config_tests; fi
+    if [ -x ./hotkey_daemon_tests ]; then ./hotkey_daemon_tests; fi
     if [ -x ./power_key_tests ]; then ./power_key_tests; fi
     sh tests/power_control.sh scripts/power-control.sh
 ' < build/device-tests.tar

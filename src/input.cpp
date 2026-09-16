@@ -59,7 +59,7 @@ int literal_accent(const QKeyEvent &e) {
 bool global_shortcut(const QKeyEvent &e) {
     if (e.key() == Qt::Key_T || e.key() == Qt::Key_Backspace || e.nativeScanCode() == 28 || e.nativeScanCode() == 22) return true;
     // This file lives in tmpfs and contains only evdev key numbers. Reading it
-    // on a Ctrl+Alt press makes registration changes immediate without polling.
+    // on a Ctrl+Opt+Alt press makes registration changes immediate without polling.
     if (e.nativeScanCode() < 8) return false;
     QFile file("/run/inkline-shortcuts/keys");
     if (!file.open(QIODevice::ReadOnly)) return false;
@@ -102,7 +102,7 @@ MappedInput InputMapper::map(const QKeyEvent &e, int terminal) {
         held.input.key = e.key();
         held.input.scan = e.nativeScanCode();
         held.input.terminal = terminal;
-        if ((e.modifiers() & Qt::ControlModifier) && (right_alt_ || left_alt_ || (e.modifiers() & Qt::AltModifier)) && global_shortcut(e))
+        if ((e.modifiers() & Qt::ControlModifier) && (e.modifiers() & Qt::MetaModifier) && (right_alt_ || left_alt_ || (e.modifiers() & Qt::AltModifier)) && global_shortcut(e))
             held.input.action = InputAction::Ignore;
         else if (caps(e)) held.input.key = caps_control_ ? Qt::Key_Control : Qt::Key_CapsLock;
         else if (!(mods & (Qt::ControlModifier | Qt::MetaModifier)) && physical_key(e) == Qt::Key_Space &&
@@ -147,8 +147,6 @@ MappedInput InputMapper::map(const QKeyEvent &e, int terminal) {
                 if (e.key() == Qt::Key_B) held.input.action = InputAction::ToggleBar;
                 if (e.key() == Qt::Key_Q) held.input.action = InputAction::Quit;
             }
-            if ((mods & Qt::ControlModifier) && (mods & Qt::AltModifier) && e.key() == Qt::Key_T)
-                held.input.action = InputAction::Ignore; // Device launcher.
             if ((mods & Qt::ShiftModifier) && held.input.key == Qt::Key_PageUp) held.input.action = InputAction::HistoryUp;
             if ((mods & Qt::ShiftModifier) && held.input.key == Qt::Key_PageDown) held.input.action = InputAction::HistoryDown;
         }

@@ -1,4 +1,5 @@
 #include "rmt/hotkey_config.hpp"
+#include "rmt/shortcut_chord.hpp"
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
@@ -10,6 +11,28 @@
 template<class F> void rejects(F work) { bool rejected = false; try { work(); } catch (const std::exception &) { rejected = true; } CHECK(rejected); }
 int main() {
     namespace h = rmt::hotkeys;
+    for (const bool folio : {false, true}) {
+        rmt::ShortcutChord chord(folio);
+        chord.update(29, 1); chord.update(56, 1); chord.update(14, 1);
+        CHECK(!chord.active() && !chord.recovery_held());
+        chord.update(folio ? 125 : 107, 1); // USB End / Folio's non-Opt code.
+        CHECK(!chord.active());
+        chord.update(folio ? 107 : 126, 1);
+        CHECK(chord.active() && chord.recovery_held());
+        chord.update(folio ? 107 : 126, 0);
+        CHECK(!chord.active() && !chord.recovery_held());
+        chord.reset(); CHECK(!chord.active());
+        chord.update(97, 1); chord.update(100, 1); chord.update(folio ? 107 : 125, 1);
+        CHECK(chord.active() && !chord.recovery_held());
+        chord.update(14, 1); CHECK(chord.recovery_held());
+        chord.update(97, 0); CHECK(!chord.recovery_held());
+    }
+    const std::vector<std::string> literal{"echo", "two words", "", "'", "\\", "a\"b", "$HOME", "$(id)", "*", ";", "日本語"};
+    CHECK(h::parse_command(h::display_command(literal)) == literal);
+    CHECK(h::parse_command("echo a\\ b \"two words\" ''") == std::vector<std::string>({"echo", "a b", "two words", ""}));
+    CHECK(h::parse_command("sh -c 'echo hello | cat'") == std::vector<std::string>({"sh", "-c", "echo hello | cat"}));
+    for (const auto invalid : {"", "echo 'unfinished", "echo \"unfinished", "echo trailing\\", "echo\nnext"})
+        rejects([&] { h::parse_command(invalid); });
     char path[] = "/tmp/inkline-hotkeys.XXXXXX"; CHECK(mkdtemp(path));
     const std::string directory(path);
     const std::vector<std::string> command{"/bin/echo", "two words", "$(touch /tmp/never)", "'quote'", "", "日本語"};

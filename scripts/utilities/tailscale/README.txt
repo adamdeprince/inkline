@@ -29,7 +29,7 @@ separate daemon in RAM without signing in. Commands are installed under
 
 2. SIGN IN ON THE TABLET
 
-Connect the tablet to Wi-Fi, open Inkline with Ctrl+Alt+T, and run:
+Connect the tablet to Wi-Fi, open Inkline with Ctrl+Opt+Alt+T, and run:
 
   tailscale up --accept-dns=false --accept-routes=false --hostname=remarkable2
 

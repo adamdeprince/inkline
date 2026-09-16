@@ -6,7 +6,7 @@ Type Folio oder eine USB-Tastatur, arbeiten Sie direkt auf dem Tablet oder
 verbinden Sie sich über SSH oder Goblin Mosh. Text und Bilder erscheinen in Graustufen.
 
 \begin{notice}
-\key{Strg+Alt+T} öffnet Inkline direkt auf dem Tablet.\par
+\key{Strg+Opt+Alt+T} öffnet Inkline direkt auf dem Tablet.\par
 \key{Ein/Aus-Taste:} drücken und loslassen, um den Ruhezustand zu starten;
 erneut drücken zum Aufwachen. Shells und Editorpuffer bleiben im RAM.
 \end{notice}
@@ -20,8 +20,8 @@ drücken und bestätigen. \code{exit} schließt ein Terminal; das letzte führt
 zurück zu den Notizbüchern. Unten stehen Escape, Verlauf auf/ab, Quit und Settings.
 \code{clear} entfernt die kurze Starthilfe und das kleine Goblin-Logo.
 
-Belegt eine per Kürzel gestartete App den Bildschirm, führt \key{Strg+Alt+T}
-zu Inkline zurück. Im Notfall \key{Strg+Alt+Backspace zwei Sekunden halten}.
+Belegt eine per Kürzel gestartete App den Bildschirm, führt \key{Strg+Opt+Alt+T}
+zu Inkline zurück. Im Notfall \key{Strg+Opt+Alt+Backspace zwei Sekunden halten}.
 Die Wiederherstellung schließt alle Terminals; ungespeicherte Arbeit darin geht
 verloren. Nach einem Neustart erscheint weiterhin die normale Notizbuchoberfläche.
 
@@ -161,6 +161,10 @@ Kürzel in einer Inkline-Shell registrieren. Argumente werden wörtlich übergeb
 für Shellsyntax eine Shell ausdrücklich aufrufen. Kürzelprogramme lesen
 \code{~/.bashrc} über Bash.
 
+Unter Settings → Command shortcuts (Seite 2) lässt sich einer Buchstabentaste ein Befehl zuweisen. Wähle Terminal oder Native e-paper app und dann Save. Remove verlangt eine Bestätigung; Reset draft verwirft Änderungen. T ist gesperrt. Nur Save und bestätigtes Entfernen schreiben auf den Speicher. Das Kommandozeilenwerkzeug verwaltet dieselben Belegungen.
+
+Alle globalen Tastenkürzel verwenden jetzt Strg+Opt+Alt, auch T und die Wiederherstellung durch Halten von Backspace. Verwende die separate Opt-Taste des Folio, auf USB-Tastaturen Windows/Command (Super). Strg+Alt bleibt für Emacs verfügbar. Beende und öffne Inkline nach dem Update erneut; die Installation erhält offene Terminals.
+
 \begin{shell}
 ~/inkline shortcut register e emacs
 ~/inkline shortcut register p python3
@@ -168,7 +172,7 @@ für Shellsyntax eine Shell ausdrücklich aufrufen. Kürzelprogramme lesen
 ~/inkline shortcut deregister p
 \end{shell}
 
-\key{Strg+Alt+E} öffnet Emacs auf einem freien Platz.
+\key{Strg+Opt+Alt+E} öffnet Emacs auf einem freien Platz.
 \code{~/inkline run PROGRAM ARG...} startet ohne registriertes Kürzel.
 Erneutes Registrieren ersetzt die Belegung; Entfernen lässt laufende Programme
 unberührt. Tasten entsprechen physischen US-Positionen. Satzzeichen in
@@ -184,12 +188,12 @@ Der Starter setzt Qt-Optionen und RAM-Caches, verwirft Protokolle und setzt
 Inkline nach dem Ende fort. Apps sollen Qt-Eingaben ohne exklusiven Tastaturzugriff nutzen.
 
 \begin{notice}
-\key{Strg+Alt+T ist fest reserviert.} Registrieren und Entfernen sind gesperrt.
+\key{Strg+Opt+Alt+T ist fest reserviert.} Registrieren und Entfernen sind gesperrt.
 Es beendet die native App und kehrt zu bestehenden Terminals zurück.
 Die physische Strg-Taste verwenden; Caps-Lock-Umbelegung gilt nur innerhalb von Inkline.
 \end{notice}
 
-\key{Notfall:} Strg+Alt+Backspace zwei Sekunden halten, um die App samt
+\key{Notfall:} Strg+Opt+Alt+Backspace zwei Sekunden halten, um die App samt
 Kindprozessen zu stoppen und Inkline neu zu starten. Alle Terminals schließen;
 ungespeicherte Arbeit geht verloren. Root-Apps können die Rettung durch
 exklusiven Eingabezugriff, Dienständerungen oder Ressourcenmangel verhindern.

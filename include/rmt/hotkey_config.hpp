@@ -23,6 +23,9 @@ void register_binding(const std::string &directory, std::string_view key,
                       const std::vector<std::string> &command, std::string_view mode = "terminal");
 void deregister_binding(const std::string &directory, std::string_view key);
 std::string display_command(const std::vector<std::string> &command);
+// Editable command text: quotes and backslashes group literal arguments.
+// Never expands variables, globs, substitutions, or shell operators.
+std::vector<std::string> parse_command(std::string_view text);
 
 }
 #endif

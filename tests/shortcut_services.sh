@@ -11,8 +11,8 @@ if systemctl is-active --quiet inkline.service; then
     echo 'Close existing Inkline terminals before running this integration test.' >&2
     exit 1
 fi
-if /home/root/inkline shortcut list | grep -q 'Ctrl+Alt+j '; then
-    echo 'The test needs the unused Ctrl+Alt+J binding.' >&2
+if /home/root/inkline shortcut list | grep -q 'Ctrl+Opt+Alt+j '; then
+    echo 'The test needs the unused Ctrl+Opt+Alt+J binding.' >&2
     exit 1
 fi
 stage=$(mktemp -d /tmp/inkline-shortcut-check.XXXXXX)
@@ -47,7 +47,7 @@ native_gone() {
 
 if /home/root/inkline shortcut register t /bin/true; then echo 'T was replaceable' >&2; exit 1; fi
 if /home/root/inkline shortcut deregister T; then echo 'T was removable' >&2; exit 1; fi
-"$probe" # Ctrl+Alt+T through the kernel input path.
+"$probe" # Ctrl+Opt+Alt+T through the kernel input path.
 wait_for 'terminal launch' running
 original_pid=$(main_pid)
 
@@ -83,19 +83,19 @@ chmod 700 "$stage/native.sh"
 wait_for 'native app' test -s "$stage/native.pid"
 test "$(awk '{print $3}' /proc/"$original_pid"/stat)" = T
 native_pid=$(cat "$stage/native.pid")
-"$probe" # Ctrl+Alt+T must stop the hung app without losing terminal sessions.
+"$probe" # Ctrl+Opt+Alt+T must stop the hung app without losing terminal sessions.
 wait_for 'terminal resume' resumed
 wait_for 'native service exit' native_gone
 test "$(main_pid)" = "$original_pid"
 test -d "/proc/$program_pid"
 test ! -e "/proc/$native_pid"
-echo 'Native app suspension and Ctrl+Alt+T session preservation passed.'
+echo 'Native app suspension and Ctrl+Opt+Alt+T session preservation passed.'
 
 rm "$stage/native.pid"
 "$probe" 36
 wait_for 'second native app' test -s "$stage/native.pid"
 native_pid=$(cat "$stage/native.pid")
-"$probe" 14 2400 # Hold Ctrl+Alt+Backspace beyond the two-second threshold.
+"$probe" 14 2400 # Hold Ctrl+Opt+Alt+Backspace beyond the two-second threshold.
 wait_for 'emergency restart' fresh
 wait_for 'emergency native exit' native_gone
 test ! -e "/proc/$program_pid"
@@ -110,5 +110,5 @@ wait_for 'resume after crash' resumed
 test "$(main_pid)" = "$original_pid"
 /home/root/inkline shortcut deregister j
 registered=false
-if /home/root/inkline shortcut list | grep -q 'Ctrl+Alt+j '; then exit 1; fi
+if /home/root/inkline shortcut list | grep -q 'Ctrl+Opt+Alt+j '; then exit 1; fi
 echo 'Crash recovery, deregistration and protected T passed; restoring notebooks.'

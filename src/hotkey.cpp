@@ -1,7 +1,8 @@
-// Global Ctrl+Alt shortcuts for Folio and USB keyboards. The daemon never
+// Global Ctrl+Opt+Alt shortcuts for Folio and USB keyboards. The daemon never
 // grabs an input device, records typed text, or writes runtime state to disk.
 #include "rmt/hotkey_config.hpp"
 #include "rmt/power_key.hpp"
+#include "rmt/shortcut_chord.hpp"
 #include <algorithm>
 #include <array>
 #include <cerrno>
@@ -43,29 +44,30 @@ struct Trigger {
 struct Keyboard {
     std::string path;
     int fd;
-    bool left_ctrl = false, right_ctrl = false, left_alt = false, right_alt = false;
-    bool backspace = false, desynchronized = false, emergency_active = false, emergency_fired = false;
+    rmt::ShortcutChord chord{};
+    bool desynchronized = false, emergency_active = false, emergency_fired = false;
     std::chrono::steady_clock::time_point emergency_since{};
     rmt::PowerKey power{}, sleep{};
 
-    bool ctrl() const { return left_ctrl || right_ctrl; }
-    bool alt() const { return left_alt || right_alt; }
     void update_emergency() {
-        const bool active = ctrl() && alt() && backspace;
+        const bool active = chord.recovery_held();
         if (active && !emergency_active) emergency_since = std::chrono::steady_clock::now();
         if (!active) emergency_fired = false;
         emergency_active = active;
     }
     void snapshot() {
-        power.reset(); sleep.reset();
+        power.reset(); sleep.reset(); chord.reset();
+        emergency_active = emergency_fired = false;
         std::array<unsigned char, bit_bytes> held{};
         if (ioctl(fd, EVIOCGKEY(held.size()), held.data()) < 0) return;
-        left_ctrl = bit(held, KEY_LEFTCTRL); right_ctrl = bit(held, KEY_RIGHTCTRL);
-        left_alt = bit(held, KEY_LEFTALT); right_alt = bit(held, KEY_RIGHTALT);
-        backspace = bit(held, KEY_BACKSPACE); update_emergency();
+        for (unsigned code = 0; code < 128; ++code) chord.update(code, bit(held, code));
+        update_emergency();
     }
     Trigger event(const input_event &input, const std::map<unsigned, rmt::hotkeys::Binding> &bindings, bool power_enabled) {
-        if (input.type == EV_SYN && input.code == SYN_DROPPED) { desynchronized = true; return {}; }
+        if (input.type == EV_SYN && input.code == SYN_DROPPED) {
+            desynchronized = true; chord.reset(); emergency_active = emergency_fired = false;
+            return {};
+        }
         if (desynchronized) {
             if (input.type == EV_SYN && input.code == SYN_REPORT) { snapshot(); desynchronized = false; }
             return {};
@@ -75,16 +77,9 @@ struct Keyboard {
             auto &key = input.code == KEY_POWER ? power : sleep;
             return key.event(input.value, power_enabled) ? Trigger{Trigger::Sleep, input.code} : Trigger{};
         }
-        switch (input.code) {
-        case KEY_LEFTCTRL: left_ctrl = input.value != 0; break;
-        case KEY_RIGHTCTRL: right_ctrl = input.value != 0; break;
-        case KEY_LEFTALT: left_alt = input.value != 0; break;
-        case KEY_RIGHTALT: right_alt = input.value != 0; break;
-        case KEY_BACKSPACE: backspace = input.value != 0; break;
-        default: break;
-        }
+        chord.update(input.code, input.value);
         update_emergency();
-        if (input.value != 1 || !ctrl() || !alt()) return {};
+        if (input.value != 1 || !chord.active()) return {};
         if (input.code == KEY_T) return {Trigger::Terminal, input.code};
         const auto found = bindings.find(input.code);
         return found == bindings.end() ? Trigger{} : Trigger{Trigger::Binding, input.code};
@@ -111,7 +106,12 @@ void discover(std::vector<Keyboard> &keyboards) {
         if (!readable || (!shortcuts && !bit(keys, KEY_POWER) && !bit(keys, KEY_SLEEP))) {
             close(fd); continue;
         }
-        keyboards.push_back({path, fd}); keyboards.back().snapshot();
+        input_id identity{};
+        char name[128]{};
+        const bool folio = ioctl(fd, EVIOCGID, &identity) >= 0 && identity.bustype == BUS_HOST &&
+            identity.vendor == 0x2edd && identity.product == 1 &&
+            ioctl(fd, EVIOCGNAME(sizeof(name)), name) >= 0 && std::strcmp(name, "rM_Keyboard") == 0;
+        keyboards.push_back({path, fd, rmt::ShortcutChord(folio)}); keyboards.back().snapshot();
     }
     closedir(directory);
 }
@@ -200,35 +200,35 @@ int manage(int argc, char **argv, const std::string &directory, bool custom_dire
         if (first >= argc) throw std::runtime_error("A program is required");
         std::vector<std::string> command(argv + first, argv + argc);
         rmt::hotkeys::register_binding(directory, argv[2], command, mode); notify_daemon(custom_directory);
-        std::printf("Registered Ctrl+Alt+%s -> %s\n", argv[2], rmt::hotkeys::display_command(command).c_str());
+        std::printf("Registered Ctrl+Opt+Alt+%s -> %s\n", argv[2], rmt::hotkeys::display_command(command).c_str());
         return 0;
     }
     if (action == "deregister" || action == "remove") {
         if (argc != 3) throw std::runtime_error("Usage: ~/inkline shortcut deregister KEY");
         rmt::hotkeys::deregister_binding(directory, argv[2]); notify_daemon(custom_directory);
-        std::printf("Deregistered Ctrl+Alt+%s\n", argv[2]); return 0;
+        std::printf("Deregistered Ctrl+Opt+Alt+%s\n", argv[2]); return 0;
     }
     if (action == "list") {
-        std::puts("Ctrl+Alt+t -> /home/root/inkline start  [permanent]");
+        std::puts("Ctrl+Opt+Alt+t -> /home/root/inkline start  [permanent]");
         std::vector<std::string> warnings;
         for (const auto &binding : rmt::hotkeys::load(directory, &warnings))
-            std::printf("Ctrl+Alt+%s -> [%s] %s\n", binding.key.c_str(), binding.mode.c_str(), rmt::hotkeys::display_command(binding.command).c_str());
+            std::printf("Ctrl+Opt+Alt+%s -> [%s] %s\n", binding.key.c_str(), binding.mode.c_str(), rmt::hotkeys::display_command(binding.command).c_str());
         for (const auto &warning : warnings) std::fprintf(stderr, "Warning: %s\n", warning.c_str());
         return warnings.empty() ? 0 : 1;
     }
     if (action == "check") {
         std::vector<std::string> warnings; (void)rmt::hotkeys::load(directory, &warnings);
         if (!warnings.empty()) throw std::runtime_error(warnings.front());
-        std::puts("Inkline global shortcuts ready; Ctrl+Alt+T and the emergency chord are permanent."); return 0;
+        std::puts("Inkline global shortcuts ready; Ctrl+Opt+Alt+T and the emergency chord are permanent."); return 0;
     }
     if (action == "help" || action == "--help" || action == "-h") {
         std::puts("Usage: ~/inkline shortcut register KEY [--terminal|--epaper] PROGRAM [ARG ...]");
         std::puts("       ~/inkline shortcut deregister KEY");
         std::puts("       ~/inkline shortcut list");
-        std::puts("Ctrl+Alt+T always opens Inkline and cannot be changed.");
+        std::puts("Ctrl+Opt+Alt+T always opens Inkline and cannot be changed.");
         std::puts("Programs open in a new terminal by default. --epaper gives a native app the screen.");
-        std::puts("Hold Ctrl+Alt+Backspace for 2 seconds to stop shortcut apps and restore Inkline.");
-        std::puts("Emergency recovery closes all open terminals; ordinary Ctrl+Alt+T preserves them.");
+        std::puts("Hold Ctrl+Opt+Alt+Backspace for 2 seconds to stop shortcut apps and restore Inkline.");
+        std::puts("Emergency recovery closes all open terminals; ordinary Ctrl+Opt+Alt+T preserves them.");
         return 0;
     }
     throw std::runtime_error("Unknown shortcut command; run ~/inkline shortcut help");
@@ -242,7 +242,7 @@ int daemon(const std::string &directory) {
     auto observe_resume = [&] {
         const auto monotonic = clock_ms(CLOCK_MONOTONIC);
         if (resume_guard.observe(clock_ms(CLOCK_BOOTTIME), monotonic)) {
-            for (auto &keyboard : keyboards) { keyboard.power.reset(); keyboard.sleep.reset(); }
+            for (auto &keyboard : keyboards) keyboard.snapshot();
             spawn({power_control, "resume"});
         }
         return monotonic;
@@ -272,7 +272,7 @@ int daemon(const std::string &directory) {
                     if (trigger.type != Trigger::None) triggers.push_back(trigger);
                 }
             }
-            if (keyboards[i].emergency_due(std::chrono::steady_clock::now())) recover = true;
+            if (!lost && keyboards[i].emergency_due(std::chrono::steady_clock::now())) recover = true;
             if (lost) { close(keyboards[i].fd); keyboards[i].fd = -1; }
         }
         keyboards.erase(std::remove_if(keyboards.begin(), keyboards.end(), [](const Keyboard &keyboard) { return keyboard.fd < 0; }), keyboards.end());

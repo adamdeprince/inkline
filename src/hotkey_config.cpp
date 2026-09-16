@@ -150,7 +150,7 @@ void register_binding(const std::string &directory, std::string_view name,
                       const std::vector<std::string> &command, std::string_view mode) {
     const auto *key = definition(name);
     if (!key) throw std::runtime_error("Key must be a letter, digit, or US punctuation key");
-    if (key->code == KEY_T) throw std::runtime_error("Ctrl+Alt+T is permanently reserved for Inkline");
+    if (key->code == KEY_T) throw std::runtime_error("Ctrl+Opt+Alt+T is permanently reserved for Inkline");
     if (command.empty() || command[0].empty() || command.size() > 64) throw std::runtime_error("A program and at most 63 arguments are required");
     if (mode != "terminal" && mode != "epaper") throw std::runtime_error("Mode must be terminal or epaper");
     std::string contents = std::string(header) + std::string(mode) + '\n';
@@ -187,7 +187,7 @@ void register_binding(const std::string &directory, std::string_view name,
 void deregister_binding(const std::string &directory, std::string_view name) {
     const auto *key = definition(name);
     if (!key) throw std::runtime_error("Unknown shortcut key");
-    if (key->code == KEY_T) throw std::runtime_error("Ctrl+Alt+T is permanent and cannot be deregistered");
+    if (key->code == KEY_T) throw std::runtime_error("Ctrl+Opt+Alt+T is permanent and cannot be deregistered");
     if (unlink(path_for(directory, *key).c_str()) < 0 && errno != ENOENT)
         throw std::runtime_error(std::string("Cannot remove shortcut: ") + std::strerror(errno));
 }
@@ -196,12 +196,42 @@ std::string display_command(const std::vector<std::string> &command) {
     std::string result;
     for (const auto &argument : command) {
         if (!result.empty()) result += ' ';
-        const bool quote = argument.empty() || argument.find_first_of(" \t'\\\"$`") != std::string::npos;
+        const bool quote = argument.empty() || argument.find_first_of(" \t\r\n'\\\"$`;&|<>()*?[]{}!~#") != std::string::npos;
         if (!quote) { result += argument; continue; }
         result += '\'';
         for (const char c : argument) result += c == '\'' ? "'\\''" : std::string(1, c);
         result += '\'';
     }
+    return result;
+}
+
+std::vector<std::string> parse_command(std::string_view text) {
+    std::vector<std::string> result;
+    std::string argument;
+    char quote = 0;
+    bool started = false;
+    for (size_t i = 0; i < text.size(); ++i) {
+        const char c = text[i];
+        if (c == '\0' || c == '\n' || c == '\r') throw std::runtime_error("Use a single-line command");
+        if (!quote && (c == ' ' || c == '\t')) {
+            if (started) { result.push_back(argument); argument.clear(); started = false; }
+            continue;
+        }
+        started = true;
+        if (c == quote) { quote = 0; continue; }
+        if (!quote && (c == '\'' || c == '"')) { quote = c; continue; }
+        if (c == '\\' && quote != '\'') {
+            if (i + 1 == text.size()) throw std::runtime_error("Finish the backslash escape");
+            const char next = text[i + 1];
+            if (!quote || next == '"' || next == '\\' || next == '$' || next == '`') {
+                argument += next; ++i; continue;
+            }
+        }
+        argument += c;
+    }
+    if (quote) throw std::runtime_error("Close the quoted argument");
+    if (started) result.push_back(argument);
+    if (result.empty() || result.front().empty()) throw std::runtime_error("Enter a program to run");
     return result;
 }
 }
