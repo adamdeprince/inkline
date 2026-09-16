@@ -170,6 +170,25 @@ int main(void) {
     CHECK(rmt_core_memory_used(core) < baseline + 1024 * 1024);
     rmt_core_free(core);
 
+    /* BusyBox clear on reMarkable emits CUP + ED0, not ED2. The image
+     * must be removed from storage, not just covered by a blank frame. */
+    core = rmt_core_new(80, 24, NULL); CHECK(core);
+    terminal = rmt_core_terminal(core);
+    CHECK(ghostty_terminal_resize(terminal, 80, 24, 8, 16) == GHOSTTY_SUCCESS);
+    const char *clears[] = {"\033[H\033[J", "\033[H\033[0J", "\033[H\033[000J",
+                            "\033[2J", "\033[02J"};
+    for (size_t i = 0; i < sizeof(clears) / sizeof(clears[0]); ++i) {
+        write_vt(terminal, "\033[H\033_Ga=T,f=32,s=1,v=1,i=30,C=1;/wAA/w==\033\\");
+        check_red(terminal, 30);
+        /* Erasing below another cursor position, a selective erase, or
+         * clearing history must not remove the visible logo at the top. */
+        write_vt(terminal, "\033[2;1H\033[J\033[1;2H\033[0J\033[H\033[?J\033[3J");
+        check_red(terminal, 30);
+        write_vt(terminal, clears[i]);
+        CHECK(!image(terminal, 30));
+    }
+    rmt_core_free(core);
+
     options = rmt_core_defaults();
     options.image_bytes = 4;
     core = rmt_core_new(80, 24, &options);

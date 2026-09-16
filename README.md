@@ -4,14 +4,14 @@ Inkline is a terminal for **reMarkable 2**, built with **libghostty-vt** and the
 stock Qt e-paper backend. It is designed for Type Folio and external USB
 keyboards, with kitty graphics and an initial sixel implementation.
 
-**Version 0.3.6 is a preview.** The main artifact is the repeatable
+**Version 0.3.7 is a preview.** The main artifact is the repeatable
 [installation procedure](docs/install.md), including preflight, launch, recovery
 and uninstall. It targets firmware **3.27**, tested on **3.27.3.0**. Other models
 and firmware lines are not supported by this installer.
 
 ## Install
 
-Download the **[Inkline 0.3.6 preview](https://github.com/adamdeprince/inkline/releases/tag/v0.3.6)**
+Download the **[Inkline 0.3.7 preview](https://github.com/adamdeprince/inkline/releases/tag/v0.3.7)**
 and follow the [installation procedure](docs/install.md). The prebuilt ARM bundle
 includes the installer, launcher, uninstall script, checksums, source archives
 and licenses. No compiler, SDK or third-party package manager is needed to install it.
@@ -32,7 +32,7 @@ The package is generated at `build/dist/inkline-rm2.tar.gz`. The
 After installation, press **Ctrl+Alt+T on the tablet’s Type Folio or USB keyboard**
 to open Inkline. No second computer is needed for subsequent launches. Tap
 **Quit**, press **Ctrl+Shift+Q**, or exit the shell to return to notebooks.
-In 0.3.6, Quit asks for confirmation and `exit` closes only the current terminal.
+Quit asks for confirmation and `exit` closes only the current terminal.
 The launcher temporarily switches from `xochitl` to Inkline and restores it when
 Inkline stops. A small keyboard shortcut service starts at boot; the terminal itself opens only
 on request, and the usual notebook interface remains the default.
@@ -54,7 +54,7 @@ Build recipes, pinned inputs, and device checks are documented in
 Compact TeX Live is installed on the tablet and Purrfect PDF export passes.
 The full collection is optional and too large to recommend for internal storage.
 
-## Keyboard controls in 0.3.6
+## Keyboard controls
 
 Hold the separate **Opt** key (between Ctrl and Alt on the Folio) and press
 **1 through 0** for **F1 through F10**. The shortcut uses the keyboard's Meta
@@ -181,6 +181,12 @@ supplies the account's home directory when HOME is missing or empty.
 
 ## Validation
 
+For 0.3.7, the graphics, stream and renderer suites pass on macOS and reMarkable 2.
+They verify that the tablet’s BusyBox `clear` sequence removes Kitty and sixel
+images from memory and the retained frame, including fragmented PTY input.
+Partial and selective erases preserve images outside the cleared area.
+The device graphics test reports zero process storage-write bytes.
+
 For 0.3.6, all **ten ARM suites** pass on reMarkable 2, with the corresponding
 host suites and an additional local control-socket integration test on macOS.
 They cover graphics, sixel, stream parsing, PTYs, rendering, keyboard and global
@@ -230,9 +236,10 @@ cross build extracts its target libraries without running the Linux installer.
 See [toolchain details](toolchains/README.md).
 
 Libghostty-vt is pinned to commit
-`448062571c5edf010b7490d06869b88b5ebf8f80`. Two included patches fix ARM32 seeking
-and select libc for Linux C embedding, avoiding Wuffs allocator stubs overriding
-glibc. The core also handles the pinned allocator ABI's logarithmic alignment.
+`448062571c5edf010b7490d06869b88b5ebf8f80`. Included patches fix ARM32 seeking,
+select libc for Linux C embedding, bound history and graphics retention, and
+remove images when BusyBox `clear` erases the screen. The core also handles
+the pinned allocator ABI's logarithmic alignment.
 
 Inkline includes GPL-3.0-or-later sixel code derived from Goblin Mosh and is
 provided under that license. See [third-party notices](THIRD_PARTY.md) and

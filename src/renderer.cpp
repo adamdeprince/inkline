@@ -102,7 +102,24 @@ void Renderer::clear_sixel() {
     invalidate();
 }
 
-void Renderer::clear_graphics() {
+void Renderer::control(std::string_view sequence) {
+    if (sequence != "\033c") {
+        if (sequence.substr(0, 2) == "\033[") sequence.remove_prefix(2);
+        else if (sequence.substr(0, 1) == "\233") sequence.remove_prefix(1);
+        else return;
+        if (sequence.empty() || sequence.back() != 'J') return;
+        sequence.remove_suffix(1);
+        while (!sequence.empty() && sequence.front() == '0') sequence.remove_prefix(1);
+        if (sequence.empty()) {
+            // BusyBox clear emits CUP + ED0. Only erase-below at the actual
+            // top-left clears the whole display; another cursor position
+            // (including origin mode with margins) must retain other images.
+            uint16_t x = 0, y = 0;
+            check(ghostty_terminal_get(terminal_, GHOSTTY_TERMINAL_DATA_CURSOR_X, &x));
+            check(ghostty_terminal_get(terminal_, GHOSTTY_TERMINAL_DATA_CURSOR_Y, &y));
+            if (x != 0 || y != 0) return;
+        } else if (sequence != "2") return;
+    }
     // Ghostty applies Kitty erase semantics when the pending ED/RIS reaches
     // its parser. Sixel overlays are ours, and both layers need a repaint.
     clear_sixel();

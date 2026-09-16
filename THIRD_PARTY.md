@@ -8,6 +8,8 @@
   following the `llseek` path used by Zig's own I/O implementation.
   `patches/ghostty-inkline-retention.patch` adds Inkline's exact history limit
   and off-screen graphics reclamation entry point without injecting VT input.
+  `patches/ghostty-inkline-erase.patch` clears visible Kitty images when ED0
+  erases the entire screen, as used by the tablet's BusyBox `clear` command.
   `patches/ghostty-linux-libc.patch` selects libc for Linux C embedding so the
   Wuffs no-libc stubs do not override the application's allocator. The source
   bundle includes the patched Ghostty tree, its dependency lockfile, and the

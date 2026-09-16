@@ -69,9 +69,7 @@ public:
         : QObject(parent), core_(make_core()), renderer_(*core_, pixels, 16 * 1024 * 1024),
           keyboard_(*core_), mouse_(*core_), selection_(rmt_core_terminal(core_.get())), clipboard_(clipboard), stream_(*core_, [this](sixel::Bitmap &&b) { renderer_.sixel(std::move(b)); }),
           changed_(std::move(changed)), exited_(std::move(exited)), error_(std::move(error)) {
-        stream_.set_control_handler([this](std::string_view c) {
-            if (c == "\033c" || c == "\033[2J" || c == "\x9b" "2J") renderer_.clear_graphics();
-        });
+        stream_.set_control_handler([this](std::string_view c) { renderer_.control(c); });
         auto terminal = rmt_core_terminal(core_.get());
         ghostty_terminal_set(terminal, GHOSTTY_TERMINAL_OPT_USERDATA, this);
         ghostty_terminal_set(terminal, GHOSTTY_TERMINAL_OPT_WRITE_PTY, reinterpret_cast<const void *>(reply));

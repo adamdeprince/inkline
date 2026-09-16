@@ -224,3 +224,22 @@ Every page passed text-bound checks; representative Latin and CJK pages were
 visually reviewed. All fonts are embedded with Unicode mappings. The installer
 still preserves live terminal sessions and uses the supported USB document
 importer when available; it does not write notebook metadata directly.
+
+## 0.3.7 BusyBox clear — September 16
+
+The tablet was running 0.3.6 when its startup Goblin survived `clear`. Stock
+BusyBox emits `ESC [ H ESC [ J`: cursor home followed by erase-below (ED0).
+The previous graphics cleanup handled ED2 and reset, so text disappeared while
+the Kitty placement remained in memory.
+
+A pinned-source patch now removes visible Kitty placements and unused image
+payloads when an unprotected ED0 covers the entire screen. It preserves the
+original text-erasure behavior without invoking ED2's scrollback heuristic.
+The sixel renderer handles the same full-screen clear, including explicit zero
+parameters. Normal partial erases and selective erase sequences are unchanged.
+
+The core, stream and renderer regression suites pass on macOS and reMarkable 2.
+Tests check image storage, exact blank rendered pixels, dirty-region coverage,
+byte-at-a-time input and preservation on partial, selective and history-only
+erases. Device tests run offscreen in tmpfs without interrupting active sessions;
+the graphics suite reports zero process storage-write bytes.

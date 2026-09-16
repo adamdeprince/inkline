@@ -7,6 +7,7 @@
 #include <QPainter>
 #include <deque>
 #include <array>
+#include <string_view>
 
 namespace rmt {
 // All terminal access and drawing occur on the GUI thread. Images are RAM only.
@@ -25,7 +26,8 @@ public:
     QImage frame();
     void sixel(sixel::Bitmap &&bitmap);
     void clear_sixel();
-    void clear_graphics();
+    // Observe complete CSI/RIS before the stream sends it to the terminal.
+    void control(std::string_view sequence);
     void reclaim(bool memory_pressure);
     int cell_width() const { return cw_; }
     int cell_height() const { return ch_; }

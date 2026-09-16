@@ -1,0 +1,25 @@
+--- a/src/terminal/Terminal.zig
++++ b/src/terminal/Terminal.zig
+@@ -3664,6 +3664,22 @@
+         },
+ 
+         .below => {
++            // BusyBox clear uses CUP + ED0. At the actual top-left this
++            // erases the entire display, including visible Kitty graphics.
++            // Keep partial/selective erases unchanged, and do not route via
++            // ED2's prompt heuristic (which can move text into scrollback).
++            if (comptime build_options.kitty_graphics) {
++                if (!protected and self.screens.active.cursor.x == 0 and
++                    self.screens.active.cursor.y == 0)
++                {
++                    self.screens.active.kitty_images.clearScreen(
++                        self.io(),
++                        self.screens.active.alloc,
++                        self,
++                    );
++                }
++            }
++
+             // All lines to the right (including the cursor)
+             self.eraseLine(.right, protected_req);
+ 

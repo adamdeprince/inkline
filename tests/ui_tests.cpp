@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
         rmt::Renderer renderer(*core, 24);
         renderer.resize(640, 480);
         rmt::Stream stream(*core, [&](rmt::sixel::Bitmap &&bitmap) { renderer.sixel(std::move(bitmap)); });
-        stream.set_control_handler([&](std::string_view control) { if (control == "\033[2J") renderer.clear_graphics(); });
+        stream.set_control_handler([&](std::string_view control) { renderer.control(control); });
         stream.write("\033[?25l");
         const QRect initial_dirty = renderer.render();
         CHECK(initial_dirty == renderer.image().rect());
@@ -69,6 +69,24 @@ int main(int argc, char **argv) {
         CHECK(qGray(renderer.frame().pixel(2, 2)) == 0);
         stream.write("\033[2J");
         CHECK(qGray(renderer.frame().pixel(2, 2)) == 255);
+        // The tablet's BusyBox clear uses home + erase-below. Check the
+        // retained frame too, including commands split across PTY reads.
+        for (const std::string clear : {"\033[H\033[J", "\033[H\033[0J", "\033[H\033[000J", "\033[H\033[02J"}) {
+            stream.write("\033[H\033_Ga=T,f=32,s=1,v=1,c=4,r=3,i=1,C=1;AAAA/w==\033\\");
+            CHECK(qGray(renderer.frame().pixel(2, 2)) == 0);
+            for (const char c : clear) stream.write({&c, 1});
+            CHECK(renderer.render().contains(QRect(0, 0, 4 * renderer.cell_width(), 3 * renderer.cell_height())));
+            CHECK(renderer.image() == empty);
+            CHECK(renderer.render().isEmpty());
+            stream.write("\033P0;1q\"1;1;30;6#0;2;0;0;0#0!30~\033\\");
+            CHECK(renderer.sixel_bytes() == 30 * 6 * 4);
+            CHECK(qGray(renderer.frame().pixel(2, 2)) == 0);
+            stream.write("\033[2;1H\033[J\033[1;2H\033[0J\033[H\033[?J\033[3J");
+            CHECK(renderer.sixel_bytes() == 30 * 6 * 4);
+            for (const char c : clear) stream.write({&c, 1});
+            CHECK(renderer.sixel_bytes() == 0);
+            CHECK(renderer.frame() == empty);
+        }
         stream.write("\033[H\033_Ga=T,f=32,s=1,v=1,c=4,r=3,i=1,C=1;AAAA/w==\033\\");
         CHECK(qGray(renderer.frame().pixel(2, 2)) == 0);
         stream.write("\033_Ga=d,d=A\033\\");
