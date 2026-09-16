@@ -294,3 +294,12 @@ commands and native-app modes registered through the shared CLI storage API.
 The nine-language LuaLaTeX manual builds without missing glyphs, unresolved
 references, or overfull boxes (79 pages). The new three-modifier physical Folio
 and USB checks are still pending.
+
+
+The 0.4.0 bundle installed as release `36adcca3380dfb13`. Its launcher is enabled
+and the existing terminal process (PID 621) was preserved. Temporary kernel
+keyboards then sent Ctrl+Opt+Alt+T twice: one USB profile using Super, and one
+Folio profile using its actual identity and Opt code. Both triggered the
+installed launcher's `show` helper and preserved PID 621 and the control socket.
+The destructive recovery integration test was not run over the open sessions.
+Quit and reopen to load the new UI; the global daemon uses the new chord already.
