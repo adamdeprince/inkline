@@ -29,7 +29,7 @@ a convenience in the development setup, not an installer requirement.
 
 On your computer, download `inkline-rm2.tar.gz` and
 `inkline-rm2.tar.gz.sha256` from the
-[0.3.7 preview release](https://github.com/adamdeprince/inkline/releases/tag/v0.3.7).
+[0.3.8 preview release](https://github.com/adamdeprince/inkline/releases/tag/v0.3.8).
 Use the attached Inkline bundle; GitHub's automatically generated source-code
 archives do not contain the compiled application. The bundle is about 79 MiB
 and includes the installer, uninstall script, source archives and licenses.
@@ -39,12 +39,12 @@ additional tablet package manager.
 Alternatively, download both files from a terminal on your computer:
 
 ```sh
-curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.3.7/inkline-rm2.tar.gz
-curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.3.7/inkline-rm2.tar.gz.sha256
+curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.3.8/inkline-rm2.tar.gz
+curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.3.8/inkline-rm2.tar.gz.sha256
 ```
 
 The same files are mirrored under
-[`inkline.goblinreactor.com/downloads/v0.3.7/`](https://inkline.goblinreactor.com/downloads/v0.3.7/inkline-rm2.tar.gz).
+[`inkline.goblinreactor.com/downloads/v0.3.8/`](https://inkline.goblinreactor.com/downloads/v0.3.8/inkline-rm2.tar.gz).
 To compile the application yourself, see [building from source](#building-from-source).
 
 ## 3. Check, then install
@@ -86,8 +86,10 @@ Installation creates:
 
 - `/home/root/.local/share/inkline/`: versioned application bundles, sources and licenses.
 - `/home/root/inkline`: the command used to launch, stop and uninstall Inkline.
-- Two systemd symlinks under `/etc/systemd/system/` that enable the small
-  `inkline-hotkey.service` keyboard launcher at boot.
+- A managed `/etc/systemd/system/inkline-hotkey.service` file and a relative
+  enable link in `multi-user.target.wants/`. The unit is readable before `/home`
+  mounts; `RequiresMountsFor` waits for the application bundle before starting
+  the keyboard launcher. Updates migrate the old links into `/home` automatically.
 
 An unrelated file at either location makes installation stop. Reinstalling the
 same verified bundle is supported. Upgrades retain the previous release
@@ -148,7 +150,7 @@ Useful controls:
   wake. Shells and editor buffers stay in RAM. Network connections may need
   to reconnect. Quit and reopen Inkline after upgrading to activate this behavior.
 
-Inkline 0.3.7 includes right Alt/Option shortcuts, nine terminal slots,
+Inkline 0.3.8 includes right Alt/Option shortcuts, nine terminal slots,
 quit confirmation, a Settings button, and a saved Caps Lock/Control toggle.
 Each new terminal shows a brief guide and a tiny Goblin logo.
 Inkline sets `HOME=/home/root` for tablet sessions, including shells opened by

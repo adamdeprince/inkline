@@ -4,14 +4,14 @@ Inkline is a terminal for **reMarkable 2**, built with **libghostty-vt** and the
 stock Qt e-paper backend. It is designed for Type Folio and external USB
 keyboards, with kitty graphics and an initial sixel implementation.
 
-**Version 0.3.7 is a preview.** The main artifact is the repeatable
+**Version 0.3.8 is a preview.** The main artifact is the repeatable
 [installation procedure](docs/install.md), including preflight, launch, recovery
 and uninstall. It targets firmware **3.27**, tested on **3.27.3.0**. Other models
 and firmware lines are not supported by this installer.
 
 ## Install
 
-Download the **[Inkline 0.3.7 preview](https://github.com/adamdeprince/inkline/releases/tag/v0.3.7)**
+Download the **[Inkline 0.3.8 preview](https://github.com/adamdeprince/inkline/releases/tag/v0.3.8)**
 and follow the [installation procedure](docs/install.md). The prebuilt ARM bundle
 includes the installer, launcher, uninstall script, checksums, source archives
 and licenses. No compiler, SDK or third-party package manager is needed to install it.
@@ -180,6 +180,10 @@ use the home directory work in every shell. A directly launched terminal also
 supplies the account's home directory when HOME is missing or empty.
 
 ## Validation
+
+For 0.3.8, eight isolated boot-service tests pass on macOS, covering installation,
+legacy-link migration, reinstallation, removal and unrelated-file protection.
+A physical reboot check remains pending; see the [device record](docs/device.md).
 
 For 0.3.7, the graphics, stream and renderer suites pass on macOS and reMarkable 2.
 They verify that the tablet’s BusyBox `clear` sequence removes Kitty and sixel

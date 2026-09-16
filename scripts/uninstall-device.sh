@@ -6,13 +6,11 @@ exec 9>/run/inkline-manage.lock
 flock -x 9
 test ! -L "$root"
 test "$(cat "$root/.inkline-managed")" = inkline-v1
+sh "$root/current/hotkey-service.sh" check
 systemctl stop inkline-hotkey.service 2>/dev/null || :
 systemctl stop inkline-shortcut-app.service 2>/dev/null || :
 systemctl kill --kill-whom=all --signal=CONT inkline.service 2>/dev/null || :
-if [ -L /etc/systemd/system/inkline-hotkey.service ] &&
-    [ "$(readlink /etc/systemd/system/inkline-hotkey.service)" = "$root/current/inkline-hotkey.service" ]; then
-    systemctl disable inkline-hotkey.service
-fi
+sh "$root/current/hotkey-service.sh" remove
 if systemctl is-active --quiet inkline.service; then systemctl stop inkline.service; fi
 systemctl start xochitl.service
 systemctl is-active --quiet xochitl.service

@@ -24,9 +24,6 @@ done
 for command in systemctl systemd-inhibit sha256sum mktemp tar flock; do command -v "$command" >/dev/null || fail "Missing command: $command"; done
 test -x /bin/bash || fail 'Bash is required to load ~/.bashrc for interactive shells.'
 test -w /etc/systemd/system || fail '/etc/systemd/system must be writable to install the keyboard launcher.'
-if [ -e /etc/systemd/system/inkline-hotkey.service ] || [ -L /etc/systemd/system/inkline-hotkey.service ]; then
-    test -L /etc/systemd/system/inkline-hotkey.service && test "$(readlink /etc/systemd/system/inkline-hotkey.service)" = "$root/current/inkline-hotkey.service" || fail 'An unrelated keyboard launcher service already exists.'
-fi
 exec 9>/run/inkline-manage.lock
 flock -x 9
 test ! -L "$root" || fail 'The install directory must not be a symlink.'
@@ -38,6 +35,7 @@ if [ -e /home/root/inkline ] || [ -L /home/root/inkline ]; then
 fi
 cd "$payload"
 sha256sum -c SHA256SUMS >/dev/null || fail 'Bundle checksum verification failed.'
+sh "$payload/hotkey-service.sh" check
 scratch=$(mktemp -d /tmp/inkline-check.XXXXXX)
 trap 'rm -rf -- "$scratch"' EXIT
 trap 'exit 130' HUP INT TERM
@@ -75,8 +73,7 @@ cp "$root/current/inkline-launcher" /home/root/.inkline-launcher.new
 chmod 700 /home/root/.inkline-launcher.new
 mv -f /home/root/.inkline-launcher.new /home/root/inkline
 if systemctl is-active --quiet inkline-hotkey.service; then systemctl stop inkline-hotkey.service; fi
-systemctl daemon-reload
-systemctl enable "$root/current/inkline-hotkey.service"
+sh "$root/current/hotkey-service.sh" install
 systemctl daemon-reload
 systemctl start inkline-hotkey.service
 systemctl is-active --quiet inkline-hotkey.service || fail 'The keyboard launcher did not start.'

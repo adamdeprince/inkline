@@ -1,6 +1,8 @@
+# Inkline managed boot service
 [Unit]
 Description=Inkline on-device keyboard launcher
 After=systemd-udevd.service
+RequiresMountsFor=/home/root/.local/share/inkline
 
 [Service]
 Type=simple

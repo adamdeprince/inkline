@@ -243,3 +243,22 @@ Tests check image storage, exact blank rendered pixels, dirty-region coverage,
 byte-at-a-time input and preservation on partial, selective and history-only
 erases. Device tests run offscreen in tmpfs without interrupting active sessions;
 the graphics suite reports zero process storage-write bytes.
+
+## 0.3.8 Keyboard launcher after reboot — September 16
+
+After a reboot, systemd reported `inkline-hotkey.service` as enabled but could
+not load the unit. Both its unit link and its enable link pointed into `/home`,
+which is a separate filesystem. The Folio keyboard and application bundle were
+present after boot; the service had never started.
+
+The installer now places a small managed unit file directly in
+`/etc/systemd/system`, with a relative enable link in `multi-user.target.wants`.
+`RequiresMountsFor` orders the executable after its home filesystem is mounted.
+Existing installations migrate automatically; removal handles both layouts and
+rejects unrelated unit files or links. This follows systemd's requirement that
+[linked unit files be accessible at manager startup](https://github.com/systemd/systemd/blob/v255/man/systemctl.xml).
+
+Eight isolated installer tests pass on macOS, covering new installation,
+reinstallation, legacy-link migration, removal, unit visibility without `/home`
+and preservation of unrelated files. Device installation and another physical
+reboot remain to be verified once the USB connection is available again.
