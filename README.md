@@ -181,8 +181,10 @@ supplies the account's home directory when HOME is missing or empty.
 
 ## Validation
 
-For 0.3.8, eight isolated boot-service tests pass on macOS, covering installation,
-legacy-link migration, reinstallation, removal and unrelated-file protection.
+For 0.3.8, eight isolated boot-service tests pass on macOS and reMarkable 2,
+covering installation, legacy-link migration, reinstallation, removal and
+unrelated-file protection. The repaired service launches Inkline through the
+kernel keyboard input path on the tablet.
 A physical reboot check remains pending; see the [device record](docs/device.md).
 
 For 0.3.7, the graphics, stream and renderer suites pass on macOS and reMarkable 2.

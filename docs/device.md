@@ -258,7 +258,16 @@ Existing installations migrate automatically; removal handles both layouts and
 rejects unrelated unit files or links. This follows systemd's requirement that
 [linked unit files be accessible at manager startup](https://github.com/systemd/systemd/blob/v255/man/systemctl.xml).
 
-Eight isolated installer tests pass on macOS, covering new installation,
+Eight isolated installer tests pass on macOS and reMarkable 2, covering new installation,
 reinstallation, legacy-link migration, removal, unit visibility without `/home`
-and preservation of unrelated files. Device installation and another physical
-reboot remain to be verified once the USB connection is available again.
+and preservation of unrelated files. The device fixtures ran in tmpfs over Wi-Fi.
+
+The 0.3.8 package installed successfully as release `8d8b7090ea43a657`.
+Systemd reports the launcher enabled and active, loaded directly from `/etc`,
+with both `Requires=home.mount` and `After=home.mount`. A temporary uinput
+keyboard sent Ctrl+Alt+T through evdev; Inkline started and its control socket
+became ready. The daemon also has the physical Folio input open. The terminal
+was left running, and an interactive Ctrl+Alt+T check also opened Inkline.
+Serial devices were not accessed or reconfigured. Another
+physical reboot remains an acceptance check while separate serial-device work
+is in progress.
