@@ -56,7 +56,7 @@ def prepare(name, version, group=None, release=None):
     package.mkdir(parents=True)
     write(package / "package-name", name + "\n")
     write(package / "version", version + "\n")
-    for script in ("install-device.sh", "uninstall-device.sh"):
+    for script in ("install-device.sh", "uninstall-device.sh", "prune-releases.sh"):
         shutil.copy2(ROOT / "scripts/utilities" / script, package / script)
         (package / script).chmod(0o755)
     locale = CACHE / "debian/groups/locale/usr/lib/locale/C.utf8"

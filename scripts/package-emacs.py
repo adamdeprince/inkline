@@ -13,7 +13,7 @@ lock = json.loads((ROOT / "scripts/utilities/emacs/inputs.lock.json").read_text(
 prefix = ROOT / "build/emacs/install/home/root/.local/share/inkline-utilities/emacs/current/runtime/emacs"
 if not (prefix / "bin/emacs-31.1").is_file():
     raise SystemExit("Build Emacs first; see scripts/utilities/emacs/README.md")
-package = utilities.prepare("emacs", "31.1+20260915.rm2.1", release=lock["release"])
+package = utilities.prepare("emacs", "31.1+20260915.rm2.2", release="2026-09-15.2")
 utilities.tree(prefix, package / "runtime/emacs")
 # Strip ELF debug/symbol sections; never change the portable-dump fingerprint.
 for path in (package / "runtime/emacs").rglob("*"):
@@ -79,6 +79,8 @@ with (package / "README.txt").open("a") as output:
     output.write("\nGNU Emacs 31.1, built from verified upstream source for terminal use.\n")
     output.write("Run emacs normally; the wrapper always uses --no-window-system (-nw).\n")
     output.write("Native compilation is disabled at build time, so no automatic .eln cache is created.\n")
+    output.write("After installation, unused older Emacs releases are removed automatically.\n")
+    output.write("In-use releases are kept; after closing Emacs, run ~/inkline cleanup emacs.\n")
     output.write("Your ~/.emacs and ~/.emacs.d configuration is preserved. emacsclient uses --tty.\n")
     output.write("Source: https://inkline.goblinreactor.com/downloads/utilities/2026-09-15.1/sources/\n")
 utilities.finish(package, ["emacs", "emacsclient"], '"$utility_root/bin/emacs" -Q --batch -l "$utility_root/check.el"')

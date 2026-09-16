@@ -80,7 +80,7 @@ works throughout the panel.
 
 Keyboard, input-method, font-size, and bottom-bar preferences are stored in
 `~/.config/inkline/settings.ini` and survive restarts. Display tuning stays in RAM.
-Font changes are saved after the pinch ends, or 700 ms after a Settings adjustment.
+Font changes remain in RAM and are saved when Inkline exits normally.
 Only a changed preference writes this file; typing, graphics and switching
 terminals do not save it. Ordinary Caps Lock's on/off state starts off each time.
 
@@ -180,9 +180,9 @@ waveform used for Inkline's full-screen region:
 
 | Profile | Firmware mode | Behavior |
 | --- | --- | --- |
-| Fast (default) | Animation | Immediate interactive redraws and 16 ms output batching. Lowest delay, with more visible ghosting. |
+| Fast | Animation | Immediate interactive redraws and 16 ms output batching. Lowest delay, with more visible ghosting. |
 | Balanced | UI | Clear UI updates, 4 ms interactive delay and 32 ms output batching. |
-| Crisp | Content | The cleanest grayscale waveform, with 12 ms interactive delay and 60 ms batching. Physical updates take longer. |
+| Crisp (default) | Content | The cleanest grayscale waveform, with 12 ms interactive delay and 60 ms batching. Physical updates take longer. |
 | Mono | Mono | Fast black-and-white text with 24 ms output batching. Graphics lose their gray shades. |
 | Saver | UI | 40 ms interactive delay and 120 ms batching, requesting fewer updates during bursts. |
 
@@ -210,10 +210,22 @@ being too close. 0% disables the floor; higher values move only the text color
 toward black or white until the requested gap is reached. Backgrounds and
 graphics are unchanged.
 
-The surrounding terminal previews both changes. The values stay in RAM when
-you lift your finger, close Settings, or switch terminals. They never write a
-contrast preference to flash. Closing Inkline resets text darkness to 50% and
-minimum contrast to 35%. Other existing saved preferences retain their behavior.
+The surrounding terminal previews both changes. All preferences stay in RAM
+when you lift your finger, close Settings, switch terminals or suspend. Changed
+values are saved together on normal Inkline exit (including a service stop);
+unchanged sessions write nothing. A forced kill, crash or power loss can lose
+changes since launch. Darkness defaults to 50%, minimum contrast to 35%, and
+the update mode to Crisp; explicitly saved values take precedence.
+
+## Power button and sleep
+
+Press and release the tablet's physical power button to suspend, and press it
+again to wake. Inkline and its shells remain in RAM. No notebook handoff or
+settings save occurs during sleep; network connections may need to reconnect.
+The launcher ignores the wake press and release to avoid immediately sleeping
+again. Leave about two seconds after waking before requesting another sleep.
+After an upgrade, quit and reopen Inkline once: an already running old launcher
+retains its previous sleep inhibitor until it exits.
 
 ## Unicode keyboard and pen mouse
 

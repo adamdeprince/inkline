@@ -1,0 +1,92 @@
+% The distributed manual is ONE PDF. Language files are chapters, not editions.
+\documentclass[10pt]{article}
+\usepackage[paperwidth=157mm,paperheight=210mm,left=12mm,right=12mm,top=18mm,bottom=16mm,headheight=13pt]{geometry}
+\usepackage{fontspec,luatexja-fontspec}
+\setmainfont{TeX Gyre Heros}
+\setsansfont{TeX Gyre Heros}
+\setmonofont[Scale=0.90]{TeX Gyre Cursor}
+\setmainjfont[Path=assets/fonts/,BoldFont=NotoSansMonoCJKsc-Regular.otf,BoldFeatures={FakeBold=1.5}]{NotoSansMonoCJKsc-Regular.otf}
+\newjfontfamily\Japanese[Path=assets/fonts/,Language=Japanese,BoldFont=NotoSansMonoCJKsc-Regular.otf,BoldFeatures={FakeBold=1.5}]{NotoSansMonoCJKsc-Regular.otf}
+\newjfontfamily\Simplified[Path=assets/fonts/,Language=Chinese Simplified,BoldFont=NotoSansMonoCJKsc-Regular.otf,BoldFeatures={FakeBold=1.5}]{NotoSansMonoCJKsc-Regular.otf}
+\newjfontfamily\Traditional[Path=assets/fonts/,Language=Chinese Traditional,BoldFont=NotoSansMonoCJKsc-Regular.otf,BoldFeatures={FakeBold=1.5}]{NotoSansMonoCJKsc-Regular.otf}
+\usepackage[english,french,spanish,ngerman,italian,portuguese]{babel}
+\usepackage{graphicx,array,tabularx,booktabs,fancyhdr,tcolorbox,listings,xurl}
+\usepackage[unicode,hidelinks]{hyperref}
+\usepackage{bookmark}
+\input{inkline-version.tex}
+\hypersetup{pdftitle={Inkline — User guide in nine languages},pdfauthor={Inkline},pdfsubject={reMarkable 2 terminal, version \InklineVersion},pdfcreator={LuaLaTeX},pdfdisplaydoctitle=true}
+\pdfvariable suppressoptionalinfo 767
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
+\setlength{\emergencystretch}{2em}
+\renewcommand{\arraystretch}{1.18}
+\newcommand{\ManualLanguage}{9 languages}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\footnotesize\bfseries INKLINE\enspace /\enspace\normalfont\ManualLanguage}
+\fancyhead[R]{\footnotesize\InklineVersion}
+\fancyfoot[L]{\scriptsize\href{https://inkline.goblinreactor.com/}{inkline.goblinreactor.com}}
+\fancyfoot[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0.5pt}
+\newcommand{\Language}[3]{\clearpage\renewcommand{\ManualLanguage}{#2}\phantomsection\label{lang:#1}\bookmark[level=0,dest=\HyperLocalCurrentHref]{#2}\vspace*{1mm}{\LARGE\bfseries #2}\par{\small #3\enspace /\enspace reMarkable 2\enspace /\enspace 3.27}\par\vspace{3mm}}
+\newcommand{\topic}[1]{\clearpage\section*{#1}\bookmark[level=1,dest=\HyperLocalCurrentHref]{#1}}
+\newcommand{\firsttopic}[1]{\section*{#1}\bookmark[level=1,dest=\HyperLocalCurrentHref]{#1}}
+\newcommand{\key}[1]{\textbf{#1}}
+\newcommand{\code}[1]{\texttt{\detokenize{#1}}}
+\newenvironment{keytable}{\par\small\tabularx{\linewidth}{@{}>{\raggedright\arraybackslash}p{49mm}X@{}}\toprule}{\bottomrule\endtabularx\par\normalsize}
+\newenvironment{choices}{\par\small\tabularx{\linewidth}{@{}>{\raggedright\arraybackslash}p{29mm}X@{}}\toprule}{\bottomrule\endtabularx\par\normalsize}
+\newtcolorbox{notice}{colback=white,colframe=black,boxrule=0.6pt,arc=0pt,left=6pt,right=6pt,top=4pt,bottom=4pt}
+\lstnewenvironment{shell}{\lstset{basicstyle=\small\ttfamily,columns=fullflexible,keepspaces=true,breaklines=true,frame=single,framerule=0.3pt,aboveskip=6pt,belowskip=6pt,xleftmargin=4pt,xrightmargin=4pt}}{}
+\newcommand{\ProjectLinks}{\small\url{https://inkline.goblinreactor.com/}\par\url{https://github.com/adamdeprince/inkline}\normalsize}
+\newcommand{\InstallLink}{\url{https://inkline.goblinreactor.com/install.html}}
+\newcommand{\IndexRow}[2]{\hyperref[lang:#1]{#2}\hfill\pageref{lang:#1}\par\vspace{3mm}}
+
+\begin{document}
+\selectlanguage{english}
+\thispagestyle{empty}
+\bookmark[level=0,page=1]{Inkline}
+\vspace*{10mm}
+\includegraphics[width=19mm]{assets/goblin.png}\par\vspace{7mm}
+{\fontsize{42}{46}\selectfont\bfseries inkline}\par\vspace{2mm}
+{\Large A terminal for reMarkable 2}\par\vspace{12mm}
+\rule{\linewidth}{1pt}\par\vspace{3mm}
+{\Large User guide / 9 languages}\par
+English · 日本語 · 简体中文 · 繁體中文\par
+Français · Español · Deutsch · Italiano · Português\par
+\vfill
+Type Folio + USB keyboard\par
+Version \InklineVersion\ preview\enspace /\enspace firmware 3.27\par\vspace{5mm}
+\ProjectLinks
+
+\clearpage
+\phantomsection\bookmark[level=0,dest=\HyperLocalCurrentHref]{Language index — 9 languages}
+{\LARGE\bfseries Language index}\par\vspace{3mm}
+\begin{notice}
+This is one manual in \textbf{nine languages}. Each chapter is a complete guide.
+Tap a language to jump to it; the numbers are PDF page numbers.
+\end{notice}
+\vspace{3mm}
+\IndexRow{en}{English — User guide}
+\IndexRow{ja}{{\Japanese 日本語 — 利用ガイド}}
+\IndexRow{zh-Hans}{{\Simplified 简体中文 — 使用指南}}
+\IndexRow{zh-Hant}{{\Traditional 繁體中文 — 使用指南}}
+\IndexRow{fr}{Français — Guide d'utilisation}
+\IndexRow{es}{Español — Guía de uso}
+\IndexRow{de}{Deutsch — Benutzerhandbuch}
+\IndexRow{it}{Italiano — Guida all'uso}
+\IndexRow{pt}{Português — Guia de utilização}
+\vfill
+\small 日本語・中文：言語名をタップ / 点击语言名称 / 點選語言名稱。\par
+Français · Español · Deutsch · Italiano · Português:\par
+Touchez / Toque / Antippen / Tocca / Toque.\normalsize
+
+\input{docs/manual/en.tex}
+\input{docs/manual/ja.tex}
+\input{docs/manual/zh-Hans.tex}
+\input{docs/manual/zh-Hant.tex}
+\input{docs/manual/fr.tex}
+\input{docs/manual/es.tex}
+\input{docs/manual/de.tex}
+\input{docs/manual/it.tex}
+\input{docs/manual/pt.tex}
+\end{document}

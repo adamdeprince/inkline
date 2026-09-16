@@ -7,6 +7,7 @@ cd "$project_dir"
 device_host=${1:-remarkable}
 test_binaries='core_tests sixel_tests stream_tests pty_tests'
 if [ -f build/tablet/hotkey_config_tests ]; then test_binaries="$test_binaries hotkey_config_tests"; fi
+if [ -f build/tablet/power_key_tests ]; then test_binaries="$test_binaries power_key_tests"; fi
 if [ -f build/tablet/ui_tests ]; then test_binaries="$test_binaries ui_tests"; fi
 if [ -f build/tablet/input_tests ]; then test_binaries="$test_binaries input_tests"; fi
 if [ -f build/tablet/view_tests ]; then test_binaries="$test_binaries view_tests"; fi
@@ -21,6 +22,7 @@ done
 test_assets=
 if [ -f build/tablet/assets/goblin.png ]; then test_assets=assets; fi
 tar -C build/tablet -cf build/device-tests.tar $test_binaries $test_assets
+tar -rf build/device-tests.tar scripts/power-control.sh tests/power_control.sh
 ssh -T -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=10 \
     -o ServerAliveInterval=5 -o ServerAliveCountMax=2 "$device_host" '
     set -eu
@@ -47,4 +49,6 @@ ssh -T -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=10 \
     if [ -x ./clipboard_tests ]; then ./clipboard_tests; fi
     if [ -x ./input_method_tests ]; then ./input_method_tests; fi
     if [ -x ./hotkey_config_tests ]; then ./hotkey_config_tests; fi
+    if [ -x ./power_key_tests ]; then ./power_key_tests; fi
+    sh tests/power_control.sh scripts/power-control.sh
 ' < build/device-tests.tar

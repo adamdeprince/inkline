@@ -75,18 +75,25 @@ Hold the **right Alt/Option** key for the other Folio and USB keyboard shortcuts
 **Ctrl+Shift+B** hides or shows the bottom bar. Its fifth button opens
 **Settings**, where Caps Lock can act as **Control** (the default) or normal
 **Caps Lock**. Active choices have a solid fill; keyboard focus has a dashed outline.
-The **E-paper updates** row offers Fast, Balanced, Crisp, Mono, and Saver profiles.
+The **E-paper updates** row offers Fast, Balanced, Crisp, Mono, and Saver profiles;
+**Crisp is the default**, while explicitly saved choices are preserved.
 Fast uses the firmware's animation waveform and minimal batching; Crisp uses
 the content waveform for the cleanest grayscale; Mono trades image grays for
 fast black-and-white text; Saver batches output longer to request fewer screen
-updates. These display choices stay in RAM.
+updates. All settings stay in RAM and are saved together on normal exit.
+Unchanged sessions write nothing; finger lifts, closing Settings and suspend
+do not write preferences to flash.
 Pinch with two fingers to change font size (6–48 px), with slower movement and
 one-pixel steps for finer control. Settings also has minus and plus buttons.
-The size is saved after the adjustment. Each terminal has its own
+The size is saved when Inkline exits. Each terminal has its own
 shell and scrollback; switching to an unused slot opens a shell there.
 Drag two fingers down to reveal older output, or up to return toward the prompt.
 Swipe two fingers left for the next terminal, or right for the previous one.
 Single-finger drags select text; the pen reports mouse events to applications that enable them. Shift+pen forces selection.
+
+Press and release the physical power button to suspend, then press again to
+wake. Open shells and editor buffers remain in RAM; network connections may
+need to reconnect. Quit and reopen Inkline after updating to enable this behavior.
 New terminals print a short guide with a tiny Goblin logo and the current
 Caps Lock setting. The logo is displayed through inline kitty graphics in RAM.
 Settings also selects **Romaji, Pinyin, Zhuyin, Wubi**, or **US-International**

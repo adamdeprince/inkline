@@ -58,6 +58,10 @@ case "${1:-help}" in
     manual)
         exec "$bundle/current/install-manual.sh"
         ;;
+    cleanup)
+        shift
+        exec "$bundle/current/prune-releases.sh" "$@"
+        ;;
     uninstall)
         exec "$bundle/current/uninstall-device.sh"
         ;;
@@ -65,6 +69,7 @@ case "${1:-help}" in
         echo 'Usage: ~/inkline start|demo [--rotate 0|90|270] [--font-size 6..48] [--quit-after 1..60]'
         echo '       ~/inkline stop|status|manual|uninstall'
         echo '       ~/inkline run PROGRAM [ARG ...]'
+        echo '       ~/inkline cleanup UTILITY [--check]'
         echo '       ~/inkline shortcut register|deregister|list|help'
         ;;
     *) echo 'Run ~/inkline --help for usage.' >&2; exit 2 ;;

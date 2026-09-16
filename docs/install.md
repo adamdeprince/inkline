@@ -144,6 +144,9 @@ Useful controls:
   steps for finer control; keyboard zoom combinations have been removed.
 - Alt+Space opens the Unicode keyboard; tap Settings there to select Asian input methods; Option+C/V uses the RAM clipboard.
 - `~/inkline stop` restores notebooks from another SSH session.
+- Press and release the physical power button to suspend; press it again to
+  wake. Shells and editor buffers stay in RAM. Network connections may need
+  to reconnect. Quit and reopen Inkline after upgrading to activate this behavior.
 
 Inkline 0.3.6 includes right Alt/Option shortcuts, nine terminal slots,
 quit confirmation, a Settings button, and a saved Caps Lock/Control toggle.
@@ -161,7 +164,8 @@ seconds to stop a malfunctioning shortcut app and restart Inkline; emergency
 recovery closes all terminal sessions. See [global shortcuts](global-shortcuts.md)
 for native e-paper apps, session preservation, and recovery limits.
 
-The bundle includes [Inkline Manual.pdf](Inkline%20Manual.pdf). Installation
+The bundle includes one [Inkline Manual.pdf](Inkline%20Manual.pdf), with all nine
+website languages and a linked language index at the beginning. Installation
 tries to import it into **My files** through the USB web interface when that
 interface is enabled and notebooks are running. Otherwise the PDF stays in the
 bundle. Enable the tablet's USB web interface, quit Inkline, and run
@@ -182,12 +186,14 @@ strengthen antialiased letter edges. Text colors and graphics retain their
 original values. **Minimum contrast** keeps foreground and background luminance
 apart when a terminal program chooses hard-to-read colors.
 
-The **E-paper updates** row offers five tradeoffs. Fast is the default and uses
-the firmware's low-latency animation mode. Balanced uses its normal UI mode,
-Crisp uses the higher-quality content mode, Mono favors black-and-white text,
-and Saver batches command output for 120 ms so bursts request fewer screen updates. Text darkness, minimum
-contrast, and update profile stay in RAM across all nine terminals and Settings
-visits. Changing them does not write to flash; closing Inkline resets them.
+The **E-paper updates** row offers five tradeoffs. **Crisp is the default** and
+uses the higher-quality content mode. Fast uses the low-latency animation mode,
+Balanced uses normal UI mode, Mono favors black-and-white text, and Saver batches
+command output for 120 ms so bursts request fewer screen updates. Existing
+explicitly saved modes are preserved. All settings stay in RAM across terminals,
+Settings visits and sleep. Inkline saves changed preferences together at normal
+exit, including a service stop; unchanged sessions write nothing. Forced kills,
+crashes and power loss can discard changes made since launch.
 
 Normal typing redraws only libghostty's dirty rows on a retained grayscale
 surface. This avoids the previous full-screen raster and comparison on every
@@ -197,6 +203,13 @@ Inkline starts interactive Bash so the tablet's `~/.bashrc` is loaded. Optional
 Python/pip cache preferences belong in that file; see [Python setup](python.md).
 
 ## Recovery and removal
+
+To reclaim older utility releases without uninstalling the current version,
+preview with `~/inkline cleanup emacs --check`, then run
+`~/inkline cleanup emacs`. Replace `emacs` with another installed utility name
+as needed. Current releases, releases used by running programs and unrecognized
+paths are kept. Close an old program and retry to remove its retained files.
+Newly built Emacs installers run this cleanup after a successful upgrade.
 
 From SSH:
 
@@ -245,7 +258,9 @@ included ARM/libc patches. The result is `build/dist/inkline-rm2.tar.gz`, with a
 adjacent SHA-256 file. The host-side script uploads this bundle into a fresh RAM
 directory and uses the same included device installer as the prebuilt release.
 
-The PDF manual is generated from `docs/manual.md` with
-`python3 scripts/build-manual.py` in a host Python environment containing
-PyQt6. The finished PDF is committed so installers do not need Qt development
-tools or a PDF generator.
+The single nine-language PDF is built from `docs/manual.tex` and its language
+chapters with **LuaLaTeX**: `python3 scripts/build-manual.py`. See the
+[manual build instructions](manual/README.md) for matching macOS/Linux tools,
+fonts and temporary cache paths. The finished PDF is committed, so installers
+need no TeX or PDF generation tools. LaTeX utility installation instructions
+remain on the website.

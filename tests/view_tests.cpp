@@ -3,6 +3,8 @@
 #include <QCoreApplication>
 #include <QElapsedTimer>
 #include <QFile>
+#include <QFileInfo>
+#include <QDateTime>
 #include <QGuiApplication>
 #include <QKeyEvent>
 #include <QMouseEvent>
@@ -68,14 +70,14 @@ int main(int argc, char **argv) {
     const auto settings = temporary.filePath("settings.ini");
     {
         // Darkness and minimum contrast stay in RAM through finger lifts,
-        // Settings exit and shutdown.
+        // Settings exit, and are saved once at terminal shutdown.
         const auto path = temporary.filePath("darkness.ini");
         QQuickWindow window; window.resize(1000, 750);
         rmt::TerminalView view(window.contentItem(), 24, true, path);
         view.setSize(QSizeF(1000, 750)); view.layout(); view.start(); view.settings();
-        CHECK(view.text_darkness() == 50 && view.minimum_contrast() == 35 && view.update_profile() == 0);
+        CHECK(view.text_darkness() == 50 && view.minimum_contrast() == 35 && view.update_profile() == 2);
         for (int n = 0; n < 4; ++n) press(view, Qt::Key_Tab);
-        press(view, Qt::Key_Right); CHECK(view.update_profile() == 1);
+        press(view, Qt::Key_Right); CHECK(view.update_profile() == 3);
         press(view, Qt::Key_Tab); press(view, Qt::Key_Right); CHECK(view.text_darkness() == 55);
         press(view, Qt::Key_Tab); press(view, Qt::Key_Right);
         CHECK(view.minimum_contrast() == 40);
@@ -98,13 +100,39 @@ int main(int argc, char **argv) {
         touch(view, QEvent::TouchEnd, {point(view, 1, S::Released, 798, 610)});
         CHECK(view.minimum_contrast() == 100 && !QFile::exists(path));
         view.settings(); view.select_terminal(1);
-        CHECK(view.text_darkness() == 100 && view.minimum_contrast() == 100 && view.update_profile() == 1 && view.terminal_count() == 2);
-        view.settings(); CHECK(view.text_darkness() == 100 && view.minimum_contrast() == 100 && view.update_profile() == 1);
+        CHECK(view.text_darkness() == 100 && view.minimum_contrast() == 100 && view.update_profile() == 3 && view.terminal_count() == 2);
+        view.settings(); CHECK(view.text_darkness() == 100 && view.minimum_contrast() == 100 && view.update_profile() == 3);
         press(view, Qt::Key_Escape); pump(800); CHECK(!QFile::exists(path));
         rmt::TerminalView restored(window.contentItem(), 0, true, path);
-        CHECK(restored.text_darkness() == 50 && restored.minimum_contrast() == 35 && restored.update_profile() == 0);
+        CHECK(restored.text_darkness() == 50 && restored.minimum_contrast() == 35 && restored.update_profile() == 2);
     }
-    CHECK(!QFile::exists(temporary.filePath("darkness.ini")));
+    {
+        rmt::Preferences saved(temporary.filePath("darkness.ini"));
+        CHECK(saved.text_darkness() == 100 && saved.minimum_contrast() == 100 && saved.update_profile() == 3);
+        QQuickWindow window;
+        rmt::TerminalView restored(window.contentItem(), 0, true, temporary.filePath("darkness.ini"));
+        CHECK(restored.text_darkness() == 100 && restored.minimum_contrast() == 100 && restored.update_profile() == 3);
+    }
+    {
+        const auto path = temporary.filePath("unchanged.ini");
+        rmt::Preferences prefs(path);
+        CHECK(prefs.update_profile() == 2);
+        prefs.set_bottom_bar(false); prefs.set_bottom_bar(true);
+        prefs.set_text_darkness(80); prefs.set_text_darkness(50);
+        prefs.persist(); CHECK(!QFile::exists(path));
+        prefs.set_input_method(3); prefs.set_caps_control(false); prefs.set_bottom_bar(false);
+        prefs.set_font_pixels(19); prefs.set_minimum_contrast(60); prefs.set_update_profile(4);
+        pump(50); CHECK(!QFile::exists(path));
+        prefs.persist();
+        rmt::Preferences saved(path);
+        CHECK(saved.input_method() == 3 && !saved.caps_control() && !saved.bottom_bar());
+        CHECK(saved.font_pixels() == 19 && saved.minimum_contrast() == 60 && saved.update_profile() == 4);
+        QFile file(path); CHECK(file.open(QIODevice::ReadOnly)); const auto bytes = file.readAll(); file.close();
+        const auto modified = QFileInfo(path).lastModified();
+        saved.persist(); prefs.persist();
+        CHECK(file.open(QIODevice::ReadOnly)); CHECK(file.readAll() == bytes);
+        CHECK(QFileInfo(path).lastModified() == modified);
+    }
     {
         QQuickWindow window; window.resize(1000, 750);
         rmt::TerminalView view(window.contentItem(), 24, true, settings);
@@ -142,10 +170,10 @@ int main(int argc, char **argv) {
         click(view, 100, 695); CHECK(view.settings_open());
         if (const char *path = std::getenv("INKLINE_TEST_SNAPSHOTS")) CHECK(view.snapshot().save(QString::fromUtf8(path) + "/terminal-settings.png"));
         press(view, Qt::Key_Space, 65); // Caps Lock row: Control -> Caps Lock.
-        CHECK(!rmt::Preferences(settings).caps_control());
+        CHECK(rmt::Preferences(settings).caps_control()); // still unchanged on disk
         press(view, Qt::Key_Tab, 23);
         press(view, Qt::Key_Return, 36);
-        CHECK(!view.bottom_bar() && !rmt::Preferences(settings).bottom_bar());
+        CHECK(!view.bottom_bar() && rmt::Preferences(settings).bottom_bar());
         alt(view, Qt::Key_Tab, 23); CHECK(!view.settings_open());
         // Settings can still open while the entire bottom bar is hidden.
         alt(view, Qt::Key_Space, 65); CHECK(view.unicode_keyboard_open());
@@ -184,13 +212,13 @@ int main(int argc, char **argv) {
         touch(view, QEvent::TouchUpdate, {point(view, 1, S::Updated, 350, 300), point(view, 2, S::Updated, 650, 300)});
         CHECK(view.font_pixels() == 29); CHECK(rmt::Preferences(settings).font_pixels() == 26);
         touch(view, QEvent::TouchEnd, {point(view, 1, S::Released, 350, 300), point(view, 2, S::Released, 650, 300)});
-        CHECK(rmt::Preferences(settings).font_pixels() == 29);
+        CHECK(rmt::Preferences(settings).font_pixels() == 26);
         CHECK(view.terminal_count() == rmt::TerminalView::TERMINALS); // resizing preserves all PTYs
         touch(view, QEvent::TouchBegin, {point(view, 1, S::Pressed, 400, 300), point(view, 2, S::Pressed, 600, 300)});
         touch(view, QEvent::TouchUpdate, {point(view, 1, S::Updated, 480, 300), point(view, 2, S::Updated, 520, 300)});
         CHECK(view.font_pixels() == 13);
         touch(view, QEvent::TouchCancel, {}); CHECK(view.font_pixels() == 29);
-        CHECK(rmt::Preferences(settings).font_pixels() == 29);
+        CHECK(rmt::Preferences(settings).font_pixels() == 26);
         view.setRotation(0);
         // Input methods are selected through Settings, and persist.
         view.settings();
@@ -198,7 +226,7 @@ int main(int argc, char **argv) {
         press(view, Qt::Key_Return, 36); // method chooser
         for (int n = 0; n < 3; ++n) press(view, Qt::Key_Down, 116);
         press(view, Qt::Key_Return, 36); CHECK(view.input_method() == 3);
-        CHECK(rmt::Preferences(settings).input_method() == 3);
+        CHECK(rmt::Preferences(settings).input_method() == 0);
         if (const char *path = std::getenv("INKLINE_TEST_SNAPSHOTS")) CHECK(view.snapshot().save(QString::fromUtf8(path) + "/terminal-settings-selected.png"));
         press(view, Qt::Key_Escape, 9);
         press(view, Qt::Key_N, 57, Qt::NoModifier, "n"); press(view, Qt::Key_I, 31, Qt::NoModifier, "i");
@@ -212,10 +240,11 @@ int main(int argc, char **argv) {
         CHECK(view.input_method() == 0);
         pump(800);
         // The preference file is unaffected by ordinary typing and navigation.
-        QFile file(settings); CHECK(file.open(QIODevice::ReadOnly)); const auto saved = file.readAll(); file.close();
+        CHECK(!QFile::exists(settings));
         for (int n = 0; n < 50; ++n) press(view, Qt::Key_A, 38, Qt::NoModifier, "a");
-        CHECK(file.open(QIODevice::ReadOnly)); CHECK(file.readAll() == saved);
+        CHECK(!QFile::exists(settings));
     }
+    CHECK(rmt::Preferences(settings).font_pixels() == 29 && !rmt::Preferences(settings).caps_control());
     {
         const auto tiny_settings = temporary.filePath("tiny.ini");
         QQuickWindow window;
@@ -225,21 +254,22 @@ int main(int argc, char **argv) {
         touch(view, QEvent::TouchBegin, {point(view, 1, S::Pressed, 400, 300), point(view, 2, S::Pressed, 600, 300)});
         touch(view, QEvent::TouchUpdate, {point(view, 1, S::Updated, 496, 300), point(view, 2, S::Updated, 504, 300)});
         touch(view, QEvent::TouchEnd, {});
-        CHECK(view.font_pixels() == 6 && rmt::Preferences(tiny_settings).font_pixels() == 6);
+        CHECK(view.font_pixels() == 6 && rmt::Preferences(tiny_settings).font_pixels() == 26);
         alt(view, Qt::Key_Minus, 21); CHECK(view.font_pixels() == 6);
         alt(view, Qt::Key_Plus, 20); CHECK(view.font_pixels() == 6);
         alt(view, Qt::Key_Minus, 21); CHECK(view.font_pixels() == 6);
         CHECK(!view.snapshot().isNull() && view.terminal_count() == 1);
-        pump(800); CHECK(rmt::Preferences(tiny_settings).font_pixels() == 6);
+        pump(800); CHECK(rmt::Preferences(tiny_settings).font_pixels() == 26);
         rmt::TerminalView restored(window.contentItem(), 0, true, tiny_settings);
-        CHECK(restored.font_pixels() == 6);
+        CHECK(restored.font_pixels() == 26); // another view sees only the last saved state
         for (int n = 0; n < 2; ++n) {
             touch(view, QEvent::TouchBegin, {point(view, 1, S::Pressed, 480, 300), point(view, 2, S::Pressed, 520, 300)});
             touch(view, QEvent::TouchUpdate, {point(view, 1, S::Updated, 100, 300), point(view, 2, S::Updated, 900, 300)});
             touch(view, QEvent::TouchEnd, {});
         }
-        CHECK(view.font_pixels() == 48 && rmt::Preferences(tiny_settings).font_pixels() == 48);
+        CHECK(view.font_pixels() == 48 && rmt::Preferences(tiny_settings).font_pixels() == 26);
     }
+    CHECK(rmt::Preferences(temporary.filePath("tiny.ini")).font_pixels() == 48);
     {
         // Two fingers drag history naturally; changing their spacing after
         // scrolling starts must not resize text or change terminals.

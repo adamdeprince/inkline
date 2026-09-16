@@ -2,6 +2,9 @@
 
 The small `inkline-hotkey.service` watches Folio and USB keyboards even when
 Inkline is closed. It never grabs them or records ordinary typing.
+It also discovers dedicated power-key devices. While Inkline owns the screen,
+a press and release requests systemd suspend; the notebook application retains
+its own power handling while it is active. See [power handling](power.md).
 
 ```sh
 ~/inkline shortcut register e emacs

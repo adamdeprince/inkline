@@ -179,7 +179,7 @@ Device testing found that stock BusyBox `flock` lacks `-w`. The shortcut
 launcher now uses bounded nonblocking attempts. The service test waits through
 the full deactivating state before checking that a hung app is gone.
 
-The eight-page PDF manual is bundled. Automatic My files import was unavailable
+The original eight-page English PDF was bundled. Automatic My files import was unavailable
 with this tablet's current USB web interface setting; the installer left the
 PDF available and printed retry instructions. Actual document import remains
 an acceptance check after enabling that interface. New physical pen gestures,
@@ -199,3 +199,28 @@ its LaTeX, BibTeX, PDF/DVI and configuration-preservation checks pass with build
 files in RAM. AUCTeX 12.2 still emits upstream deprecation warnings.
 The installed Emacs release occupies 138.1 MiB, versus about 185.4 MiB for the
 old bundle. Older retained releases use additional storage.
+
+## Suspend, saved settings and multilingual manual — September 15
+
+The ARM build passes eleven test executables, including power release/repeat,
+dropped-event recovery, resumed-clock detection and wake-key suppression.
+Separate shell tests use a mocked `systemctl` in tmpfs to verify foreground
+ownership, explicit inhibitor checking, concurrent-request locking and redraw
+after wake. They never suspend the device. Physical sleep/wake still needs a
+check after quitting and reopening the installed version; the existing session
+retains its old `sleep:idle` inhibitor until then.
+
+Crisp is the new default. All settings remain in RAM and persist together on
+normal exit, including SIGTERM/SIGINT through Qt's event loop. The view tests
+cover deferred writes, saved contrast/update settings and unchanged sessions.
+The old-release cleanup fixture verifies that current, in-use and unrecognized
+paths survive and that obsolete managed releases are removed.
+
+The manual is now one 74-page LuaLaTeX PDF: a cover, a linked nine-language
+index, and eight pages per language. English, Japanese, Simplified Chinese,
+Traditional Chinese, French, Spanish, German, Italian and Portuguese are included.
+The build rejects missing glyphs, unresolved references and overfull boxes.
+Every page passed text-bound checks; representative Latin and CJK pages were
+visually reviewed. All fonts are embedded with Unicode mappings. The installer
+still preserves live terminal sessions and uses the supported USB document
+importer when available; it does not write notebook metadata directly.

@@ -75,3 +75,9 @@ if [ -x "$root/current/post-install.sh" ]; then
 fi
 printf '%s installed. Commands are available inside Inkline.\n' "$name"
 printf 'Remove: %s/current/uninstall-device.sh\n' "$root"
+# Emacs carries a large Lisp tree. Remove obsolete releases only after the new
+# release and post-install steps succeeded; a running old Emacs keeps its files.
+if [ "$name" = emacs ]; then
+    flock -u 9
+    "$root/current/prune-releases.sh" "$name" || printf 'Old-release cleanup failed; retry ~/inkline cleanup emacs after closing Emacs.\n'
+fi

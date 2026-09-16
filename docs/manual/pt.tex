@@ -1,0 +1,269 @@
+\selectlanguage{portuguese}
+\Language{pt}{Português}{Guia de utilização}
+\firsttopic{Abrir, suspender e voltar}
+O Inkline executa uma shell local no reMarkable 2. Use um Type Folio ou teclado
+USB, trabalhe no tablet ou ligue-se por SSH ou Goblin Mosh. O texto e as imagens
+são apresentados em tons de cinzento.
+
+\begin{notice}
+\key{Ctrl+Alt+T} abre o Inkline diretamente no tablet.\par
+\key{Botão de alimentação:} prima e solte para suspender; prima novamente
+para retomar. As shells e os buffers do editor ficam na RAM.
+\end{notice}
+A suspensão pausa o tablet sem fechar o Inkline nem guardar definições na
+memória flash. As ligações de rede podem precisar de se restabelecer. O toque
+que acorda o tablet não provoca outra suspensão. Após atualizar, feche e volte
+a abrir o Inkline para ativar o novo comportamento do botão.
+
+Para voltar aos cadernos, toque em \key{Quit} ou prima \key{Ctrl+Shift+Q} e
+confirme. \code{exit} fecha um terminal; fechar o último devolve os cadernos.
+A barra inferior contém Escape, histórico acima/abaixo, Quit e Settings.
+\code{clear} apaga a breve ajuda inicial e o pequeno logótipo Goblin.
+
+Se uma aplicação de atalho ocupar o ecrã, \key{Ctrl+Alt+T} regressa ao Inkline.
+Numa emergência, mantenha \key{Ctrl+Alt+Backspace durante dois segundos}.
+A recuperação fecha todos os terminais e perde o trabalho não guardado nessas
+sessões. Após reiniciar o tablet, a interface inicial continua a ser a dos cadernos.
+
+\ProjectLinks
+
+\topic{Teclas e posições de terminal}
+O Type Folio tem uma tecla \key{Opt} separada entre Ctrl e Alt, e uma tecla
+\key{Alt/Opt direita}. Têm funções diferentes.
+
+\begin{keytable}
+\key{Teclas} & \key{Ação} \\ \midrule
+Opt separada + 1--0 & F1--F10 \\
+Alt/Opt direita + 1--9 & Selecionar posição 1--9 \\
+Alt/Opt direita + Left / Right & Posição anterior / seguinte \\
+Alt/Opt direita + Tab & Escape \\
+Alt/Opt direita + Up / Down & PageUp / PageDown \\
+Alt/Opt direita + Backspace & Confirmar o fecho de todos os terminais \\
+Qualquer Alt + Space & Teclado Unicode \\
+Alt/Opt direita + C / V & Copiar seleção / colar \\
+Ctrl+Shift+B & Ocultar / mostrar a barra inferior \\
+\end{keytable}
+
+No \key{Type Folio americano}, Alt/Opt direita+\key{0} escreve \code{+}.
+Alt/Opt direita com a \key{tecla menos imediatamente à esquerda de Backspace}
+escreve \code{=}. Com o método de entrada desligado, Shift+6 produz um
+circunflexo literal: \code{c^2} mantém-se \code{c^2}. Não há atalhos de zoom.
+
+Os teclados USB mantêm as teclas de função normais. O atalho da Opt separada
+usa Meta quando o teclado USB disponibiliza essa tecla.
+
+Existem até \key{nove posições independentes}. Selecionar uma vazia abre uma
+shell. O indicador conta os terminais abertos: se apenas 1 e 9 estiverem
+abertos, o 9 mostra \key{Terminal 2 / 2 · slot 9}. Fechar uma shell liberta a
+posição sem alterar a numeração dos atalhos.
+
+Cada terminal tem a sua shell, diretório, composição de entrada, imagens e
+500 linhas de histórico. As definições de ecrã e de entrada são comuns.
+
+\topic{Definições e ecrã}
+Toque em \key{Settings}, o quinto botão inferior. Com a barra oculta, prima
+\key{Alt+Space}, depois \key{F2}, ou toque em Settings no teclado Unicode.
+Uma opção preenchida está ativa; o contorno tracejado indica o foco do teclado.
+Tab move o foco; as setas e Enter alteram a opção.
+
+\key{Caps Lock:} escolha Control (predefinição) ou Caps Lock.
+\key{Tamanho:} faça pinça com dois dedos ou use os botões menos/mais.
+Movimentos lentos ajustam um píxel de cada vez, de \key{6 a 48 píxeis}.
+
+\key{Text darkness:} 50\% é a apresentação original. Valores superiores
+escurecem os contornos. \key{Minimum contrast} separa a luminância do texto
+e do fundo quando uma aplicação escolhe cores próximas; a predefinição é 35\%.
+
+\begin{choices}
+\key{Modo e-paper} & \key{Compromisso} \\ \midrule
+Fast & Espera mínima; forma de onda de animação; mais imagens residuais \\
+Balanced & Forma de onda de interface; agrupa saída em 32 ms \\
+Crisp (predefinido) & Cinzentos mais limpos; forma de onda de conteúdo; mais lento \\
+Mono & Preto e branco rápido; elimina os cinzentos das imagens \\
+Saver & Agrupa em 120 ms; menos atualizações durante rajadas de saída \\
+\end{choices}
+
+Apenas as linhas alteradas são redesenhadas, mas o painel continua a precisar
+de tempo. A poupança de bateria de Saver não foi medida. A atualização mantém
+um modo guardado explicitamente.
+
+\begin{notice}
+Todas as definições ficam na \key{RAM} e são guardadas juntas ao sair normalmente
+do Inkline. Levantar o dedo, fechar Settings ou suspender não escreve na flash.
+Uma sessão sem alterações não escreve nada. Uma falha, encerramento forçado
+ou perda de energia pode perder alterações ainda não guardadas.
+\end{notice}
+
+\topic{Unicode e métodos de entrada}
+\key{Alt+Space} abre o teclado Unicode. Toque num caráter para o inserir;
+o teclado permanece aberto. Toque em \key{Done} ou prima Escape para fechar.
+
+As categorias incluem letras, marcas, números, pontuação, matemática/moedas,
+símbolos, espaços, carateres de formatação e uso privado. Arraste na vertical
+ou use setas, PageUp/PageDown, Home/End e a roda do rato.
+\key{Tab} muda a categoria; Enter insere o caráter selecionado.
+
+Escreva um valor Unicode hexadecimal, como \code{03bb}, seguido de Enter para
+inserir λ. Backspace edita o valor. O círculo pontilhado das marcas combinantes
+é apenas uma ajuda visual; só a marca é inserida. Espaços e carateres de
+formatação têm etiquetas. O catálogo usa as tabelas Unicode do Qt, excluindo
+controlos, valores não atribuídos, substitutos e não carateres. Alguns glifos
+precisam de fontes não instaladas; o uso privado exige uma fonte adequada.
+
+No seletor, prima \key{F2} ou toque em \key{Settings}, depois \key{Input method}:
+\begin{choices}
+Off — direct keyboard & Escrita americana normal \\
+Romaji & Hiragana japonês a partir de entrada romanizada \\
+Pinyin & Chinês através de pinyin \\
+Zhuyin & Chinês com o mapa básico de zhuyin \\
+Wubi 86 & Chinês através de códigos de forma \\
+US-International & Acentos latinos comuns \\
+\end{choices}
+
+Escolha o resultado na barra de candidatos. Selecione
+\key{Off — direct keyboard} no mesmo menu para voltar à entrada americana.
+A escolha aplica-se a todos os terminais e é guardada ao sair do Inkline.
+
+\topic{Toque, caneta e área de transferência}
+\key{Dois dedos acima/abaixo:} percorrem o histórico. Arraste para baixo para
+ver saída antiga e para cima para voltar ao prompt. Cada terminal mantém
+500 linhas físicas em RAM, além do ecrã atual.
+
+\key{Dois dedos à esquerda/direita:} mudam uma posição por gesto.
+Levante os dedos antes de voltar a mudar. Afaste-os ou aproxime-os para
+alterar o tamanho do texto.
+
+\key{Um dedo:} arraste para selecionar texto. Alt/Opt direita+C copia;
+Alt/Opt direita+V cola. Todos os terminais partilham uma área de transferência
+em RAM até 128 KiB.
+
+\key{Caneta:} as aplicações com relatórios de rato ativos recebem pressão,
+movimento e libertação como eventos do botão esquerdo, usando o protocolo
+negociado, incluindo SGR. Nos restantes casos, arrastar seleciona texto.
+Mantenha \key{Shift} para forçar a seleção local numa aplicação que usa o rato.
+
+\key{OSC 52} permite que programas do terminal, incluindo remotos por SSH,
+leiam ou substituam esta área de transferência, separada da dos cadernos.
+Alt/Opt direita+X copia e explica que a eliminação deve acontecer no editor:
+OSC 52 não consegue apagar texto de um editor.
+
+\key{Imagens:} os transportes kitty inline e por memória partilhada ficam
+na RAM. Os modos de ficheiro e ficheiro temporário estão desativados.
+Sixel funciona quando pedido explicitamente, mas não é anunciado automaticamente.
+Os marcadores kitty, animações e alguns modos sixel continuam incompletos.
+
+\code{clear} e a limpeza de todo o ecrã removem texto e imagens visíveis.
+Imagens fora do ecrã são libertadas quando falta memória. Não há cache de imagens
+em disco; imagens grandes continuam a consumir a RAM limitada do tablet.
+
+\topic{Iniciar programas com atalhos}
+Registe atalhos numa shell Inkline. Os argumentos são literais; invoque uma
+shell explicitamente para usar a sua sintaxe. Os programas iniciados por atalho
+leem \code{~/.bashrc} através de Bash.
+
+\begin{shell}
+~/inkline shortcut register e emacs
+~/inkline shortcut register p python3
+~/inkline shortcut list
+~/inkline shortcut deregister p
+\end{shell}
+
+\key{Ctrl+Alt+E} abre o Emacs numa posição livre.
+\code{~/inkline run PROGRAM ARG...} inicia sem registar um atalho.
+Registar novamente substitui a associação; removê-la não afeta programas em
+execução. As teclas seguem posições físicas americanas. Coloque pontuação
+entre aspas e use caminhos completos para programas próprios, que devem
+estar previamente instalados.
+
+Para uma aplicação Qt/e-paper nativa que desenha o próprio ecrã:
+\begin{shell}
+~/inkline shortcut register a --epaper /home/root/my-app
+\end{shell}
+Uma aplicação nativa de cada vez pausa o Inkline e as suas shells. O lançador
+fornece definições Qt e caches em RAM, descarta registos e retoma o Inkline
+quando a aplicação termina. Use entrada Qt sem capturar exclusivamente o teclado.
+
+\begin{notice}
+\key{Ctrl+Alt+T é permanente.} Não pode ser registado nem removido.
+Para a aplicação nativa e regressa aos terminais existentes. Use uma tecla
+Ctrl física; a alteração de Caps Lock só se aplica dentro do Inkline.
+\end{notice}
+
+\key{Emergência:} mantenha Ctrl+Alt+Backspace dois segundos para parar a
+aplicação e os seus descendentes e reiniciar o Inkline. Todos os terminais
+fecham e perde-se trabalho não guardado. Aplicações root podem impedir a
+recuperação capturando entrada, alterando serviços ou esgotando recursos.
+Reiniciar o dispositivo é o último recurso.
+
+\topic{Instalar, atualizar e guardar o guia}
+O pacote destina-se a \key{reMarkable 2 com firmware 3.27} e usa as bibliotecas
+Qt 6.8 e-paper do sistema. Transferências e verificação de integridade:
+
+\InstallLink
+
+O instalador verifica hardware, firmware, fontes, arranque do Qt, diretórios
+temporários em RAM e swap desativado. As versões ficam em
+\path{/home/root/.local/share/inkline}; o lançador de teclado inicia no arranque.
+As atualizações mantêm os terminais abertos. \key{Feche e reabra o Inkline
+para usar a nova versão.} As versões anteriores ficam para permitir regressar
+e ocupam espaço adicional.
+
+Este único PDF contém os nove idiomas e acompanha o pacote. A instalação tenta
+importá-lo para \key{My files} pela interface web USB quando esta está ativa
+e os cadernos estão abertos. Uma importação bem-sucedida é registada para não
+duplicar o mesmo manual.
+
+Se a importação automática não estiver disponível, ligue USB, feche o Inkline
+e ative \key{USB web interface} nas definições de armazenamento dos cadernos.
+Por SSH, execute:
+\begin{shell}
+~/inkline manual
+\end{shell}
+Também pode obter o PDF e importá-lo pelo navegador USB ou pela aplicação
+reMarkable para computador/telemóvel. O importador nunca altera diretamente
+a base dos cadernos nem interrompe terminais. O manual importado continua
+em My files depois de desinstalar o Inkline.
+
+Por SSH, volte aos cadernos ou remova o Inkline:
+\begin{shell}
+~/inkline stop
+~/inkline uninstall
+\end{shell}
+A instalação de software opcional, incluindo o perfil LaTeX recomendado,
+está documentada no site.
+
+\topic{Funcionamento, armazenamento e RAM}
+O Qt entrega teclas a um mapeamento comum para atalhos e Caps Lock.
+O libghostty-vt codifica as teclas do terminal. Cada posição liga o programa
+a um pseudoterminal (PTY) independente. As shells recebem
+\code{HOME=/home/root}; o Bash interativo lê \code{~/.bashrc}.
+
+A saída passa pelo analisador do terminal e pelo descodificador sixel.
+O libghostty mantém células, cursor, ecrãs alternativos, histórico e imagens
+kitty. O renderizador conserva uma imagem em cinzento e redesenha as linhas
+alteradas; o backend e-paper do Qt atualiza o painel. Um daemon evdev independente
+trata atalhos globais e alimentação; o systemd gere suspensão e retoma.
+
+Cada terminal limita as alocações centrais a 64 MiB, as imagens kitty a
+16 MiB por ecrã e as imagens sixel retidas a 16 MiB. Renderização e aplicações
+consomem memória adicional. Posições vazias não alocam terminais.
+Nove aplicações grandes podem exceder a RAM disponível.
+
+Imagens temporárias, caches e sessões usam RAM. Software instalado, documentos,
+definições guardadas ao sair e ficheiros escritos por aplicações usam armazenamento
+persistente. O Inkline não impede os programas de escrever ficheiros.
+
+O pacote Python opcional é Python padrão. Para reduzir escritas de cache,
+adicione ao \code{~/.bashrc} do tablet:
+\begin{shell}
+export PYTHONDONTWRITEBYTECODE=1
+export PIP_NO_CACHE_DIR=1
+\end{shell}
+Execute \code{source ~/.bashrc} ou abra outra shell. Use
+\code{python3 -m pip install --no-compile PACKAGE} para evitar a compilação
+de bytecode que o pip faz separadamente durante a instalação. O modo isolado
+do Python ignora as suas variáveis de ambiente. O guia completo está no site.
+
+O Inkline usa GPL-3.0-or-later. Os pacotes incluem arquivos de código-fonte
+correspondentes e avisos das dependências. Os relatórios distinguem testes
+automáticos de comportamentos físicos ainda por confirmar.

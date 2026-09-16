@@ -302,7 +302,7 @@ constexpr std::array<UpdatePolicy, 5> update_policies{{
     {"Mono", "black and white only · fast text · no image grays", 1, 0, 24},
     {"Saver", "clear UI waveform · fewer updates · 120 ms batching", 3, 40, 120},
 }};
-constexpr int default_update_policy = 0;
+static_assert(update_policies.size() == Preferences::UPDATE_PROFILE_COUNT);
 
 // Firmware 3.27's scene-graph plugin exports EPScreenModeItem but does not
 // install a public header for it. Resolve the two stable Qt meta-object
@@ -351,17 +351,14 @@ public:
     CapsLeds leds;
     Clipboard clipboard;
     std::array<std::unique_ptr<Session>, TERMINALS> sessions;
-    int active = 0, pixels, selected = 0, darkness = Preferences::DEFAULT_DARKNESS;
-    int contrast = Preferences::DEFAULT_MINIMUM_CONTRAST;
-    int update_policy = default_update_policy;
+    int active = 0, pixels, initial_pixels, selected = 0, darkness, contrast, update_policy;
     int unicode_category = UnicodeKeyboard::Letters, unicode_selected = 0, unicode_first_row = 0;
     int unicode_drag_row = 0;
     qreal unicode_drag_y = 0;
     QString unicode_hex;
     bool demo;
     std::vector<std::string> shell;
-    QTimer repaint, toast, font_save, autoscroll, maintenance;
-    bool font_dirty = false;
+    QTimer repaint, toast, autoscroll, maintenance;
     int slider_drag = -1, press_slider = 0;
     QString notice;
     bool pointer_down = false, dragging = false, text_drag = false, pen_down = false;
@@ -381,15 +378,14 @@ public:
     QString error;
     bool show_terminal = false;
     Private(TerminalView &v, int p, bool demonstration, const QString &path, std::vector<std::string> command)
-        : view(v), epaper(v), prefs(path), pixels(p > 0 ? std::clamp(p, Preferences::MIN_FONT, Preferences::MAX_FONT) : prefs.font_pixels()), demo(demonstration), shell(std::move(command)) {
+        : view(v), epaper(v), prefs(path), pixels(p > 0 ? std::clamp(p, Preferences::MIN_FONT, Preferences::MAX_FONT) : prefs.font_pixels()), initial_pixels(pixels), darkness(prefs.text_darkness()),
+          contrast(prefs.minimum_contrast()), update_policy(prefs.update_profile()), demo(demonstration), shell(std::move(command)) {
         input.set_caps_control(prefs.caps_control());
         repaint.setSingleShot(true);
         QObject::connect(&repaint, &QTimer::timeout, &view, [this] { guarded([this] { refresh(); }); });
         epaper.set_mode(update_policies[update_policy].screen_mode);
         toast.setSingleShot(true); toast.setInterval(1400);
         QObject::connect(&toast, &QTimer::timeout, &view, [this] { show_terminal = false; notice.clear(); view.update(); });
-        font_save.setSingleShot(true); font_save.setInterval(700);
-        QObject::connect(&font_save, &QTimer::timeout, &view, [this] { guarded([this] { save_font(); }); });
         autoscroll.setInterval(160);
         maintenance.setInterval(1000);
         QObject::connect(&maintenance, &QTimer::timeout, &view, [this] { guarded([this] {
@@ -418,22 +414,25 @@ public:
         if (ordinal != active + 1) label += QString(" · slot %1").arg(active + 1);
         return label;
     }
-    ~Private() { try { if (font_dirty) prefs.set_font_pixels(pixels); } catch (...) {} }
+    ~Private() {
+        try {
+            if (pixels != initial_pixels) prefs.set_font_pixels(pixels);
+            prefs.persist();
+        } catch (const std::exception &e) { std::fprintf(stderr, "Inkline: %s\n", e.what()); }
+    }
     int ime_height() const { return prefs.input_method() == InputMethod::Off ? 0 : 104; }
     QRectF text_area() const { return {margin, margin, view.width() - 2 * margin, view.height() - 2 * margin - footer_height() - ime_height()}; }
-    void save_font() { if (font_dirty) { prefs.set_font_pixels(pixels); font_dirty = false; } }
-    void zoom(int size, bool defer = true) {
+    void zoom(int size) {
         size = std::clamp(size, Preferences::MIN_FONT, Preferences::MAX_FONT);
         if (pixels == size) return;
-        pixels = size; font_dirty = true;
+        pixels = size;
         for (auto &session : sessions) if (session) session->font_size(pixels);
         layout();
-        if (defer) font_save.start();
     }
     void set_darkness(int value) {
         value = std::clamp(value, 0, 100);
         if (darkness == value) return;
-        darkness = value;
+        darkness = value; prefs.set_text_darkness(value);
         for (auto &session : sessions) if (session) session->text_darkness(value);
         schedule(); view.update();
     }
@@ -444,7 +443,7 @@ public:
     void set_contrast(int value) {
         value = std::clamp(value, 0, 100);
         if (contrast == value) return;
-        contrast = value;
+        contrast = value; prefs.set_minimum_contrast(value);
         for (auto &session : sessions) if (session) session->minimum_contrast(value);
         schedule(); view.update();
     }
@@ -455,7 +454,7 @@ public:
     void set_update_policy(int value) {
         value = (value + int(update_policies.size())) % int(update_policies.size());
         if (update_policy == value) return;
-        update_policy = value;
+        update_policy = value; prefs.set_update_profile(value);
         epaper.set_mode(update_policies[update_policy].screen_mode);
         if (repaint.isActive()) { repaint.stop(); schedule(); }
         view.update();
@@ -1043,7 +1042,7 @@ public:
         if (pen_down) return;
         if (event.type() == QEvent::TouchCancel) {
             cancel_pointer();
-            if (gesture == Gesture::Pinch) { zoom(pinch_pixels, false); font_save.start(); }
+            if (gesture == Gesture::Pinch) { zoom(pinch_pixels); }
             gesture = Gesture::None; touch_id = -1; return;
         }
         QList<QEventPoint> live;
@@ -1071,7 +1070,7 @@ public:
                     // Lock the gesture after deliberate movement. Small changes
                     // in finger spacing during a scroll must not resize text.
                     if (pinch_distance >= 20 && stretch >= std::max(qreal(12), pinch_distance * 0.06) && stretch > 2 * std::max(travel, std::abs(sideways))) {
-                        gesture = Gesture::Pinch; font_save.stop();
+                        gesture = Gesture::Pinch;
                     } else if (can_scroll && std::abs(sideways) >= 60 && std::abs(sideways) > 1.5 * travel) {
                         gesture = Gesture::Swipe;
                         choose(active + (sideways < 0 ? 1 : -1));
@@ -1081,7 +1080,7 @@ public:
                     // Half the proportional response, in single-pixel steps.
                     // Square-root scaling treats opening and closing equally.
                     const auto scale = std::sqrt(std::clamp(distance / pinch_distance, qreal(0.0625), qreal(16)));
-                    zoom(int(std::lround(pinch_pixels * scale)), false);
+                    zoom(int(std::lround(pinch_pixels * scale)));
                 }
                 if (gesture == Gesture::Scroll && sessions[active]) {
                     scroll_remainder -= center.y() - gesture_last.y();
@@ -1092,7 +1091,6 @@ public:
                 }
             }
             if (live.isEmpty() || event.type() == QEvent::TouchEnd) {
-                if (gesture == Gesture::Pinch) save_font();
                 gesture = Gesture::None; touch_id = -1;
             }
             return;
@@ -1159,7 +1157,7 @@ void TerminalView::keyReleaseEvent(QKeyEvent *event) { d_->guarded([&] { d_->key
 void TerminalView::focusOutEvent(QFocusEvent *event) {
     d_->guarded([&] {
         d_->cancel_pointer();
-        if (d_->gesture == Private::Gesture::Pinch) { d_->zoom(d_->pinch_pixels, false); d_->font_save.start(); }
+        if (d_->gesture == Private::Gesture::Pinch) { d_->zoom(d_->pinch_pixels); }
         d_->gesture = Private::Gesture::None; d_->touch_id = -1;
     });
     d_->guarded([&] { for (const auto &release : d_->input.reset()) if (d_->sessions[release.terminal]) d_->sessions[release.terminal]->key(release); });

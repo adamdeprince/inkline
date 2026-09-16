@@ -1,6 +1,7 @@
 // Global Ctrl+Alt shortcuts for Folio and USB keyboards. The daemon never
 // grabs an input device, records typed text, or writes runtime state to disk.
 #include "rmt/hotkey_config.hpp"
+#include "rmt/power_key.hpp"
 #include <algorithm>
 #include <array>
 #include <cerrno>
@@ -19,6 +20,7 @@
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <time.h>
 #include <unistd.h>
 #include <vector>
 
@@ -34,7 +36,7 @@ bool bit(const std::array<unsigned char, bit_bytes> &bits, unsigned code) {
 void reload_signal(int) { reload_requested = 1; }
 
 struct Trigger {
-    enum Type { None, Terminal, Binding } type = None;
+    enum Type { None, Terminal, Binding, Sleep } type = None;
     unsigned code = 0;
 };
 
@@ -44,6 +46,7 @@ struct Keyboard {
     bool left_ctrl = false, right_ctrl = false, left_alt = false, right_alt = false;
     bool backspace = false, desynchronized = false, emergency_active = false, emergency_fired = false;
     std::chrono::steady_clock::time_point emergency_since{};
+    rmt::PowerKey power{}, sleep{};
 
     bool ctrl() const { return left_ctrl || right_ctrl; }
     bool alt() const { return left_alt || right_alt; }
@@ -54,19 +57,24 @@ struct Keyboard {
         emergency_active = active;
     }
     void snapshot() {
+        power.reset(); sleep.reset();
         std::array<unsigned char, bit_bytes> held{};
         if (ioctl(fd, EVIOCGKEY(held.size()), held.data()) < 0) return;
         left_ctrl = bit(held, KEY_LEFTCTRL); right_ctrl = bit(held, KEY_RIGHTCTRL);
         left_alt = bit(held, KEY_LEFTALT); right_alt = bit(held, KEY_RIGHTALT);
         backspace = bit(held, KEY_BACKSPACE); update_emergency();
     }
-    Trigger event(const input_event &input, const std::map<unsigned, rmt::hotkeys::Binding> &bindings) {
+    Trigger event(const input_event &input, const std::map<unsigned, rmt::hotkeys::Binding> &bindings, bool power_enabled) {
         if (input.type == EV_SYN && input.code == SYN_DROPPED) { desynchronized = true; return {}; }
         if (desynchronized) {
             if (input.type == EV_SYN && input.code == SYN_REPORT) { snapshot(); desynchronized = false; }
             return {};
         }
         if (input.type != EV_KEY) return {};
+        if (input.code == KEY_POWER || input.code == KEY_SLEEP) {
+            auto &key = input.code == KEY_POWER ? power : sleep;
+            return key.event(input.value, power_enabled) ? Trigger{Trigger::Sleep, input.code} : Trigger{};
+        }
         switch (input.code) {
         case KEY_LEFTCTRL: left_ctrl = input.value != 0; break;
         case KEY_RIGHTCTRL: right_ctrl = input.value != 0; break;
@@ -97,8 +105,10 @@ void discover(std::vector<Keyboard> &keyboards) {
         const int fd = open(path.c_str(), O_RDONLY | O_NONBLOCK | O_CLOEXEC);
         if (fd < 0) continue;
         std::array<unsigned char, bit_bytes> keys{};
-        if (ioctl(fd, EVIOCGBIT(EV_KEY, keys.size()), keys.data()) < 0 || !bit(keys, KEY_T) || !bit(keys, KEY_BACKSPACE) ||
-            !(bit(keys, KEY_LEFTCTRL) || bit(keys, KEY_RIGHTCTRL)) || !(bit(keys, KEY_LEFTALT) || bit(keys, KEY_RIGHTALT))) {
+        const bool readable = ioctl(fd, EVIOCGBIT(EV_KEY, keys.size()), keys.data()) >= 0;
+        const bool shortcuts = bit(keys, KEY_T) && bit(keys, KEY_BACKSPACE) &&
+            (bit(keys, KEY_LEFTCTRL) || bit(keys, KEY_RIGHTCTRL)) && (bit(keys, KEY_LEFTALT) || bit(keys, KEY_RIGHTALT));
+        if (!readable || (!shortcuts && !bit(keys, KEY_POWER) && !bit(keys, KEY_SLEEP))) {
             close(fd); continue;
         }
         keyboards.push_back({path, fd}); keyboards.back().snapshot();
@@ -140,6 +150,13 @@ int run_wait(const std::vector<std::string> &arguments, std::chrono::seconds tim
 }
 
 constexpr const char *launcher = "/home/root/.local/share/inkline/current/shortcut-launch.sh";
+constexpr const char *power_control = "/home/root/.local/share/inkline/current/power-control.sh";
+
+std::int64_t clock_ms(clockid_t clock) {
+    timespec value{};
+    if (clock_gettime(clock, &value) != 0) throw std::runtime_error("Cannot read suspend clock");
+    return std::int64_t(value.tv_sec) * 1000 + value.tv_nsec / 1000000;
+}
 
 void launch_terminal() { spawn({launcher, "show"}); }
 
@@ -221,6 +238,16 @@ int daemon(const std::string &directory) {
     std::signal(SIGHUP, reload_signal);
     auto bindings = read_bindings(directory);
     std::vector<Keyboard> keyboards;
+    rmt::ResumeGuard resume_guard;
+    auto observe_resume = [&] {
+        const auto monotonic = clock_ms(CLOCK_MONOTONIC);
+        if (resume_guard.observe(clock_ms(CLOCK_BOOTTIME), monotonic)) {
+            for (auto &keyboard : keyboards) { keyboard.power.reset(); keyboard.sleep.reset(); }
+            spawn({power_control, "resume"});
+        }
+        return monotonic;
+    };
+    observe_resume();
     auto next_discovery = std::chrono::steady_clock::time_point{};
     for (;;) {
         if (reload_requested) { reload_requested = 0; bindings = read_bindings(directory); }
@@ -231,6 +258,7 @@ int daemon(const std::string &directory) {
         const bool emergency_held = std::any_of(keyboards.begin(), keyboards.end(), [](const auto &k) { return k.emergency_active && !k.emergency_fired; });
         const int ready = poll(descriptors.data(), descriptors.size(), emergency_held ? 100 : 1000);
         if (ready < 0 && errno != EINTR) return 1;
+        const auto monotonic = observe_resume();
         bool recover = false;
         std::vector<Trigger> triggers;
         for (size_t i = 0; i < keyboards.size(); ++i) {
@@ -240,7 +268,7 @@ int daemon(const std::string &directory) {
                 const ssize_t count = read(keyboards[i].fd, events, sizeof(events));
                 if (count == 0 || (count < 0 && errno != EAGAIN && errno != EINTR)) lost = true;
                 if (count > 0) for (size_t at = 0; at < size_t(count) / sizeof(input_event); ++at) {
-                    const auto trigger = keyboards[i].event(events[at], bindings);
+                    const auto trigger = keyboards[i].event(events[at], bindings, !resume_guard.blocked(monotonic));
                     if (trigger.type != Trigger::None) triggers.push_back(trigger);
                 }
             }
@@ -251,6 +279,12 @@ int daemon(const std::string &directory) {
         if (recover) emergency_recover();
         else for (const auto &trigger : triggers) {
             if (trigger.type == Trigger::Terminal) launch_terminal();
+            else if (trigger.type == Trigger::Sleep) {
+                if (!resume_guard.blocked(monotonic)) {
+                    resume_guard.block(monotonic);
+                    spawn({power_control, "sleep"});
+                }
+            }
             else if (const auto found = bindings.find(trigger.code); found != bindings.end()) launch_binding(found->second);
         }
         while (waitpid(-1, nullptr, WNOHANG) > 0) {}

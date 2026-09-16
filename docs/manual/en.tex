@@ -1,0 +1,263 @@
+\selectlanguage{english}
+\Language{en}{English}{User guide}
+\firsttopic{Open, sleep, return}
+Inkline runs a local shell on reMarkable 2. Use a Type Folio or USB keyboard,
+work on the tablet, or connect with SSH or Goblin Mosh. Text and graphics are
+rendered in grayscale.
+
+\begin{notice}
+\key{Ctrl+Alt+T} opens Inkline from the tablet itself.\par
+\key{Power button:} press and release to suspend; press again to wake.
+Your open shells and editor buffers stay in RAM.
+\end{notice}
+Sleep pauses the tablet; it does not exit Inkline or save settings to flash.
+Network connections may need to reconnect after waking. The wake press is
+ignored as a sleep request, so the tablet does not immediately suspend again.
+After an update, quit and reopen Inkline once to activate the new power handling.
+
+To return to notebooks, tap \key{Quit} or press \key{Ctrl+Shift+Q}, then confirm.
+Typing \code{exit} closes one terminal; closing the last returns to notebooks.
+The bottom bar has Escape, history up/down, Quit and Settings buttons.
+The startup guide and tiny Goblin logo disappear with \code{clear}.
+
+If a shortcut app owns the screen, \key{Ctrl+Alt+T} returns to Inkline.
+For emergency recovery, hold \key{Ctrl+Alt+Backspace for two seconds}.
+Recovery closes every Inkline terminal: unsaved work in those sessions is lost.
+The notebook interface remains the default after reboot.
+
+\ProjectLinks
+
+\topic{Keys and terminal slots}
+The Type Folio has a separate \key{Opt} key between Ctrl and Alt, and a
+\key{right Alt/Opt} key. They have different jobs.
+
+\begin{keytable}
+\key{Keys} & \key{Action} \\ \midrule
+Separate Opt + 1--0 & F1--F10 \\
+Right Alt/Opt + 1--9 & Select terminal slot 1--9 \\
+Right Alt/Opt + Left / Right & Previous / next slot \\
+Right Alt/Opt + Tab & Escape \\
+Right Alt/Opt + Up / Down & PageUp / PageDown \\
+Right Alt/Opt + Backspace & Confirm quitting all terminals \\
+Either Alt + Space & Unicode keyboard \\
+Right Alt/Opt + C / V & Copy selection / paste \\
+Ctrl+Shift+B & Hide / show bottom bar \\
+\end{keytable}
+
+On the \key{US Type Folio}, right Alt/Opt+\key{0} types \code{+}.
+Right Alt/Opt with the \key{minus key just left of Backspace} types \code{=}.
+With the input method off, Shift+6 types a literal caret: \code{c^2} stays
+\code{c^2}. Keyboard zoom shortcuts are disabled.
+
+USB keyboards keep their ordinary function keys. The separate Opt shortcut
+uses Meta when a USB keyboard provides it.
+
+There are at most \key{nine independent slots}. Selecting an empty slot opens
+a shell. The indicator counts open terminals: with only slots 1 and 9 open,
+slot 9 shows \key{Terminal 2 / 2 · slot 9}. Closing a shell frees its slot
+without renumbering the shortcuts.
+
+Each terminal has its own shell, directory, input composition, graphics and
+500 lines of scrollback. Display and input-method settings apply to all slots.
+
+\topic{Settings and display}
+Tap \key{Settings}, the fifth bottom button. With the bar hidden, press
+\key{Alt+Space}, then \key{F2} or tap Settings in the Unicode keyboard.
+A filled choice is active; a dashed outline is keyboard focus. Tab moves
+focus; arrows and Enter change choices.
+
+\key{Caps Lock:} choose Control (the default) or Caps Lock.
+\key{Text size:} pinch with two fingers, or use the minus/plus buttons in
+Settings. Slow movement changes the size one pixel at a time, from
+\key{6 to 48 pixels}.
+
+\key{Text darkness:} 50\% is the original rendering. Higher values darken
+letter edges. \key{Minimum contrast} separates foreground and background
+luminance when an app chooses similar colors; the default is 35\%.
+
+\begin{choices}
+\key{E-paper mode} & \key{Tradeoff} \\ \midrule
+Fast & Minimal batching; animation waveform; more ghosting \\
+Balanced & UI waveform; 32 ms output batching \\
+Crisp (default) & Cleaner grayscale; content waveform; slower \\
+Mono & Fast black and white; discards image grays \\
+Saver & 120 ms batching; fewer updates during bursts \\
+\end{choices}
+
+Only changed text rows are redrawn. The physical display still takes time
+to update. Saver reduces update requests; battery savings have not been measured.
+An update preserves an explicitly saved mode instead of forcing the new default.
+
+\begin{notice}
+All settings stay in \key{RAM} during use and are saved together when Inkline
+exits normally. Finger lifts, closing Settings and sleep do not write them
+to flash. An unchanged session writes nothing. A crash, forced kill or power
+loss can lose unsaved setting changes.
+\end{notice}
+
+\topic{Unicode and input methods}
+\key{Alt+Space} opens the Unicode keyboard. Tap a character to insert it;
+the keyboard stays open. Tap \key{Done} or press Escape to close it.
+
+Categories include letters, marks, numbers, punctuation, math/currency,
+symbols, spaces, format characters and private use. Drag vertically to
+scroll; arrows, PageUp/PageDown, Home/End and the mouse wheel also work.
+\key{Tab} changes category; Enter inserts the selected character.
+
+Type a hexadecimal Unicode value, such as \code{03bb}, then Enter to insert
+λ. Backspace edits the value. Combining marks show a dotted circle as a
+visual aid; only the mark is inserted. Spaces and format characters have labels.
+The catalog uses Qt's Unicode tables, excluding controls, unassigned values,
+surrogates and noncharacters. Some characters need fonts that are not installed;
+private-use values require a matching font.
+
+Press \key{F2} in the picker or tap \key{Settings}, then choose \key{Input method}:
+
+\begin{choices}
+Off — direct keyboard & Ordinary US typing \\
+Romaji & Japanese hiragana from romanized input \\
+Pinyin & Chinese from pinyin \\
+Zhuyin & Chinese with the basic Zhuyin map \\
+Wubi 86 & Chinese shape codes \\
+US-International & Common Latin accents \\
+\end{choices}
+
+Choose a result in the candidate strip. Select \key{Off — direct keyboard}
+in the same menu to return to normal US input. The choice applies to all
+terminals and is saved when Inkline exits.
+
+\topic{Touch, pen and clipboard}
+\key{Two fingers up/down:} scroll history. Drag down for older output and
+up toward the prompt. Each terminal retains 500 physical lines in RAM,
+in addition to the live screen.
+
+\key{Two fingers left/right:} switch one terminal slot per gesture.
+Lift your fingers before switching again. Spread or close them to resize text.
+
+\key{One finger:} drag to select text. Right Alt/Opt+C copies;
+right Alt/Opt+V pastes. All terminals share one RAM clipboard, up to 128 KiB.
+
+\key{Pen:} apps that enable terminal mouse reporting receive pen press,
+movement and release as left-mouse events, using the negotiated protocol
+(including SGR). Otherwise, dragging selects text. Hold \key{Shift} to force
+local selection in an app that uses mouse reporting.
+
+\key{OSC 52} lets terminal programs, including remote programs over SSH,
+read or replace Inkline's RAM clipboard. It is separate from the notebook
+clipboard. Right Alt/Opt+X copies and explains that deletion belongs in the
+editor: OSC 52 cannot delete an editor's text.
+
+\key{Graphics:} kitty inline and shared-memory transport stay in RAM;
+file and temporary-file transport are disabled. Sixel works when requested
+explicitly, but is not advertised automatically. Kitty placeholders,
+animation playback and some sixel modes remain unfinished.
+
+\code{clear} and full-screen erase remove visible graphics as well as text.
+Off-screen graphics are reclaimed under memory pressure. There is no disk
+image cache; large images still consume the tablet's limited RAM.
+
+\topic{Launch programs with keys}
+Register shortcuts in an Inkline shell. Arguments are literal; use an explicit
+shell for shell syntax. Shortcut programs read \code{~/.bashrc} through Bash.
+
+\begin{shell}
+~/inkline shortcut register e emacs
+~/inkline shortcut register p python3
+~/inkline shortcut list
+~/inkline shortcut deregister p
+\end{shell}
+
+\key{Ctrl+Alt+E} opens Emacs in a free slot.
+\code{~/inkline run PROGRAM ARG...} launches without a binding.
+Registering replaces a binding; deregistering leaves running programs alone.
+Keys use US physical positions. Quote punctuation and use full paths for
+custom programs; programs must already be installed.
+
+For a native Qt/e-paper app that draws its own screen:
+\begin{shell}
+~/inkline shortcut register a --epaper /home/root/my-app
+\end{shell}
+One native app runs at a time, pausing Inkline and its shells. The launcher
+supplies Qt e-paper settings and RAM caches, discards logs and resumes Inkline
+when the app exits. Apps should use Qt input without exclusive keyboard grabs.
+
+\begin{notice}
+\key{Ctrl+Alt+T is permanent.} It cannot be registered or deregistered.
+It stops a native shortcut app and returns to the existing terminals.
+Use a physical Ctrl key; Caps Lock remapping applies inside Inkline.
+\end{notice}
+
+\key{Emergency:} hold Ctrl+Alt+Backspace for two seconds to stop the shortcut
+app and its descendants and restart Inkline. All terminals close; unsaved
+work is lost. Root apps can defeat recovery by grabbing input, changing
+services or exhausting resources. Restarting the device is the final fallback.
+
+\topic{Install, update, keep the manual}
+The bundle targets \key{reMarkable 2, firmware 3.27}, using the stock Qt 6.8
+e-paper libraries. Current downloads and checksum instructions are at:
+
+\InstallLink
+
+The installer checks hardware, firmware, fonts, Qt startup, RAM temporary
+directories and disabled swap. Releases live under
+\path{/home/root/.local/share/inkline}; the keyboard launcher starts at boot.
+Updates preserve open terminals. \key{Quit and reopen Inkline to use the
+new version.} Previous releases remain for rollback and occupy storage.
+
+This single PDF contains all nine languages and ships in the bundle.
+Installation attempts to import it into \key{My files} through the USB web
+interface when that interface is enabled and notebooks are running.
+A successful import is recorded to avoid importing the same manual twice.
+
+If automatic import is unavailable, connect USB, quit Inkline and enable
+\key{USB web interface} in the notebook storage settings. From SSH, run:
+\begin{shell}
+~/inkline manual
+\end{shell}
+Alternatively, download this PDF and import it through the USB browser
+interface or reMarkable's desktop/mobile app. The importer never edits the
+notebook database directly or interrupts terminals. An imported manual stays
+in My files after Inkline is uninstalled.
+
+From SSH, return to notebooks or remove Inkline with:
+\begin{shell}
+~/inkline stop
+~/inkline uninstall
+\end{shell}
+Optional software, including the recommended LaTeX installation, is documented
+on the website.
+
+\topic{How it works; storage and RAM}
+Qt delivers keyboard input to a shared mapper for shortcuts and Caps Lock.
+libghostty-vt encodes terminal keys. Each slot connects its program to a
+separate pseudo-terminal (PTY). Shells receive \code{HOME=/home/root};
+interactive Bash reads \code{~/.bashrc}.
+
+Output passes through the terminal parser and sixel decoder. libghostty
+maintains cells, cursor state, alternate screens, history and kitty images.
+The renderer keeps a grayscale image and redraws changed rows; Qt's stock
+e-paper backend updates the panel. An independent evdev daemon handles
+global shortcuts and the power key; systemd handles suspend and wake.
+
+Each terminal caps core allocations at 64 MiB, kitty images at 16 MiB per
+screen and retained sixel images at 16 MiB. Rendering and app memory are
+additional. Empty slots allocate no terminal. Nine large apps can exceed RAM.
+
+Temporary graphics, caches and session state use RAM. Installed software,
+saved documents, settings saved at exit and app-written files use persistent
+storage. Inkline does not prevent arbitrary programs from writing files.
+
+The optional Python package is stock Python. To reduce cache writes, put
+these preferences in the tablet's \code{~/.bashrc}:
+\begin{shell}
+export PYTHONDONTWRITEBYTECODE=1
+export PIP_NO_CACHE_DIR=1
+\end{shell}
+Run \code{source ~/.bashrc} or open a new shell. Use
+\code{python3 -m pip install --no-compile PACKAGE} to avoid pip's separate
+install-time bytecode compilation. Python isolated mode ignores Python
+environment variables. See the website for the full Python guide.
+
+Inkline is GPL-3.0-or-later software. Bundles include matching source archives
+and dependency notices. Test records distinguish automated checks from
+physical behaviors that still need confirmation.

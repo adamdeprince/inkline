@@ -21,5 +21,5 @@ set -- --rotate "${INKLINE_ROTATE:-90}"
 if [ "${INKLINE_FONT_SIZE:-0}" -gt 0 ]; then set -- "$@" --font-size "$INKLINE_FONT_SIZE"; fi
 if [ "${INKLINE_DEMO:-0}" = 1 ]; then set -- "$@" --demo; fi
 if [ "${INKLINE_QUIT_AFTER:-0}" -gt 0 ]; then set -- "$@" --quit-after "$INKLINE_QUIT_AFTER"; fi
-/usr/bin/systemd-inhibit --what=idle:sleep --mode=block --why='Inkline terminal session' \
+/usr/bin/systemd-inhibit --what=idle:handle-power-key:handle-suspend-key --mode=block --why='Inkline terminal session' \
     /home/root/.local/share/inkline/current/inkline "$@"

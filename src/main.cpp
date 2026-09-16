@@ -14,12 +14,55 @@
 #include <QNetworkProxy>
 #include <QNetworkReply>
 #include <QEventLoop>
+#include <QSocketNotifier>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <cstring>
 #include <cstdio>
 #include <exception>
 #include <stdexcept>
+#include <cerrno>
+#include <csignal>
+#include <fcntl.h>
+#include <unistd.h>
+
+namespace {
+volatile std::sig_atomic_t shutdown_pipe = -1;
+void request_shutdown(int) {
+    const int saved_errno = errno;
+    const char byte = 1;
+    if (shutdown_pipe >= 0) { const auto ignored = write(shutdown_pipe, &byte, 1); (void)ignored; }
+    errno = saved_errno;
+}
+class ShutdownSignals {
+public:
+    ShutdownSignals() {
+        if (pipe(fds_) < 0) throw std::runtime_error("Cannot create shutdown signal pipe");
+        for (int fd : fds_) {
+            if (fcntl(fd, F_SETFD, FD_CLOEXEC) < 0 || fcntl(fd, F_SETFL, O_NONBLOCK) < 0) {
+                close(fds_[0]); close(fds_[1]);
+                throw std::runtime_error("Cannot configure shutdown signal pipe");
+            }
+        }
+        shutdown_pipe = fds_[1];
+        struct sigaction action{};
+        action.sa_handler = request_shutdown;
+        sigemptyset(&action.sa_mask);
+        sigaction(SIGTERM, &action, &old_term_);
+        sigaction(SIGINT, &action, &old_int_);
+    }
+    ~ShutdownSignals() {
+        sigaction(SIGTERM, &old_term_, nullptr);
+        sigaction(SIGINT, &old_int_, nullptr);
+        shutdown_pipe = -1;
+        close(fds_[0]); close(fds_[1]);
+    }
+    int fd() const { return fds_[0]; }
+private:
+    int fds_[2];
+    struct sigaction old_term_{}, old_int_{};
+};
+}
 
 int main(int argc, char **argv) {
     // The 64 KiB literal shortcut format can expand up to sixfold in JSON.
@@ -107,6 +150,14 @@ int main(int argc, char **argv) {
             std::puts("Inkline " INKLINE_VERSION ": terminal, font, keyboard, settings and renderer ready.");
             return 0;
         }
+        // Save settings through normal Qt teardown on service stop as well as
+        // Quit/last-shell exit. SIGKILL and power loss deliberately cannot save.
+        ShutdownSignals shutdown;
+        QSocketNotifier shutdown_ready(shutdown.fd(), QSocketNotifier::Read);
+        QObject::connect(&shutdown_ready, &QSocketNotifier::activated, &app, [&] {
+            shutdown_ready.setEnabled(false);
+            app.quit();
+        });
         QQuickWindow window;
         window.setTitle("Inkline"); window.setColor(Qt::white);
         const bool tablet = QGuiApplication::platformName() == "epaper";

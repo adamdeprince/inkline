@@ -1,0 +1,225 @@
+\selectlanguage{english}\Simplified
+\Language{zh-Hans}{简体中文}{使用指南}
+\firsttopic{启动、休眠与返回笔记}
+Inkline 在 reMarkable 2 上运行本地 shell。使用 Type Folio 或 USB 键盘，可以在平板上
+工作，也可以通过 SSH 或 Goblin Mosh 连接其他计算机。文字和图像以适合电子纸的灰度显示。
+
+\begin{notice}
+按 \key{Ctrl+Alt+T}，即可直接在平板上打开 Inkline。\par
+\key{电源键：}按下再松开即可休眠，再按一次唤醒。已打开的 shell 和编辑器缓冲区保留在 RAM 中。
+\end{notice}
+休眠会暂停设备，不会退出 Inkline，也不会把设置写入闪存。唤醒后，网络连接可能需要重新建立。
+用于唤醒的按键不会再次触发休眠。更新后，请退出并重新打开 Inkline 一次，以启用新的电源键处理。
+
+要返回笔记，点按 \key{Quit} 或按 \key{Ctrl+Shift+Q}，然后确认。
+输入 \code{exit} 只关闭当前终端；关闭最后一个终端后返回笔记。
+底栏包含 Escape、历史记录上／下、Quit 和 Settings 按钮。
+启动时的简短说明和小 Goblin 标志可用 \code{clear} 清除。
+
+如果快捷键启动的应用占用了屏幕，按 \key{Ctrl+Alt+T} 返回 Inkline。
+紧急恢复时，\key{按住 Ctrl+Alt+Backspace 两秒}。
+此操作会关闭所有 Inkline 终端，丢失这些会话中尚未保存的工作。
+设备重启后仍默认进入笔记界面。
+
+\ProjectLinks
+
+\topic{按键与终端槽位}
+Type Folio 在 Ctrl 与 Alt 之间有一个独立的 \key{Opt} 键，另有一个
+\key{右 Alt/Opt} 键。两者用途不同。
+
+\begin{keytable}
+\key{按键} & \key{操作} \\ \midrule
+独立 Opt + 1--0 & F1--F10 \\
+右 Alt/Opt + 1--9 & 选择终端槽位1--9 \\
+右 Alt/Opt + Left / Right & 上一个／下一个槽位 \\
+右 Alt/Opt + Tab & Escape \\
+右 Alt/Opt + Up / Down & PageUp / PageDown \\
+右 Alt/Opt + Backspace & 确认退出所有终端 \\
+任一 Alt + Space & Unicode 键盘 \\
+右 Alt/Opt + C / V & 复制选区／粘贴 \\
+Ctrl+Shift+B & 隐藏／显示底栏 \\
+\end{keytable}
+
+在\key{美式 Type Folio} 上，右 Alt/Opt+\key{0} 输入 \code{+}；
+右 Alt/Opt+\key{紧挨 Backspace 左侧的减号键}输入 \code{=}。
+关闭输入法后，Shift+6 直接输入插入符号：\code{c^2} 保持为 \code{c^2}。
+没有用于缩放字体的键盘组合键。
+
+USB 键盘可直接使用普通功能键。独立 Opt 的快捷操作在提供 Meta 的 USB 键盘上使用 Meta 修饰键。
+
+最多有\key{九个独立槽位}。选择空槽位会打开一个 shell。指示器显示当前打开的终端数，而非容量。
+如果只有槽位1和9打开，在9中显示 \key{Terminal 2 / 2 · slot 9}。
+关闭 shell 会释放槽位，不会重新编号其他快捷键。
+
+每个终端都有自己的 shell、工作目录、输入组合状态、图像和500行回滚历史。
+显示设置和输入法设置对所有槽位生效。
+
+\topic{设置与显示}
+点按底栏第五个按钮 \key{Settings}。如果底栏隐藏，按 \key{Alt+Space}，再按
+\key{F2} 或点按 Unicode 键盘中的 Settings。实心选项表示当前状态，虚线边框表示键盘焦点。
+Tab 移动焦点，方向键和 Enter 更改选择。
+
+\key{Caps Lock：}可选择 Control（默认）或 Caps Lock。
+\key{字体大小：}双指捏合，或使用设置中的减号／加号。
+缓慢移动可每次调整一个像素，范围为\key{6至48像素}。
+
+\key{Text darkness：}50\% 为原始渲染，数值越高，字形边缘越深。
+\key{Minimum contrast} 在应用选择相近颜色时拉开前景与背景的亮度差，默认35\%。
+
+\begin{choices}
+\key{电子纸模式} & \key{取舍} \\ \midrule
+Fast & 合并等待最少，使用动画波形，残影较多 \\
+Balanced & UI 波形，按32 ms 合并输出 \\
+Crisp（默认） & 灰度更清晰，使用内容波形，更新较慢 \\
+Mono & 快速黑白显示，舍弃图像中的灰色层次 \\
+Saver & 按120 ms 合并，减少连续输出的刷新次数 \\
+\end{choices}
+
+只重绘发生变化的文字行，但面板本身仍需要刷新时间。
+Saver 会减少刷新请求，省电效果尚未测量。升级会保留明确保存的模式，不会强制覆盖为新默认值。
+
+\begin{notice}
+所有设置在使用期间保留在 \key{RAM}，正常退出 Inkline 时一起保存。
+抬起手指、关闭设置和休眠都不会写入闪存。没有实际更改的会话不会写入设置。
+崩溃、强制终止或断电可能丢失尚未保存的设置更改。
+\end{notice}
+
+\topic{Unicode 与输入法}
+按 \key{Alt+Space} 打开 Unicode 键盘。点按字符即可输入，键盘保持打开，方便连续输入。
+点按 \key{Done} 或按 Escape 关闭。
+
+分类包括字母、组合标记、数字、标点、数学／货币、符号、空格、格式字符和私用区。
+上下拖动滚动；也可以使用方向键、PageUp/PageDown、Home/End 或鼠标滚轮。
+\key{Tab} 切换分类，Enter 输入选中的字符。
+
+输入十六进制 Unicode 值（例如 \code{03bb}）后按 Enter，可以输入 λ。
+Backspace 编辑数值。组合标记旁的虚线圆仅用于展示，实际只输入标记。
+空格和格式字符带有可见标签。字符表使用 Qt 的 Unicode 数据，不包括控制字符、
+未分配码位、代理码位和非字符。部分字符需要未安装的字体，私用区需要匹配的字体。
+
+在键盘中按 \key{F2} 或点按 \key{Settings}，然后选择 \key{Input method}：
+\begin{choices}
+Off — direct keyboard & 普通美式键盘直接输入 \\
+Romaji & 从罗马字输入日语平假名 \\
+Pinyin & 拼音输入中文 \\
+Zhuyin & 使用基本注音键位输入中文 \\
+Wubi 86 & 使用五笔86字形编码输入中文 \\
+US-International & 常用拉丁字母重音 \\
+\end{choices}
+
+在候选栏选择结果。要恢复普通美式输入，在同一菜单选择
+\key{Off — direct keyboard}。此选择对所有终端生效，并在 Inkline 退出时保存。
+
+\topic{触控、手写笔与剪贴板}
+\key{双指上下滑动：}滚动历史。向下拖动查看较早输出，向上返回提示符方向。
+每个终端除当前屏幕外，还在 RAM 中保留500个物理行。
+
+\key{双指左右滑动：}每次手势切换一个终端槽位。再次切换前请抬起手指。
+双指张开或合拢可调整字体大小。
+
+\key{单指：}拖动选择文字。右 Alt/Opt+C 复制，右 Alt/Opt+V 粘贴。
+所有终端共享一个最大128 KiB 的 RAM 剪贴板。
+
+\key{手写笔：}启用终端鼠标报告的应用会收到对应的鼠标左键按下、移动与松开事件，
+使用应用协商的协议，包括 SGR。其他情况下拖动用于选择文字。
+按住 \key{Shift}，可以在启用鼠标报告的应用中强制进行本地选择。
+
+\key{OSC 52} 允许终端程序（包括经 SSH 运行的远程程序）读取或替换 Inkline 的 RAM 剪贴板。
+它与笔记应用的剪贴板不同。右 Alt/Opt+X 会复制，并提示在编辑器内部执行删除；
+OSC 52 无法删除编辑器里的文字。
+
+\key{图像：}kitty 的内联与共享内存传输保留在 RAM 中；文件与临时文件传输禁用。
+显式请求时支持 sixel，但尚未自动声明支持。kitty 占位符、动画播放和部分 sixel 模式尚未完成。
+
+\code{clear} 和全屏擦除会同时清除可见图像与文字。内存不足时会回收屏幕外的图像。
+没有磁盘图像缓存，但大图仍会占用设备有限的 RAM。
+
+\topic{用快捷键启动程序}
+在 Inkline shell 中注册快捷键。参数按字面传递；如需 shell 语法，请显式调用 shell。
+快捷键程序通过 Bash 读取 \code{~/.bashrc}。
+
+\begin{shell}
+~/inkline shortcut register e emacs
+~/inkline shortcut register p python3
+~/inkline shortcut list
+~/inkline shortcut deregister p
+\end{shell}
+
+\key{Ctrl+Alt+E} 在空闲槽位打开 Emacs。
+\code{~/inkline run PROGRAM ARG...} 可不注册直接启动。
+重复注册会替换绑定；注销不影响正在运行的程序。
+按键采用美式键盘的物理位置。标点请加引号，自定义程序请使用完整路径，并先安装程序。
+
+对于自行绘制屏幕的原生 Qt／电子纸应用：
+\begin{shell}
+~/inkline shortcut register a --epaper /home/root/my-app
+\end{shell}
+一次运行一个原生应用，期间暂停 Inkline 及其 shell。启动器设置 Qt 电子纸环境与 RAM 缓存，
+丢弃日志，并在应用退出后恢复 Inkline。应用应使用 Qt 输入，不要独占键盘设备。
+
+\begin{notice}
+\key{Ctrl+Alt+T 是固定快捷键，不能注册或注销。}
+它会停止原生快捷键应用，并返回现有终端。
+请使用物理 Ctrl 键；Caps Lock 映射只在 Inkline 内部生效。
+\end{notice}
+
+\key{紧急恢复：}按住 Ctrl+Alt+Backspace 两秒，停止快捷键应用及其子进程并重新启动 Inkline。
+所有终端会关闭，未保存的工作会丢失。以 root 运行的应用可能通过独占输入、修改服务或耗尽资源
+使恢复失败；最后的办法是重启设备。
+
+\topic{安装、升级与保留手册}
+此安装包面向\key{运行固件3.27的 reMarkable 2}，使用系统自带 Qt 6.8 电子纸库。
+最新下载与校验步骤见：
+
+\InstallLink
+
+安装器检查硬件、固件、字体、Qt 启动、RAM 临时目录和 swap 是否禁用。
+版本保存在 \path{/home/root/.local/share/inkline} 下，键盘启动服务随系统启动。
+更新不会关闭已有终端。\key{退出并重新打开 Inkline 才会使用新版本。}
+旧版本保留用于回退，会继续占用存储空间。
+
+安装包附带这一个包含九种语言的 PDF。笔记界面正在运行且 USB 网页接口已启用时，
+安装器会通过该接口尝试导入\key{My files}。成功导入后记录校验值，避免重复导入同一手册。
+
+如果自动导入不可用，请连接 USB、退出 Inkline，并在笔记界面的存储设置中启用
+\key{USB web interface}，然后通过 SSH 运行：
+\begin{shell}
+~/inkline manual
+\end{shell}
+也可下载 PDF，通过 USB 浏览器界面或 reMarkable 桌面／移动应用导入。
+导入器不会直接修改笔记数据库，也不会中断终端。
+卸载 Inkline 后，已导入手册仍留在 My files。
+
+通过 SSH 返回笔记或卸载 Inkline：
+\begin{shell}
+~/inkline stop
+~/inkline uninstall
+\end{shell}
+可选软件（包括推荐的 LaTeX 环境）的安装说明保留在网站上。
+
+\topic{工作原理、存储与 RAM}
+Qt 将键盘事件交给共享映射器，处理快捷键与 Caps Lock。
+libghostty-vt 编码终端按键，每个槽位通过独立伪终端（PTY）连接程序。
+shell 获得 \code{HOME=/home/root}，交互式 Bash 读取 \code{~/.bashrc}。
+
+程序输出经过终端解析器与 sixel 解码器。libghostty 管理字符单元、光标状态、备用屏幕、
+回滚历史和 kitty 图像。渲染器保留灰度图，只重绘变化的行；系统 Qt 电子纸后端负责刷新面板。
+独立的 evdev 守护进程处理全局快捷键和电源键，systemd 负责休眠与唤醒。
+
+每个终端的核心分配上限为64 MiB；kitty 图像每个屏幕16 MiB；保留的 sixel 图像16 MiB。
+渲染器和应用内存另计。空槽位不分配终端。九个大型应用可能超过可用 RAM。
+
+临时图像、缓存和会话状态使用 RAM。已安装软件、保存的文档、退出时保存的设置以及应用写入的
+文件使用持久存储。Inkline 不会禁止任意程序写文件。
+
+可选 Python 包是标准 Python。为减少缓存写入，请在设备的 \code{~/.bashrc} 中添加：
+\begin{shell}
+export PYTHONDONTWRITEBYTECODE=1
+export PIP_NO_CACHE_DIR=1
+\end{shell}
+运行 \code{source ~/.bashrc} 或打开新 shell。
+使用 \code{python3 -m pip install --no-compile PACKAGE} 可避免 pip 在安装时单独进行的字节码编译。
+Python 隔离模式会忽略 Python 环境变量。详细内容见网站的 Python 指南。
+
+Inkline 采用 GPL-3.0-or-later 许可。安装包包含匹配的源代码归档与依赖许可说明。
+测试记录区分自动检查与仍需实机确认的行为。
