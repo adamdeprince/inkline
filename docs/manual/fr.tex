@@ -6,7 +6,7 @@ clavier USB, travaillez sur la tablette ou connectez-vous par SSH ou Goblin Mosh
 Le texte et les images sont affichés en niveaux de gris.
 
 \begin{notice}
-\key{Ctrl+Opt+Alt+T} ouvre Inkline directement sur la tablette.\par
+\key{Opt+RightAlt+T} ouvre Inkline directement sur la tablette.\par
 \key{Bouton d'alimentation :} appuyez puis relâchez pour mettre en veille ;
 appuyez de nouveau pour réveiller. Les shells et les tampons de l'éditeur restent en RAM.
 \end{notice}
@@ -20,10 +20,12 @@ puis confirmez. \code{exit} ferme un terminal ; fermer le dernier rend la main
 aux carnets. La barre du bas propose Escape, historique haut/bas, Quit et Settings.
 \code{clear} efface le petit guide de démarrage et le logo Goblin.
 
-Si une application de raccourci occupe l'écran, \key{Ctrl+Opt+Alt+T} revient à Inkline.
-En urgence, maintenez \key{Ctrl+Opt+Alt+Backspace pendant deux secondes}.
+Si une application de raccourci occupe l'écran, \key{Opt+RightAlt+T} revient à Inkline.
+En urgence, maintenez \key{Opt+RightAlt+Backspace pendant deux secondes}.
 Cette récupération ferme tous les terminaux et perd leur travail non enregistré.
 Après un redémarrage de la tablette, l'interface habituelle des carnets reste celle par défaut.
+
+RightAlt désigne la touche Alt/Opt à droite de la barre d’espace. Maintenez-la avec la touche Opt distincte, puis appuyez sur T, sans Ctrl. Super seul reste disponible pour vos raccourcis.
 
 \ProjectLinks
 
@@ -164,7 +166,7 @@ lisent \code{~/.bashrc} par l'intermédiaire de Bash.
 
 Settings → Command shortcuts (page 2) permet d’associer une commande à une lettre. Choisissez Terminal ou Native e-paper app, puis Save. Remove demande confirmation ; Reset draft annule les modifications. T est verrouillé. Seuls Save et la suppression confirmée écrivent sur le stockage. L’outil en ligne de commande gère les mêmes raccourcis.
 
-Tous les raccourcis globaux utilisent désormais Ctrl+Opt+Alt, y compris T et la récupération par maintien de Backspace. Utilisez la touche Opt distincte du Folio ; sur un clavier USB, utilisez Windows/Command (Super). Ctrl+Alt reste disponible dans Emacs. Quittez puis rouvrez Inkline après la mise à jour ; l’installation préserve les terminaux ouverts.
+Tous les raccourcis globaux utilisent désormais Opt+RightAlt, y compris T et la récupération par maintien de Backspace. Utilisez la touche Opt distincte du Folio ; sur un clavier USB, utilisez Windows/Command (Super). Ctrl+Alt reste disponible dans Emacs. Quittez puis rouvrez Inkline après la mise à jour ; l’installation préserve les terminaux ouverts.
 
 \begin{shell}
 ~/inkline shortcut register e emacs
@@ -173,7 +175,7 @@ Tous les raccourcis globaux utilisent désormais Ctrl+Opt+Alt, y compris T et la
 ~/inkline shortcut deregister p
 \end{shell}
 
-\key{Ctrl+Opt+Alt+E} ouvre Emacs dans un emplacement libre.
+\key{Opt+RightAlt+E} ouvre Emacs dans un emplacement libre.
 \code{~/inkline run PROGRAM ARG...} lance sans enregistrer de raccourci.
 Un nouvel enregistrement remplace l'ancien ; le retrait ne touche pas aux
 programmes en cours. Les touches suivent les positions physiques américaines.
@@ -189,12 +191,12 @@ Le lanceur fournit les réglages Qt et des caches en RAM, ignore les journaux et
 reprend Inkline à la fin. Utilisez les entrées Qt sans capture exclusive du clavier.
 
 \begin{notice}
-\key{Ctrl+Opt+Alt+T est permanent.} Impossible de l'enregistrer ou de le retirer.
+\key{Opt+RightAlt+T est permanent.} Impossible de l'enregistrer ou de le retirer.
 Il arrête l'application native et retrouve les terminaux existants.
-Utilisez une vraie touche Ctrl ; le remappage de Caps Lock reste local à Inkline.
+Ne maintenez pas Ctrl pour ce raccourci ; le remappage de Caps Lock reste local à Inkline.
 \end{notice}
 
-\key{Urgence :} maintenez Ctrl+Opt+Alt+Backspace deux secondes pour arrêter
+\key{Urgence :} maintenez Opt+RightAlt+Backspace deux secondes pour arrêter
 l'application et ses descendants, puis redémarrer Inkline. Les terminaux
 ferment et le travail non enregistré est perdu. Une application root peut
 bloquer ce secours en capturant les entrées, modifiant les services ou épuisant

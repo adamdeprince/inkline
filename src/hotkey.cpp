@@ -1,4 +1,4 @@
-// Global Ctrl+Opt+Alt shortcuts for Folio and USB keyboards. The daemon never
+// Global Opt+RightAlt shortcuts for Folio and USB keyboards. The daemon never
 // grabs an input device, records typed text, or writes runtime state to disk.
 #include "rmt/hotkey_config.hpp"
 #include "rmt/power_key.hpp"
@@ -101,16 +101,16 @@ void discover(std::vector<Keyboard> &keyboards) {
         if (fd < 0) continue;
         std::array<unsigned char, bit_bytes> keys{};
         const bool readable = ioctl(fd, EVIOCGBIT(EV_KEY, keys.size()), keys.data()) >= 0;
-        const bool shortcuts = bit(keys, KEY_T) && bit(keys, KEY_BACKSPACE) &&
-            (bit(keys, KEY_LEFTCTRL) || bit(keys, KEY_RIGHTCTRL)) && (bit(keys, KEY_LEFTALT) || bit(keys, KEY_RIGHTALT));
-        if (!readable || (!shortcuts && !bit(keys, KEY_POWER) && !bit(keys, KEY_SLEEP))) {
-            close(fd); continue;
-        }
         input_id identity{};
         char name[128]{};
         const bool folio = ioctl(fd, EVIOCGID, &identity) >= 0 && identity.bustype == BUS_HOST &&
             identity.vendor == 0x2edd && identity.product == 1 &&
             ioctl(fd, EVIOCGNAME(sizeof(name)), name) >= 0 && std::strcmp(name, "rM_Keyboard") == 0;
+        const bool shortcuts = bit(keys, KEY_T) && bit(keys, KEY_BACKSPACE) && bit(keys, KEY_RIGHTALT) &&
+            (folio ? bit(keys, KEY_END) : bit(keys, KEY_LEFTMETA) || bit(keys, KEY_RIGHTMETA));
+        if (!readable || (!shortcuts && !bit(keys, KEY_POWER) && !bit(keys, KEY_SLEEP))) {
+            close(fd); continue;
+        }
         keyboards.push_back({path, fd, rmt::ShortcutChord(folio)}); keyboards.back().snapshot();
     }
     closedir(directory);
@@ -200,35 +200,35 @@ int manage(int argc, char **argv, const std::string &directory, bool custom_dire
         if (first >= argc) throw std::runtime_error("A program is required");
         std::vector<std::string> command(argv + first, argv + argc);
         rmt::hotkeys::register_binding(directory, argv[2], command, mode); notify_daemon(custom_directory);
-        std::printf("Registered Ctrl+Opt+Alt+%s -> %s\n", argv[2], rmt::hotkeys::display_command(command).c_str());
+        std::printf("Registered Opt+RightAlt+%s -> %s\n", argv[2], rmt::hotkeys::display_command(command).c_str());
         return 0;
     }
     if (action == "deregister" || action == "remove") {
         if (argc != 3) throw std::runtime_error("Usage: ~/inkline shortcut deregister KEY");
         rmt::hotkeys::deregister_binding(directory, argv[2]); notify_daemon(custom_directory);
-        std::printf("Deregistered Ctrl+Opt+Alt+%s\n", argv[2]); return 0;
+        std::printf("Deregistered Opt+RightAlt+%s\n", argv[2]); return 0;
     }
     if (action == "list") {
-        std::puts("Ctrl+Opt+Alt+t -> /home/root/inkline start  [permanent]");
+        std::puts("Opt+RightAlt+t -> /home/root/inkline start  [permanent]");
         std::vector<std::string> warnings;
         for (const auto &binding : rmt::hotkeys::load(directory, &warnings))
-            std::printf("Ctrl+Opt+Alt+%s -> [%s] %s\n", binding.key.c_str(), binding.mode.c_str(), rmt::hotkeys::display_command(binding.command).c_str());
+            std::printf("Opt+RightAlt+%s -> [%s] %s\n", binding.key.c_str(), binding.mode.c_str(), rmt::hotkeys::display_command(binding.command).c_str());
         for (const auto &warning : warnings) std::fprintf(stderr, "Warning: %s\n", warning.c_str());
         return warnings.empty() ? 0 : 1;
     }
     if (action == "check") {
         std::vector<std::string> warnings; (void)rmt::hotkeys::load(directory, &warnings);
         if (!warnings.empty()) throw std::runtime_error(warnings.front());
-        std::puts("Inkline global shortcuts ready; Ctrl+Opt+Alt+T and the emergency chord are permanent."); return 0;
+        std::puts("Inkline global shortcuts ready; Opt+RightAlt+T and the emergency chord are permanent."); return 0;
     }
     if (action == "help" || action == "--help" || action == "-h") {
         std::puts("Usage: ~/inkline shortcut register KEY [--terminal|--epaper] PROGRAM [ARG ...]");
         std::puts("       ~/inkline shortcut deregister KEY");
         std::puts("       ~/inkline shortcut list");
-        std::puts("Ctrl+Opt+Alt+T always opens Inkline and cannot be changed.");
+        std::puts("Opt+RightAlt+T always opens Inkline and cannot be changed.");
         std::puts("Programs open in a new terminal by default. --epaper gives a native app the screen.");
-        std::puts("Hold Ctrl+Opt+Alt+Backspace for 2 seconds to stop shortcut apps and restore Inkline.");
-        std::puts("Emergency recovery closes all open terminals; ordinary Ctrl+Opt+Alt+T preserves them.");
+        std::puts("Hold Opt+RightAlt+Backspace for 2 seconds to stop shortcut apps and restore Inkline.");
+        std::puts("Emergency recovery closes all open terminals; ordinary Opt+RightAlt+T preserves them.");
         return 0;
     }
     throw std::runtime_error("Unknown shortcut command; run ~/inkline shortcut help");

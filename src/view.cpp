@@ -144,7 +144,7 @@ public:
             "Two fingers: up/down scroll, sideways switch terminals.\r\n"
             "Scrollback: 500 lines, kept in RAM.\r\n"
             "Alt+Space: Unicode; F2 there: Settings and input methods.\r\n"
-            "Ctrl+Opt+Alt+T: return; hold Ctrl+Opt+Alt+Backspace: emergency restart.\r\n"
+            "Opt+RightAlt+T: return; hold Opt+RightAlt+Backspace: emergency restart.\r\n"
             "Ctrl+Shift+B: bottom bar   Caps Lock: %5\r\n"
             "exit closes this terminal.\r\n\r\n")
             .arg(column).arg(QCoreApplication::applicationVersion()).arg(number).arg(open_terminals)

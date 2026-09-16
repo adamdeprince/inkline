@@ -303,3 +303,25 @@ Folio profile using its actual identity and Opt code. Both triggered the
 installed launcher's `show` helper and preserved PID 621 and the control socket.
 The destructive recovery integration test was not run over the open sessions.
 Quit and reopen to load the new UI; the global daemon uses the new chord already.
+
+## 0.4.1 Opt + right Alt/Opt launcher — September 16
+
+The physical Ctrl+Opt+Alt test delivered Ctrl, left Alt and the separate Folio
+Opt key (evdev 107), but no T keypress. The replacement global prefix uses the
+separate Opt key plus right Alt/Opt (evdev 100), without Ctrl. USB keyboards use
+Super plus right Alt. Plain Super and Ctrl+Alt remain available to applications.
+
+Host shortcut configuration, input and Settings tests passed. The configuration,
+production evdev handler and input mapper tests also passed on the tablet,
+using `/tmp` for their runtime state. They cover the new chord, registered
+C/V/X handling, Caps modes, extra modifiers, repeats and dropped events.
+
+The fix installed over Wi-Fi as release `7d75bf504ccd27cf`; the enabled launcher
+was PID 24368, with the physical Folio and power-key devices open. Inkline was
+closed, so the next keyboard launch will load the new UI too. No reboot or USB
+mode switch was performed. Physical Opt+right Alt/Opt+T acceptance is pending;
+installation and automated tests are not a substitute for that physical test.
+
+USB/typewriter development is separate and was not included in this bundle.
+The PDF wording was subsequently clarified to remove an obsolete instruction
+to hold physical Ctrl; application binaries are unchanged by that clarification.

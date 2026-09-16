@@ -1,8 +1,10 @@
 # Global program shortcuts
 
-All global shortcuts use **Ctrl+Opt+Alt**, including T and emergency recovery.
-On the Folio, use the separate Opt key between Ctrl and Alt. On a USB keyboard,
-use Windows/Command (Super) in place of Opt, together with Ctrl and Alt.
+All global shortcuts use **Opt+RightAlt**, including T and emergency recovery.
+On the Folio, hold the separate Opt key between Ctrl and Alt and the Alt/Opt
+key to the right of the spacebar, then tap the letter. Do not hold Ctrl.
+On a USB keyboard, hold Windows/Command (Super) and right Alt.
+Plain Super and ordinary right-Alt shortcuts remain available.
 Ordinary Ctrl+Alt goes to terminal programs: Emacs uses it for Ctrl+Meta
 commands such as C-M-t (`transpose-sexps`) and C-M-f (`forward-sexp`).
 
@@ -55,10 +57,10 @@ private `/run/inkline-shortcut-app` runtime/cache directory, and discards logs.
 After the app exits or crashes, Inkline resumes and repaints. If Inkline was
 closed, notebooks return. App documents still write normally.
 
-**Ctrl+Opt+Alt+T is permanent** and cannot be registered or deregistered. It stops
+**Opt+RightAlt+T is permanent** and cannot be registered or deregistered. It stops
 the native shortcut app and opens or resumes Inkline, preserving terminal sessions.
 
-Hold **Ctrl+Opt+Alt+Backspace for two seconds** for emergency recovery. The launcher
+Hold **Opt+RightAlt+Backspace for two seconds** for emergency recovery. The launcher
 kills the native app's service control group, closes every Inkline terminal,
 and opens a fresh Inkline. Unsaved work in those sessions is lost. This works
 independently of Inkline's event loop; a root app can still defeat it by grabbing
@@ -69,8 +71,8 @@ the final fallback if neither chord responds.
 Bindings live in `~/.config/inkline/shortcuts.d`. Registration writes a private
 atomic file only when the binding changes. The daemon reloads on SIGHUP and
 publishes a numeric key index in tmpfs; Inkline uses that to avoid forwarding
-registered chords to terminal programs. Caps-as-Control is local to Inkline;
-use a physical Ctrl key for the global launcher.
+registered chords to terminal programs. Caps-as-Control is local to Inkline. Extra Ctrl, Shift, left Alt or a held
+Caps Lock excludes a chord from the global launcher.
 
 Native apps, the launcher, and ordinary terminal programs all run under the
 tablet's root account. This feature is a launcher, not an application sandbox.

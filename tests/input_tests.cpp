@@ -2,6 +2,7 @@
 #include "rmt/keyboard.hpp"
 #include "rmt/input_method.hpp"
 #include <QGuiApplication>
+#include <QTemporaryFile>
 #include <cstdio>
 #include <cstdlib>
 #define CHECK(c) do { if (!(c)) { std::fprintf(stderr, "%s:%d: %s\n", __FILE__, __LINE__, #c); std::exit(1); } } while (0)
@@ -12,6 +13,52 @@ QKeyEvent event(QEvent::Type type, int key, quint32 scan, Qt::KeyboardModifiers 
 int main(int argc, char **argv) {
     QGuiApplication app(argc, argv);
     auto *core = rmt_core_new(80, 24, nullptr); CHECK(core);
+    {
+        QTemporaryFile index; CHECK(index.open());
+        CHECK(index.write("46\n47\n45\n") > 0); index.flush(); // Registered C/V/X.
+        rmt::InputMapper map(index.fileName());
+        auto send = [&](QEvent::Type type, int key, quint32 scan, Qt::KeyboardModifiers mods) {
+            return map.map(event(type, key, scan, mods), 0).action;
+        };
+        const auto prefix = Qt::MetaModifier | Qt::GroupSwitchModifier;
+        const std::vector<std::pair<int, quint32>> letters{{Qt::Key_C,54},{Qt::Key_V,55},{Qt::Key_X,53},{Qt::Key_T,28},{Qt::Key_Backspace,22}};
+        send(QEvent::KeyPress, Qt::Key_Meta, 115, Qt::MetaModifier);
+        for (const auto &[key, scan] : letters) {
+            CHECK(send(QEvent::KeyPress,key,scan,Qt::MetaModifier) == InputAction::Send);
+            CHECK(send(QEvent::KeyRelease,key,scan,Qt::MetaModifier) == InputAction::Send);
+        }
+        send(QEvent::KeyPress, Qt::Key_AltGr, 108, prefix);
+        for (const auto &[key, scan] : letters) {
+            CHECK(send(QEvent::KeyPress,key,scan,prefix) == InputAction::Ignore);
+            CHECK(send(QEvent::KeyRelease,key,scan,prefix) == InputAction::Ignore);
+        }
+        for (const auto extra : {Qt::ControlModifier, Qt::ShiftModifier}) {
+            CHECK(send(QEvent::KeyPress,Qt::Key_C,54,prefix|extra) == InputAction::Send);
+            send(QEvent::KeyRelease,Qt::Key_C,54,prefix|extra);
+        }
+        send(QEvent::KeyPress, Qt::Key_Alt, 64, prefix|Qt::AltModifier);
+        CHECK(send(QEvent::KeyPress,Qt::Key_C,54,prefix|Qt::AltModifier) == InputAction::Send);
+        send(QEvent::KeyRelease,Qt::Key_C,54,prefix|Qt::AltModifier);
+        send(QEvent::KeyRelease,Qt::Key_Alt,64,prefix);
+        for (const bool control : {false, true}) {
+            map.set_caps_control(control);
+            send(QEvent::KeyPress, Qt::Key_CapsLock, 66, prefix);
+            CHECK(send(QEvent::KeyPress,Qt::Key_T,28,prefix) == InputAction::Send);
+            send(QEvent::KeyRelease,Qt::Key_T,28,prefix);
+            send(QEvent::KeyRelease,Qt::Key_CapsLock,66,prefix);
+            CHECK(send(QEvent::KeyPress,Qt::Key_T,28,prefix) == InputAction::Ignore);
+            send(QEvent::KeyRelease,Qt::Key_T,28,prefix);
+        }
+        CHECK(send(QEvent::KeyPress,Qt::Key_G,42,prefix) == InputAction::Send); // Unassigned letters pass through.
+        send(QEvent::KeyRelease,Qt::Key_G,42,prefix);
+        send(QEvent::KeyRelease,Qt::Key_Meta,115,Qt::GroupSwitchModifier);
+        // Right Alt without Opt retains the local clipboard actions.
+        for (const auto &[key, action] : std::vector<std::pair<int,InputAction>>{{Qt::Key_C,InputAction::Copy},{Qt::Key_V,InputAction::Paste},{Qt::Key_X,InputAction::Cut}}) {
+            CHECK(send(QEvent::KeyPress,key,0,Qt::GroupSwitchModifier) == action);
+            send(QEvent::KeyRelease,key,0,Qt::GroupSwitchModifier);
+        }
+    }
+
     {
         rmt::Keyboard encoder(*core), reference(*core);
         rmt::InputMapper map;
@@ -101,9 +148,9 @@ int main(int argc, char **argv) {
             const auto emacs = event(QEvent::KeyPress, key, 0, Qt::ControlModifier | Qt::AltModifier);
             CHECK(encode(emacs) == reference.encode(emacs));
             (void)encode(event(QEvent::KeyRelease, key, 0));
-            CHECK(map.map(event(QEvent::KeyPress, key, 0, Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier), 0).action == InputAction::Ignore);
-            CHECK(map.map(event(QEvent::KeyPress, key, 0, Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier, {}, true), 0).action == InputAction::Ignore);
-            CHECK(map.map(event(QEvent::KeyRelease, key, 0), 0).action == InputAction::Ignore);
+            const auto personal = event(QEvent::KeyPress, key, 0, Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier);
+            CHECK(encode(personal) == reference.encode(personal));
+            (void)encode(event(QEvent::KeyRelease, key, 0));
         }
         const auto left_digit = event(QEvent::KeyPress, Qt::Key_1, 10, Qt::AltModifier, "1");
         const auto left_bytes = encode(left_digit);

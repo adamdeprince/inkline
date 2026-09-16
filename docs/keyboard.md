@@ -8,7 +8,7 @@ Each new terminal prints a short shortcut guide with a small Goblin logo and the
 current Caps Lock setting before starting the shell. Switching back to an open
 terminal preserves its contents and does not repeat the guide.
 
-Press **Ctrl+Opt+Alt+T** to open Inkline on the tablet.
+Press **Opt+RightAlt+T** to open Inkline on the tablet.
 
 Hold the separate **Opt** key, between Ctrl and Alt on the Folio, and press
 **1, 2, 3, 4, 5, 6, 7, 8, 9, 0** for **F1–F10**. This uses the keyboard's Meta
@@ -241,11 +241,11 @@ mouse reporting. Hold Shift to select local text instead. Otherwise pen drags
 select text normally. Switching sessions or losing focus releases a held
 button in the original terminal.
 
-See [global program shortcuts](global-shortcuts.md) for Ctrl+Opt+Alt bindings and
+See [global program shortcuts](global-shortcuts.md) for Opt+RightAlt bindings and
 emergency recovery, and the [PDF manual](Inkline%20Manual.pdf) for a complete guide.
 
 Global launchers use the separate Folio Opt key; on USB keyboards its equivalent
 is Windows/Command (Super). Settings → Command shortcuts is page 2 of Settings.
 The terminal launcher, custom commands and held emergency recovery all require
-Ctrl+Opt+Alt. Ordinary Ctrl+Alt remains available to Emacs. After upgrading, quit
+Opt+RightAlt. Ordinary Ctrl+Alt remains available to Emacs. After upgrading, quit
 and reopen Inkline to load the new input handling and Settings page.

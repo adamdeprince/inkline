@@ -63,7 +63,7 @@ void ShortcutSettings::paint(QPainter &p, const QRectF &panel) {
     p.drawText(panel.adjusted(22, 20, -22, -panel.height() + 65), Qt::AlignVCenter, "Command shortcuts · 2/2");
     font(p, 19);
     p.drawText(panel.adjusted(22, 72, -22, -panel.height() + 110), Qt::AlignVCenter,
-               "Ctrl+Opt+Alt + letter     • = assigned     T = locked");
+               "Opt+RightAlt + letter     • = assigned     T = locked");
     for (int i = 0; i < 26; ++i) {
         const std::string key(1, char('a' + i));
         const bool assigned = i == 19 || std::any_of(bindings_.begin(), bindings_.end(), [&](const auto &b) { return b.key == key; });
@@ -101,7 +101,7 @@ void ShortcutSettings::paint(QPainter &p, const QRectF &panel) {
     button(p, control(6), "Reset draft", false, focus_ == 6);
     p.setPen(Qt::black); font(p, 18);
     p.drawText(QRectF(panel.left() + 22, panel.top() + 548, panel.width() - 44, panel.height() - 630), Qt::TextWordWrap,
-               message_.isEmpty() ? "Only Save and Remove write to storage. Hold Ctrl+Opt+Alt+Backspace for 2 seconds to recover; this closes all terminals." : message_);
+               message_.isEmpty() ? "Only Save and Remove write to storage. Hold Opt+RightAlt+Backspace for 2 seconds to recover; this closes all terminals." : message_);
     font(p, 21);
     button(p, control(7), "‹ Settings · 1/2", false, focus_ == 7);
     button(p, control(8), "Done", false, focus_ == 8);

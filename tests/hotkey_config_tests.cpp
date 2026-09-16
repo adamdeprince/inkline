@@ -13,19 +13,20 @@ int main() {
     namespace h = rmt::hotkeys;
     for (const bool folio : {false, true}) {
         rmt::ShortcutChord chord(folio);
-        chord.update(29, 1); chord.update(56, 1); chord.update(14, 1);
-        CHECK(!chord.active() && !chord.recovery_held());
-        chord.update(folio ? 125 : 107, 1); // USB End / Folio's non-Opt code.
+        chord.update(folio ? 107 : 125, 1); // Plain Super remains available.
         CHECK(!chord.active());
-        chord.update(folio ? 107 : 126, 1);
-        CHECK(chord.active() && chord.recovery_held());
-        chord.update(folio ? 107 : 126, 0);
-        CHECK(!chord.active() && !chord.recovery_held());
-        chord.reset(); CHECK(!chord.active());
-        chord.update(97, 1); chord.update(100, 1); chord.update(folio ? 107 : 125, 1);
-        CHECK(chord.active() && !chord.recovery_held());
+        chord.update(56, 1); CHECK(!chord.active()); // Left Alt is not the launcher modifier.
+        chord.update(56, 0); chord.update(100, 1); CHECK(chord.active());
         chord.update(14, 1); CHECK(chord.recovery_held());
-        chord.update(97, 0); CHECK(!chord.recovery_held());
+        for (const auto extra : {29u, 97u, 56u, 42u, 54u, 58u}) {
+            chord.update(extra, 1); CHECK(!chord.active() && !chord.recovery_held());
+            chord.update(extra, 0); CHECK(chord.active() && chord.recovery_held());
+        }
+        chord.update(100, 0); CHECK(!chord.active());
+        chord.reset();
+        chord.update(100, 1); chord.update(folio ? 125 : 107, 1);
+        CHECK(!chord.active()); // USB End cannot replace Super; Folio uses its own Opt code.
+        chord.update(folio ? 107 : 126, 1); CHECK(chord.active());
     }
     const std::vector<std::string> literal{"echo", "two words", "", "'", "\\", "a\"b", "$HOME", "$(id)", "*", ";", "日本語"};
     CHECK(h::parse_command(h::display_command(literal)) == literal);

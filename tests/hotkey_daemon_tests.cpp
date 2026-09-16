@@ -15,9 +15,13 @@ int main() {
         key(KEY_LEFTCTRL, 1); key(KEY_LEFTALT, 1);
         CHECK(key(KEY_T, 1) == Trigger::None); key(KEY_T, 0);
         CHECK(key(KEY_E, 1) == Trigger::None); key(KEY_E, 0);
+        key(KEY_LEFTCTRL, 0); key(KEY_LEFTALT, 0);
         key(KEY_BACKSPACE, 1);
         CHECK(!keyboard.emergency_due(std::chrono::steady_clock::now() + std::chrono::seconds(5)));
         key(folio ? KEY_END : KEY_LEFTMETA, 1);
+        CHECK(key(KEY_T, 1) == Trigger::None); key(KEY_T, 0); // Super alone is personal.
+        key(KEY_LEFTALT, 1); CHECK(key(KEY_T, 1) == Trigger::None); key(KEY_T, 0);
+        key(KEY_LEFTALT, 0); key(KEY_RIGHTALT, 1);
         CHECK(key(KEY_T, 1) == Trigger::Terminal);
         CHECK(key(KEY_T, 2) == Trigger::None);
         CHECK(key(KEY_T, 0) == Trigger::None);
@@ -36,5 +40,5 @@ int main() {
         CHECK(!keyboard.chord.active() && !keyboard.emergency_active);
         CHECK(key(KEY_T, 1) == Trigger::None);
     }
-    std::puts("Evdev: triple chord, Emacs passthrough, repeat suppression, held recovery and dropped events passed.");
+    std::puts("Evdev: Opt+RightAlt chord, Emacs passthrough, repeat suppression, held recovery and dropped events passed.");
 }

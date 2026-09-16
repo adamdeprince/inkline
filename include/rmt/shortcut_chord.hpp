@@ -11,8 +11,10 @@ public:
     void update(unsigned code, int value) { if (code < held_.size()) held_[code] = value != 0; }
     void reset() { held_.fill(false); }
     bool active() const {
-        return (held_[29] || held_[97]) && (held_[56] || held_[100]) &&
-               (folio_ ? held_[107] : held_[125] || held_[126]);
+        // Require the right-hand Alt/Opt key, leaving plain Super and left
+        // Alt available to applications. Extra modifiers belong to the app.
+        return held_[100] && (folio_ ? held_[107] : held_[125] || held_[126]) &&
+               !held_[29] && !held_[97] && !held_[56] && !held_[42] && !held_[54] && !held_[58];
     }
     bool recovery_held() const { return active() && held_[14]; }
 private:

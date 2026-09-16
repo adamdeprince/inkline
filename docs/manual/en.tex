@@ -6,7 +6,7 @@ work on the tablet, or connect with SSH or Goblin Mosh. Text and graphics are
 rendered in grayscale.
 
 \begin{notice}
-\key{Ctrl+Opt+Alt+T} opens Inkline from the tablet itself.\par
+\key{Opt+RightAlt+T} opens Inkline from the tablet itself.\par
 \key{Power button:} press and release to suspend; press again to wake.
 Your open shells and editor buffers stay in RAM.
 \end{notice}
@@ -20,10 +20,12 @@ Typing \code{exit} closes one terminal; closing the last returns to notebooks.
 The bottom bar has Escape, history up/down, Quit and Settings buttons.
 The startup guide and tiny Goblin logo disappear with \code{clear}.
 
-If a shortcut app owns the screen, \key{Ctrl+Opt+Alt+T} returns to Inkline.
-For emergency recovery, hold \key{Ctrl+Opt+Alt+Backspace for two seconds}.
+If a shortcut app owns the screen, \key{Opt+RightAlt+T} returns to Inkline.
+For emergency recovery, hold \key{Opt+RightAlt+Backspace for two seconds}.
 Recovery closes every Inkline terminal: unsaved work in those sessions is lost.
 The notebook interface remains the default after reboot.
+
+RightAlt means the Alt/Opt key to the right of the spacebar. Hold it with the separate Opt key, then tap T; do not hold Ctrl. Plain Super remains available for personal bindings.
 
 \ProjectLinks
 
@@ -162,7 +164,7 @@ shell for shell syntax. Shortcut programs read \code{~/.bashrc} through Bash.
 
 Settings → Command shortcuts (page 2) lets you assign a command to a letter. Choose Terminal or Native e-paper app, then Save. Remove asks for confirmation; Reset draft discards edits. T is locked. Only Save and confirmed Remove write to storage. The command-line tool manages the same bindings.
 
-All global shortcuts now use Ctrl+Opt+Alt, including T and the held Backspace recovery chord. Use the Folio’s separate Opt key; on USB keyboards use Windows/Command (Super). Ordinary Ctrl+Alt remains available to Emacs. Quit and reopen Inkline after upgrading; installation preserves open terminals.
+All global shortcuts now use Opt+RightAlt, including T and the held Backspace recovery chord. Use the Folio’s separate Opt key; on USB keyboards use Windows/Command (Super). Ordinary Ctrl+Alt remains available to Emacs. Quit and reopen Inkline after upgrading; installation preserves open terminals.
 
 \begin{shell}
 ~/inkline shortcut register e emacs
@@ -171,7 +173,7 @@ All global shortcuts now use Ctrl+Opt+Alt, including T and the held Backspace re
 ~/inkline shortcut deregister p
 \end{shell}
 
-\key{Ctrl+Opt+Alt+E} opens Emacs in a free slot.
+\key{Opt+RightAlt+E} opens Emacs in a free slot.
 \code{~/inkline run PROGRAM ARG...} launches without a binding.
 Registering replaces a binding; deregistering leaves running programs alone.
 Keys use US physical positions. Quote punctuation and use full paths for
@@ -186,12 +188,12 @@ supplies Qt e-paper settings and RAM caches, discards logs and resumes Inkline
 when the app exits. Apps should use Qt input without exclusive keyboard grabs.
 
 \begin{notice}
-\key{Ctrl+Opt+Alt+T is permanent.} It cannot be registered or deregistered.
+\key{Opt+RightAlt+T is permanent.} It cannot be registered or deregistered.
 It stops a native shortcut app and returns to the existing terminals.
-Use a physical Ctrl key; Caps Lock remapping applies inside Inkline.
+Do not hold Ctrl for this chord. Caps Lock remapping applies inside Inkline.
 \end{notice}
 
-\key{Emergency:} hold Ctrl+Opt+Alt+Backspace for two seconds to stop the shortcut
+\key{Emergency:} hold Opt+RightAlt+Backspace for two seconds to stop the shortcut
 app and its descendants and restart Inkline. All terminals close; unsaved
 work is lost. Root apps can defeat recovery by grabbing input, changing
 services or exhausting resources. Restarting the device is the final fallback.

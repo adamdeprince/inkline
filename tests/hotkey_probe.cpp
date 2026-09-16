@@ -1,5 +1,5 @@
 // Manual on-device integration probe. Creates a temporary kernel keyboard and
-// sends Ctrl+Opt+Alt+T (or a numeric evdev key code) through actual evdev.
+// sends Opt+RightAlt+T (or a numeric evdev key code) through actual evdev.
 // Intentionally not part of CTest: this switches the tablet's visible UI.
 #include <linux/uinput.h>
 #include <fcntl.h>
@@ -37,10 +37,10 @@ int main(int argc, char **argv) {
     };
     bool ok = true;
     const int opt = folio ? KEY_END : KEY_LEFTMETA;
-    for (int key : {KEY_LEFTCTRL, opt, KEY_LEFTALT, int(code)}) ok &= send(EV_KEY, key, 1);
+    for (int key : {opt, KEY_RIGHTALT, int(code)}) ok &= send(EV_KEY, key, 1);
     ok &= send(EV_SYN, SYN_REPORT, 0);
     usleep(static_cast<unsigned>(hold_ms) * 1000);
-    for (int key : {int(code), KEY_LEFTALT, opt, KEY_LEFTCTRL}) ok &= send(EV_KEY, key, 0);
+    for (int key : {int(code), KEY_RIGHTALT, opt}) ok &= send(EV_KEY, key, 0);
     ok &= send(EV_SYN, SYN_REPORT, 0);
     usleep(2000000);
     ioctl(fd, UI_DEV_DESTROY); close(fd);

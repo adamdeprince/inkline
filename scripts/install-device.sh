@@ -78,5 +78,5 @@ systemctl daemon-reload
 systemctl start inkline-hotkey.service
 systemctl is-active --quiet inkline-hotkey.service || fail 'The keyboard launcher did not start.'
 "$root/current/install-manual.sh" || printf 'Manual import skipped; the PDF is included in the installed bundle.\n'
-printf 'Inkline installed on firmware %s.\nLaunch on the tablet: Ctrl+Opt+Alt+T\nSSH fallback: ~/inkline start\nRemove: ~/inkline uninstall\n' "$firmware"
+printf 'Inkline installed on firmware %s.\nLaunch on the tablet: Opt+RightAlt+T\nSSH fallback: ~/inkline start\nRemove: ~/inkline uninstall\n' "$firmware"
 if "$running"; then printf 'Your current terminals are still running. Quit and reopen Inkline to use this update.\n'; fi

@@ -24,6 +24,7 @@ struct MappedInput {
 // received its press, including when a shortcut changes the active session.
 class InputMapper {
 public:
+    explicit InputMapper(const QString &shortcut_keys = QStringLiteral("/run/inkline-shortcuts/keys")) : shortcut_keys_(shortcut_keys) {}
     MappedInput map(const QKeyEvent &event, int terminal);
     std::vector<MappedInput> reset();
     void set_caps_control(bool enabled);
@@ -32,8 +33,9 @@ public:
 private:
     struct Held { MappedInput input; bool consumes_alt = false, consumes_meta = false; };
     QHash<quint32, Held> held_;
+    QString shortcut_keys_;
     bool right_alt_ = false, left_alt_ = false;
-    bool caps_control_ = true, caps_locked_ = false, caps_held_control_ = false;
+    bool caps_control_ = true, caps_locked_ = false, caps_held_ = false, caps_held_control_ = false;
 };
 }
 #endif

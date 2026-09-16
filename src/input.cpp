@@ -56,12 +56,12 @@ int literal_accent(const QKeyEvent &e) {
     default: return 0;
     }
 }
-bool global_shortcut(const QKeyEvent &e) {
+bool global_shortcut(const QKeyEvent &e, const QString &path) {
     if (e.key() == Qt::Key_T || e.key() == Qt::Key_Backspace || e.nativeScanCode() == 28 || e.nativeScanCode() == 22) return true;
     // This file lives in tmpfs and contains only evdev key numbers. Reading it
-    // on a Ctrl+Opt+Alt press makes registration changes immediate without polling.
+    // on an Opt+RightAlt press makes registration changes immediate without polling.
     if (e.nativeScanCode() < 8) return false;
-    QFile file("/run/inkline-shortcuts/keys");
+    QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) return false;
     const auto wanted = QByteArray::number(e.nativeScanCode() - 8);
     for (const auto &line : file.read(512).split('\n')) if (line == wanted) return true;
@@ -83,6 +83,7 @@ MappedInput InputMapper::map(const QKeyEvent &e, int terminal) {
         if (right_alt(e)) right_alt_ = !release;
         else if (e.key() == Qt::Key_Alt) left_alt_ = !release;
         if (caps(e)) {
+            caps_held_ = !release;
             if (release) caps_held_control_ = false;
             else {
                 caps_held_control_ = caps_control_;
@@ -102,7 +103,8 @@ MappedInput InputMapper::map(const QKeyEvent &e, int terminal) {
         held.input.key = e.key();
         held.input.scan = e.nativeScanCode();
         held.input.terminal = terminal;
-        if ((e.modifiers() & Qt::ControlModifier) && (e.modifiers() & Qt::MetaModifier) && (right_alt_ || left_alt_ || (e.modifiers() & Qt::AltModifier)) && global_shortcut(e))
+        if (right_alt_ && !left_alt_ && !caps_held_ && (e.modifiers() & Qt::MetaModifier) &&
+            !(e.modifiers() & (Qt::ControlModifier | Qt::ShiftModifier)) && global_shortcut(e, shortcut_keys_))
             held.input.action = InputAction::Ignore;
         else if (caps(e)) held.input.key = caps_control_ ? Qt::Key_Control : Qt::Key_CapsLock;
         else if (!(mods & (Qt::ControlModifier | Qt::MetaModifier)) && physical_key(e) == Qt::Key_Space &&
@@ -116,7 +118,7 @@ MappedInput InputMapper::map(const QKeyEvent &e, int terminal) {
             held.input.key = function;
             held.consumes_meta = true;
         }
-        else if (right_alt_ && !right_alt(e) && !(mods & Qt::ControlModifier)) {
+        else if (right_alt_ && !right_alt(e) && !(mods & (Qt::ControlModifier | Qt::MetaModifier))) {
             const auto key = physical_key(e);
             if (const int target = number_terminal(e); target >= 0) {
                 held.input.action = InputAction::SelectTerminal;
@@ -190,7 +192,7 @@ std::vector<MappedInput> InputMapper::reset() {
         releases.push_back(event);
     }
     held_.clear();
-    right_alt_ = left_alt_ = caps_held_control_ = false;
+    right_alt_ = left_alt_ = caps_held_ = caps_held_control_ = false;
     return releases;
 }
 }

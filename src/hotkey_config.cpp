@@ -150,7 +150,7 @@ void register_binding(const std::string &directory, std::string_view name,
                       const std::vector<std::string> &command, std::string_view mode) {
     const auto *key = definition(name);
     if (!key) throw std::runtime_error("Key must be a letter, digit, or US punctuation key");
-    if (key->code == KEY_T) throw std::runtime_error("Ctrl+Opt+Alt+T is permanently reserved for Inkline");
+    if (key->code == KEY_T) throw std::runtime_error("Opt+RightAlt+T is permanently reserved for Inkline");
     if (command.empty() || command[0].empty() || command.size() > 64) throw std::runtime_error("A program and at most 63 arguments are required");
     if (mode != "terminal" && mode != "epaper") throw std::runtime_error("Mode must be terminal or epaper");
     std::string contents = std::string(header) + std::string(mode) + '\n';
@@ -187,7 +187,7 @@ void register_binding(const std::string &directory, std::string_view name,
 void deregister_binding(const std::string &directory, std::string_view name) {
     const auto *key = definition(name);
     if (!key) throw std::runtime_error("Unknown shortcut key");
-    if (key->code == KEY_T) throw std::runtime_error("Ctrl+Opt+Alt+T is permanent and cannot be deregistered");
+    if (key->code == KEY_T) throw std::runtime_error("Opt+RightAlt+T is permanent and cannot be deregistered");
     if (unlink(path_for(directory, *key).c_str()) < 0 && errno != ENOENT)
         throw std::runtime_error(std::string("Cannot remove shortcut: ") + std::strerror(errno));
 }

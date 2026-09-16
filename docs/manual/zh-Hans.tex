@@ -5,7 +5,7 @@ Inkline 在 reMarkable 2 上运行本地 shell。使用 Type Folio 或 USB 键�
 工作，也可以通过 SSH 或 Goblin Mosh 连接其他计算机。文字和图像以适合电子纸的灰度显示。
 
 \begin{notice}
-按 \key{Ctrl+Opt+Alt+T}，即可直接在平板上打开 Inkline。\par
+按 \key{Opt+RightAlt+T}，即可直接在平板上打开 Inkline。\par
 \key{电源键：}按下再松开即可休眠，再按一次唤醒。已打开的 shell 和编辑器缓冲区保留在 RAM 中。
 \end{notice}
 休眠会暂停设备，不会退出 Inkline，也不会把设置写入闪存。唤醒后，网络连接可能需要重新建立。
@@ -16,10 +16,12 @@ Inkline 在 reMarkable 2 上运行本地 shell。使用 Type Folio 或 USB 键�
 底栏包含 Escape、历史记录上／下、Quit 和 Settings 按钮。
 启动时的简短说明和小 Goblin 标志可用 \code{clear} 清除。
 
-如果快捷键启动的应用占用了屏幕，按 \key{Ctrl+Opt+Alt+T} 返回 Inkline。
-紧急恢复时，\key{按住 Ctrl+Opt+Alt+Backspace 两秒}。
+如果快捷键启动的应用占用了屏幕，按 \key{Opt+RightAlt+T} 返回 Inkline。
+紧急恢复时，\key{按住 Opt+RightAlt+Backspace 两秒}。
 此操作会关闭所有 Inkline 终端，丢失这些会话中尚未保存的工作。
 设备重启后仍默认进入笔记界面。
+
+RightAlt 指空格键右侧的 Alt/Opt 键。按住它和独立的 Opt 键，再按 T；不要按 Ctrl。单独使用 Super 的组合仍可自定义。
 
 \ProjectLinks
 
@@ -140,7 +142,7 @@ OSC 52 无法删除编辑器里的文字。
 
 Settings → Command shortcuts（第 2 页）可为字母键指定命令。选择 Terminal 或 Native e-paper app，再按 Save。Remove 需确认后才删除；Reset draft 放弃编辑。T 已锁定。只有 Save 和确认删除会写入存储。命令行工具管理同一组快捷键。
 
-所有全局快捷键现在使用 Ctrl+Opt+Alt，包括 T 和长按 Backspace 的紧急恢复组合。Folio 使用独立的 Opt 键；USB 键盘使用 Windows/Command（Super）键。普通 Ctrl+Alt 仍可用于 Emacs。升级后请退出并重新打开 Inkline；安装会保留已打开的终端。
+所有全局快捷键现在使用 Opt+RightAlt，包括 T 和长按 Backspace 的紧急恢复组合。Folio 使用独立的 Opt 键；USB 键盘使用 Windows/Command（Super）键。普通 Ctrl+Alt 仍可用于 Emacs。升级后请退出并重新打开 Inkline；安装会保留已打开的终端。
 
 \begin{shell}
 ~/inkline shortcut register e emacs
@@ -149,7 +151,7 @@ Settings → Command shortcuts（第 2 页）可为字母键指定命令。选�
 ~/inkline shortcut deregister p
 \end{shell}
 
-\key{Ctrl+Opt+Alt+E} 在空闲槽位打开 Emacs。
+\key{Opt+RightAlt+E} 在空闲槽位打开 Emacs。
 \code{~/inkline run PROGRAM ARG...} 可不注册直接启动。
 重复注册会替换绑定；注销不影响正在运行的程序。
 按键采用美式键盘的物理位置。标点请加引号，自定义程序请使用完整路径，并先安装程序。
@@ -162,12 +164,12 @@ Settings → Command shortcuts（第 2 页）可为字母键指定命令。选�
 丢弃日志，并在应用退出后恢复 Inkline。应用应使用 Qt 输入，不要独占键盘设备。
 
 \begin{notice}
-\key{Ctrl+Opt+Alt+T 是固定快捷键，不能注册或注销。}
+\key{Opt+RightAlt+T 是固定快捷键，不能注册或注销。}
 它会停止原生快捷键应用，并返回现有终端。
-请使用物理 Ctrl 键；Caps Lock 映射只在 Inkline 内部生效。
+此组合不需要 Ctrl；Caps Lock 映射只在 Inkline 内部生效。
 \end{notice}
 
-\key{紧急恢复：}按住 Ctrl+Opt+Alt+Backspace 两秒，停止快捷键应用及其子进程并重新启动 Inkline。
+\key{紧急恢复：}按住 Opt+RightAlt+Backspace 两秒，停止快捷键应用及其子进程并重新启动 Inkline。
 所有终端会关闭，未保存的工作会丢失。以 root 运行的应用可能通过独占输入、修改服务或耗尽资源
 使恢复失败；最后的办法是重启设备。
 

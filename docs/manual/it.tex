@@ -6,7 +6,7 @@ USB, lavora sul tablet oppure collegati con SSH o Goblin Mosh. Testo e immagini
 sono visualizzati in scala di grigi.
 
 \begin{notice}
-\key{Ctrl+Opt+Alt+T} apre Inkline direttamente dal tablet.\par
+\key{Opt+RightAlt+T} apre Inkline direttamente dal tablet.\par
 \key{Pulsante di accensione:} premi e rilascia per sospendere; premi di nuovo
 per riattivare. Le shell e i buffer dell'editor rimangono in RAM.
 \end{notice}
@@ -20,10 +20,12 @@ Per tornare ai quaderni, tocca \key{Quit} oppure premi \key{Ctrl+Shift+Q} e conf
 La barra inferiore contiene Escape, cronologia su/giù, Quit e Settings.
 \code{clear} cancella la breve guida iniziale e il piccolo logo Goblin.
 
-Se un'app avviata da una scorciatoia occupa lo schermo, \key{Ctrl+Opt+Alt+T} torna a Inkline.
-Per il recupero d'emergenza, tieni premuto \key{Ctrl+Opt+Alt+Backspace per due secondi}.
+Se un'app avviata da una scorciatoia occupa lo schermo, \key{Opt+RightAlt+T} torna a Inkline.
+Per il recupero d'emergenza, tieni premuto \key{Opt+RightAlt+Backspace per due secondi}.
 Il recupero chiude tutti i terminali e perde il lavoro non salvato in quelle
 sessioni. Dopo il riavvio del tablet, l'interfaccia iniziale resta quella dei quaderni.
+
+RightAlt indica il tasto Alt/Opt a destra della barra spaziatrice. Tienilo premuto insieme al tasto Opt separato, poi premi T, senza Ctrl. Super da solo resta disponibile per le tue scorciatoie.
 
 \ProjectLinks
 
@@ -163,7 +165,7 @@ leggono \code{~/.bashrc} tramite Bash.
 
 Settings → Command shortcuts (pagina 2) permette di assegnare un comando a una lettera. Scegli Terminal o Native e-paper app, poi Save. Remove chiede conferma; Reset draft scarta le modifiche. T è bloccata. Solo Save e la rimozione confermata scrivono sullo spazio di archiviazione. Lo strumento da riga di comando gestisce le stesse associazioni.
 
-Tutte le scorciatoie globali usano ora Ctrl+Opt+Alt, incluse T e il recupero tenendo premuto Backspace. Usa il tasto Opt separato del Folio; sulle tastiere USB usa Windows/Command (Super). Ctrl+Alt resta disponibile per Emacs. Chiudi e riapri Inkline dopo l’aggiornamento; l’installazione conserva i terminali aperti.
+Tutte le scorciatoie globali usano ora Opt+RightAlt, incluse T e il recupero tenendo premuto Backspace. Usa il tasto Opt separato del Folio; sulle tastiere USB usa Windows/Command (Super). Ctrl+Alt resta disponibile per Emacs. Chiudi e riapri Inkline dopo l’aggiornamento; l’installazione conserva i terminali aperti.
 
 \begin{shell}
 ~/inkline shortcut register e emacs
@@ -172,7 +174,7 @@ Tutte le scorciatoie globali usano ora Ctrl+Opt+Alt, incluse T e il recupero ten
 ~/inkline shortcut deregister p
 \end{shell}
 
-\key{Ctrl+Opt+Alt+E} apre Emacs in uno slot libero.
+\key{Opt+RightAlt+E} apre Emacs in uno slot libero.
 \code{~/inkline run PROGRAM ARG...} avvia senza registrare una scorciatoia.
 Una nuova registrazione sostituisce l'associazione; rimuoverla non tocca i
 programmi in esecuzione. I tasti seguono le posizioni fisiche statunitensi.
@@ -188,12 +190,12 @@ fornisce impostazioni Qt e cache in RAM, scarta i log e riprende Inkline alla
 chiusura. Le app devono usare l'input Qt senza catturare la tastiera in esclusiva.
 
 \begin{notice}
-\key{Ctrl+Opt+Alt+T è permanente.} Non si può registrare né rimuovere.
-Ferma l'app nativa e torna ai terminali esistenti. Usa un tasto Ctrl fisico;
+\key{Opt+RightAlt+T è permanente.} Non si può registrare né rimuovere.
+Ferma l'app nativa e torna ai terminali esistenti. Non tenere premuto Ctrl per questa scorciatoia;
 la rimappatura di Caps Lock vale soltanto dentro Inkline.
 \end{notice}
 
-\key{Emergenza:} tieni Ctrl+Opt+Alt+Backspace per due secondi per fermare l'app
+\key{Emergenza:} tieni Opt+RightAlt+Backspace per due secondi per fermare l'app
 e i suoi discendenti e riavviare Inkline. Tutti i terminali si chiudono e il
 lavoro non salvato si perde. Un'app root può impedire il recupero catturando
 l'input, cambiando servizi o esaurendo risorse. Il riavvio del dispositivo è
