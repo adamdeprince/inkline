@@ -1,0 +1,8 @@
+// Generated from licenses/catalog.json and the original notice files.
+#pragma once
+namespace rmt::legal {
+struct Document { const char *title; const char *text; };
+inline constexpr Document documents[] = {
+@INKLINE_LEGAL_ENTRIES@
+};
+}

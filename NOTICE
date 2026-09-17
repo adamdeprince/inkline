@@ -1,0 +1,36 @@
+Inkline
+Copyright (C) 2026 Adam DePrince
+
+Inkline is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your option)
+any later version.
+
+Inkline is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+more details. A complete copy accompanies Inkline in LICENSE and in this
+About & licenses screen.
+
+Source and installation instructions:
+https://github.com/adamdeprince/inkline
+https://inkline.goblinreactor.com/source.html
+
+Each release bundle includes inkline-source.tar.gz, the patched
+ghostty-source.tar.gz, dependency-sources/, and the build and installation
+scripts. These are the sources accompanying that release. You may build,
+modify, install and redistribute Inkline under the GPL's terms.
+
+Third-party components retain their own copyrights and license terms.
+The imported Goblin Mosh Sixel decoder remains GPL-3.0-or-later. Ghostty,
+uucode and Zig use MIT licenses; Wuffs supplies MIT and Apache 2.0 terms.
+The input methods, dictionaries and font include Apache 2.0, MIT, Unicode
+and SIL Open Font License notices. Use Previous / Next to read them.
+
+Inkline uses Qt under LGPLv3, dynamically linking to the libraries already
+on the device. Qt is copyright The Qt Company Ltd. and other contributors.
+Qt, libpng, zlib and the firmware's other system libraries are not bundled
+or replaced by the Inkline installer. You may replace the LGPL libraries
+and debug your modifications; Inkline imposes no restriction on doing so.
+See the Qt notice and LGPLv3 text in this screen, and the firmware's own
+open-source notices for the installed system libraries.

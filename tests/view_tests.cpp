@@ -71,6 +71,30 @@ int main(int argc, char **argv) {
     QTemporaryDir temporary; CHECK(temporary.isValid());
     const auto settings = temporary.filePath("settings.ini");
     {
+        const auto path = temporary.filePath("licenses.ini");
+        QQuickWindow window;
+        rmt::TerminalView view(window.contentItem(), 24, true, path);
+        view.setSize(QSizeF(1000, 750)); view.layout(); view.start(); view.settings();
+        const auto settings_image = view.snapshot();
+        for (int i = 0; i < 10; ++i) press(view, Qt::Key_Tab);
+        press(view, Qt::Key_Return); CHECK(view.licenses_open());
+        const auto about = view.snapshot(); CHECK(about != settings_image);
+        press(view, Qt::Key_Right); const auto gpl = view.snapshot(); CHECK(gpl != about);
+        press(view, Qt::Key_End); CHECK(view.snapshot() != gpl);
+        press(view, Qt::Key_Escape); CHECK(view.settings_open() && !view.licenses_open());
+        click(view, 780, 66); CHECK(view.licenses_open());
+        const auto before = view.snapshot();
+        using S = QEventPoint::State;
+        touch(view, QEvent::TouchBegin, {point(view, 1, S::Pressed, 400, 500)});
+        touch(view, QEvent::TouchEnd, {point(view, 1, S::Released, 400, 260)});
+        CHECK(view.snapshot() != before);
+        if (const auto dir = qEnvironmentVariable("INKLINE_LICENSE_SCREENSHOTS"); !dir.isEmpty()) {
+            press(view, Qt::Key_Home); CHECK(view.snapshot().save(dir + "/licenses.png"));
+            press(view, Qt::Key_Escape); CHECK(view.snapshot().save(dir + "/settings.png"));
+        }
+        view.settings(); CHECK(!QFile::exists(path));
+    }
+    {
         QQuickWindow window;
         rmt::TerminalView view(window.contentItem(), 24, true, temporary.filePath("usb-pages.ini"));
         view.setSize(QSizeF(1000, 750)); view.layout(); view.start(); view.settings();

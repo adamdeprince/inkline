@@ -64,18 +64,20 @@ def main():
         for name in ["install-device.sh", "uninstall-device.sh", "install-manual.sh", "run-session.sh", "inkline-launcher", "inkline.service", "inkline-hotkey.service", "hotkey-service.sh", "shortcut-launch.sh", "shortcut-epaper.sh", "shortcut-restore.sh", "power-control.sh"]:
             shutil.copy2(ROOT / "scripts" / name, stage / name)
         shutil.copy2(ROOT / "scripts/utilities/prune-releases.sh", stage / "prune-releases.sh")
-        for name in ["README.md", "LICENSE", "THIRD_PARTY.md"]:
+        for name in ["README.md", "LICENSE", "NOTICE", "THIRD_PARTY.md"]:
             shutil.copy2(ROOT / name, stage / name)
         copy_repository_tree("docs", stage / "docs", tracked_files)
         copy_repository_tree("scripts/usb", stage / "usb", tracked_files)
+        copy_repository_tree("licenses", stage / "licenses", tracked_files)
         (stage / "INSTALL.md").write_text((ROOT / "docs/install.md").read_text().replace("(keyboard.md)", "(docs/keyboard.md)"))
         (stage / "manifest.json").write_text(json.dumps({
             "name": "Inkline", "version": version, "maturity": "preview",
             "model": "reMarkable 2", "firmware_line": "3.27", "target_firmware": "3.27.3.0",
             "qt_abi": "6.8", "ghostty_commit": "448062571c5edf010b7490d06869b88b5ebf8f80",
+            "license": "GPL-3.0-or-later",
         }, indent=2) + "\n")
         with tarfile.open(stage / "inkline-source.tar.gz", "w:gz") as source:
-            for name in ["CMakeLists.txt", "README.md", "LICENSE", "THIRD_PARTY.md", ".gitignore", ".gitattributes", "src", "include", "tests", "scripts", "cmake", "patches", "docs", "toolchains", "assets"]:
+            for name in ["CMakeLists.txt", "README.md", "LICENSE", "NOTICE", "THIRD_PARTY.md", "licenses", ".gitignore", ".gitattributes", "src", "include", "tests", "scripts", "cmake", "patches", "docs", "toolchains", "assets"]:
                 def source_filter(info):
                     if "__pycache__" in info.name or info.name.endswith(".pyc"):
                         return None
@@ -85,11 +87,15 @@ def main():
                             return None
                     return info
                 source.add(ROOT / name, arcname="inkline-source/" + name, filter=source_filter)
-        (stage / "licenses").mkdir()
         ghostty = ROOT / ".cache/ghostty"
         if not ghostty.is_dir():
             ghostty = ROOT / "build/tablet/_deps/ghostty-src"
-        shutil.copy2(ghostty / "LICENSE", stage / "licenses/Ghostty-MIT.txt")
+        if (ghostty / "LICENSE").read_bytes() != (stage / "licenses/Ghostty-MIT.txt").read_bytes():
+            raise SystemExit("Update the embedded Ghostty license before packaging this engine revision")
+        for entry in json.loads((stage / "licenses/catalog.json").read_text()):
+            for name in entry["files"]:
+                if not (stage / name).is_file():
+                    raise SystemExit(f"Missing packaged notice: {name}")
         # This project's dedicated Zig cache holds the hash-addressed source
         # archives used by the pinned engine (including Unicode dependencies).
         dependencies = ROOT / ".cache/zig-global/p"

@@ -28,6 +28,7 @@ public:
     int terminal_count() const;
     bool bottom_bar() const;
     bool settings_open() const;
+    bool licenses_open() const;
     bool unicode_keyboard_open() const;
     bool quit_confirmation_open() const;
     int font_pixels() const;

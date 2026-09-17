@@ -12,6 +12,7 @@
 #include "rmt/unicode_keyboard.hpp"
 #include "rmt/shortcut_settings.hpp"
 #include "rmt/usb_tools.hpp"
+#include "rmt/legal_notices.hpp"
 #include <QCoreApplication>
 #include <QFocusEvent>
 #include <QGuiApplication>
@@ -343,7 +344,7 @@ private:
 
 class TerminalView::Private {
 public:
-    enum class Overlay { None, Unicode, Settings, Shortcuts, Usb, Methods, Quit, Error };
+    enum class Overlay { None, Unicode, Settings, Shortcuts, Usb, Licenses, Methods, Quit, Error };
     TerminalView &view;
     EpaperModeControl epaper;
     Preferences prefs;
@@ -352,6 +353,7 @@ public:
     Clipboard clipboard;
     ShortcutSettings shortcuts;
     UsbTools usb;
+    LegalNotices licenses;
     std::array<std::unique_ptr<Session>, TERMINALS> sessions;
     int active = 0, pixels, initial_pixels, selected = 0, darkness, contrast, update_policy;
     int unicode_category = UnicodeKeyboard::Letters, unicode_selected = 0, unicode_first_row = 0;
@@ -530,6 +532,11 @@ public:
     }
     void shortcut_page() { cancel_pointer(); shortcuts.open(); overlay = Overlay::Shortcuts; view.update(); }
     void usb_page() { cancel_pointer(); usb.open(); overlay = Overlay::Usb; view.update(); }
+    void licenses_page() { cancel_pointer(); licenses.open(); overlay = Overlay::Licenses; view.update(); }
+    void licenses_result(bool back) {
+        if (back) { cancel_pointer(); overlay = Overlay::Settings; selected = 10; }
+        view.update();
+    }
     void usb_result(UsbTools::Result result) {
         if (result == UsbTools::Back) shortcut_page();
         else if (result == UsbTools::Done) overlay = Overlay::None;
@@ -537,7 +544,7 @@ public:
         else if (result == UsbTools::Unicode) unicode_keyboard();
         view.update();
     }
-    void settings() { cancel_pointer(); usb.close(); overlay = overlay == Overlay::Settings || overlay == Overlay::Shortcuts || overlay == Overlay::Methods || overlay == Overlay::Usb ? Overlay::None : Overlay::Settings; selected = 0; view.update(); }
+    void settings() { cancel_pointer(); usb.close(); overlay = overlay == Overlay::Settings || overlay == Overlay::Shortcuts || overlay == Overlay::Methods || overlay == Overlay::Usb || overlay == Overlay::Licenses ? Overlay::None : Overlay::Settings; selected = 0; view.update(); }
     void quit() { cancel_pointer(); usb.pause(); overlay = Overlay::Quit; selected = 0; view.update(); }
     void set_bar(bool visible) { prefs.set_bottom_bar(visible); layout(); }
     void toggle_bar() { set_bar(!prefs.bottom_bar()); }
@@ -679,6 +686,7 @@ public:
             else if (selected == 7) overlay = Overlay::None;
             else if (selected == 8) shortcut_page();
             else if (selected == 9) usb_page();
+            else if (selected == 10) licenses_page();
         } else if (overlay == Overlay::Methods) {
             if (selected < InputMethod::COUNT) set_method(selected);
             else { overlay = methods_return; selected = 3; }
@@ -689,6 +697,7 @@ public:
         view.update();
     }
     void dialog_key(const MappedInput &event) {
+        if (overlay == Overlay::Licenses) { licenses_result(licenses.key(event)); return; }
         if (overlay == Overlay::Usb) { usb_result(usb.key(event)); return; }
         if (event.type != QEvent::KeyPress) return;
         if (overlay == Overlay::Unicode) { unicode_key(event); return; }
@@ -713,7 +722,7 @@ public:
             else set_contrast(key == Qt::Key_Home ? 0 : 100);
             return;
         }
-        const int choices = overlay == Overlay::Settings ? 10 : overlay == Overlay::Methods ? InputMethod::COUNT + 1 : overlay == Overlay::Quit ? 2 : 1;
+        const int choices = overlay == Overlay::Settings ? 11 : overlay == Overlay::Methods ? InputMethod::COUNT + 1 : overlay == Overlay::Quit ? 2 : 1;
         if (key == Qt::Key_Tab || key == Qt::Key_Down || key == Qt::Key_Right) selected = (selected + 1) % choices;
         else if (key == Qt::Key_Backtab || key == Qt::Key_Up || key == Qt::Key_Left) selected = (selected + choices - 1) % choices;
         else if ((key == Qt::Key_Return || key == Qt::Key_Enter || key == Qt::Key_Space) && !event.repeat) activate();
@@ -761,7 +770,7 @@ public:
     QRectF panel() const {
         if (overlay == Overlay::Unicode || (overlay == Overlay::Usb && usb.typewriter())) return view.boundingRect().adjusted(12, 12, -12, -12);
         const qreal w = std::min<qreal>(840, view.width() - 48);
-        const qreal h = std::min<qreal>((overlay == Overlay::Settings || overlay == Overlay::Shortcuts || overlay == Overlay::Usb) ? 940 : overlay == Overlay::Methods ? 650 : 360, view.height() - 48);
+        const qreal h = std::min<qreal>((overlay == Overlay::Settings || overlay == Overlay::Shortcuts || overlay == Overlay::Usb || overlay == Overlay::Licenses) ? 940 : overlay == Overlay::Methods ? 650 : 360, view.height() - 48);
         return {(view.width() - w) / 2, (view.height() - h) / 2, w, h};
     }
     qreal row_step() const { return std::clamp((panel().height() - 150) / 7, qreal(68), qreal(92)); }
@@ -846,6 +855,7 @@ public:
         if (overlay == Overlay::None) return;
         if (overlay == Overlay::Shortcuts) { shortcuts.paint(p, panel()); return; }
         if (overlay == Overlay::Usb) { usb.paint(p, panel()); return; }
+        if (overlay == Overlay::Licenses) { licenses.paint(p, panel()); return; }
         // Keep the terminal around Settings visible as a live text preview.
         if (overlay != Overlay::Settings) p.fillRect(view.boundingRect(), QColor(255, 255, 255, 205));
         const auto box = panel(); p.fillRect(box, Qt::white); p.setPen(QPen(Qt::black, 2)); p.drawRect(box);
@@ -893,6 +903,7 @@ public:
                               unicode_done_button().left() - unicode_settings_button().right() - 28, unicode_settings_button().height()),
                        Qt::AlignCenter, detail);
         } else if (overlay == Overlay::Settings) {
+            button(p, licenses_button(), "About & licenses", selected == 10);
             const QString labels[] = {"Caps Lock key", "Bottom bar", "Text size", "Input method", "E-paper updates", "Text darkness", "Minimum contrast"};
             for (int i = 0; i < 7; ++i) {
                 const auto r = row(i); font(p, 22); p.drawText(r.adjusted(0, 0, 0, -r.height() + 28), Qt::AlignLeft | Qt::AlignVCenter, labels[i]);
@@ -952,7 +963,9 @@ public:
     }
     QRectF shortcuts_button() const { const auto p = panel(); return {p.left() + 22, close_button().top(), (p.width() - 228) / 2, close_button().height()}; }
     QRectF usb_button() const { const auto s = shortcuts_button(); return {s.right() + 18, s.top(), s.width(), s.height()}; }
+    QRectF licenses_button() const { const auto p = panel(); return {p.right() - 254, p.top() + 20, 232, 44}; }
     void click(const QPointF &point) {
+        if (overlay == Overlay::Licenses) { licenses_result(licenses.click(point)); return; }
         if (overlay == Overlay::Shortcuts) { shortcut_result(shortcuts.click(point)); return; }
         if (overlay == Overlay::Usb) { usb_result(usb.click(point)); return; }
         if (overlay == Overlay::Unicode) {
@@ -969,6 +982,7 @@ public:
                 if (index < int(characters.size())) { unicode_selected = index; unicode_commit_selected(); }
             }
         } else if (overlay == Overlay::Settings) {
+            if (licenses_button().contains(point)) { licenses_page(); return; }
             for (int i = 0; i < 2; ++i) {
                 if (choice(0, i).contains(point)) { selected = 0; set_caps(i == 0); }
                 if (choice(1, i).contains(point)) { selected = 1; set_bar(i == 0); }
@@ -1005,6 +1019,7 @@ public:
     void pointer_press(const QPointF &point) {
         cancel_pointer();
         press_point = last_point = point; pointer_down = true; dragging = false; press_overlay = overlay;
+        if (overlay == Overlay::Licenses) licenses.begin_drag(point);
         if (overlay == Overlay::Unicode && unicode_grid().contains(point)) {
             unicode_drag_y = point.y(); unicode_drag_row = unicode_first_row;
         }
@@ -1021,6 +1036,7 @@ public:
         last_point = point;
         if (slider_drag >= 0) { if (slider_drag == 5) slide_darkness(point); else slide_contrast(point); return; }
         if (QLineF(press_point, point).length() >= 8) dragging = true;
+        if (dragging && press_overlay == Overlay::Licenses) { licenses.drag(point); view.update(); return; }
         if (dragging && press_overlay == Overlay::Unicode && unicode_grid().contains(press_point)) {
             unicode_first_row = std::clamp(unicode_drag_row + int(std::lround((unicode_drag_y - point.y()) / unicode_cell_height())),
                                            0, unicode_max_first_row());
@@ -1090,7 +1106,7 @@ public:
         }
         QList<QEventPoint> live;
         for (const auto &point : event.points()) if (point.state() != QEventPoint::State::Released) live.append(point);
-        if (live.size() >= 2 && gesture == Gesture::None && overlay != Overlay::Unicode) {
+        if (live.size() >= 2 && gesture == Gesture::None && overlay != Overlay::Unicode && overlay != Overlay::Licenses) {
             cancel_pointer(); gesture = Gesture::Pending;
             pinch_pixels = pixels; pinch_a = live[0].id(); pinch_b = live[1].id();
             const auto a = view.mapFromScene(live[0].scenePosition()), b = view.mapFromScene(live[1].scenePosition());
@@ -1149,6 +1165,10 @@ public:
         if (event.type() == QEvent::TouchEnd) { if (pointer_down) pointer_release(last_point); touch_id = -1; }
     }
     void wheel(QWheelEvent &event) {
+        if (overlay == Overlay::Licenses) {
+            licenses.scroll(event.pixelDelta().y() ? -event.pixelDelta().y() : -event.angleDelta().y());
+            view.update(); return;
+        }
         if (overlay != Overlay::Unicode) return;
         const int pixels = event.pixelDelta().y();
         const int degrees = event.angleDelta().y();
@@ -1196,7 +1216,8 @@ void TerminalView::send_text(std::string_view text) { if (d_->sessions[d_->activ
 int TerminalView::active_terminal() const { return d_->active; }
 int TerminalView::terminal_count() const { return d_->count(); }
 bool TerminalView::bottom_bar() const { return d_->prefs.bottom_bar(); }
-bool TerminalView::settings_open() const { return d_->overlay == Private::Overlay::Settings || d_->overlay == Private::Overlay::Shortcuts || d_->overlay == Private::Overlay::Usb; }
+bool TerminalView::settings_open() const { return d_->overlay == Private::Overlay::Settings || d_->overlay == Private::Overlay::Shortcuts || d_->overlay == Private::Overlay::Usb || d_->overlay == Private::Overlay::Licenses; }
+bool TerminalView::licenses_open() const { return d_->overlay == Private::Overlay::Licenses; }
 bool TerminalView::unicode_keyboard_open() const { return d_->overlay == Private::Overlay::Unicode; }
 bool TerminalView::quit_confirmation_open() const { return d_->overlay == Private::Overlay::Quit; }
 void TerminalView::keyPressEvent(QKeyEvent *event) { d_->guarded([&] { d_->key(*event); }); event->accept(); }

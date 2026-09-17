@@ -1,0 +1,27 @@
+Qt
+Copyright The Qt Company Ltd. and other contributors.
+
+Inkline uses the Qt Core, Gui, Quick, Qml, QmlMeta, QmlModels,
+QmlWorkerScript and Network modules under the GNU Lesser General Public
+License, version 3. The LGPL incorporates the GNU GPL version 3; both
+license texts are available in Inkline's About & licenses screen.
+
+The reMarkable build dynamically links against the stock firmware's
+Qt 6.8 libraries (tested with Qt 6.8.2). Inkline does not distribute or
+modify these libraries. The firmware supplier provides their source and
+notices. Upstream Qt source is also available at:
+https://download.qt.io/archive/qt/6.8/6.8.2/single/
+https://code.qt.io/cgit/qt/qtbase.git/tag/?h=v6.8.2
+https://code.qt.io/cgit/qt/qtdeclarative.git/tag/?h=v6.8.2
+
+Users may modify and replace the LGPL-covered libraries, including
+reverse engineering for debugging those modifications. Inkline's own
+source, build scripts and installation instructions accompany each
+release and allow rebuilding against compatible replacement libraries.
+
+Local desktop builds use the developer's installed Qt libraries. Their
+copyright notices, third-party notices and exact corresponding sources
+are supplied by that Qt distribution.
+
+https://www.qt.io/licensing/
+https://www.qt.io/development/open-source-lgpl-obligations

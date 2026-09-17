@@ -1,0 +1,108 @@
+[
+  {
+    "title": "Inkline",
+    "files": [
+      "NOTICE"
+    ]
+  },
+  {
+    "title": "GNU General Public License v3",
+    "files": [
+      "LICENSE"
+    ]
+  },
+  {
+    "title": "Components and source provenance",
+    "files": [
+      "THIRD_PARTY.md"
+    ]
+  },
+  {
+    "title": "Ghostty — MIT",
+    "files": [
+      "licenses/Ghostty-MIT.txt"
+    ]
+  },
+  {
+    "title": "uucode — MIT and Unicode",
+    "files": [
+      "licenses/uucode-MIT.txt",
+      "licenses/uucode-UTF8-MIT.txt",
+      "licenses/uucode-Unicode.txt"
+    ]
+  },
+  {
+    "title": "Wuffs — MIT and Apache 2.0",
+    "files": [
+      "licenses/Wuffs.txt"
+    ]
+  },
+  {
+    "title": "Zig runtime and musl math",
+    "files": [
+      "licenses/Zig-MIT.txt",
+      "licenses/Zig-musl.txt"
+    ]
+  },
+  {
+    "title": "Qt and the LGPL",
+    "files": [
+      "licenses/Qt.txt",
+      "licenses/LGPL-3.0.txt"
+    ]
+  },
+  {
+    "title": "libpng",
+    "files": [
+      "licenses/libpng.txt"
+    ]
+  },
+  {
+    "title": "zlib",
+    "files": [
+      "licenses/zlib.txt",
+      "licenses/Ghostty-zlib.txt"
+    ]
+  },
+  {
+    "title": "GoblinView input methods",
+    "files": [
+      "assets/input-methods/licenses/GoblinView-NOTICE.txt",
+      "assets/input-methods/licenses/GoblinView-APACHE-2.0.txt"
+    ]
+  },
+  {
+    "title": "Pinyin data — MIT",
+    "files": [
+      "assets/input-methods/licenses/pinyin-data-MIT.txt"
+    ]
+  },
+  {
+    "title": "Unihan data — Unicode",
+    "files": [
+      "assets/input-methods/licenses/Unicode-Data.txt"
+    ]
+  },
+  {
+    "title": "Wubi data — Apache 2.0",
+    "files": [
+      "assets/input-methods/README.md",
+      "assets/input-methods/licenses/wubi-Apache-2.0.txt"
+    ]
+  },
+  {
+    "title": "Noto CJK font — OFL 1.1",
+    "files": [
+      "licenses/NotoCJK-NOTICE.txt",
+      "assets/fonts/NotoCJK-OFL.txt"
+    ]
+  },
+  {
+    "title": "Build tools — translate-c and aro",
+    "files": [
+      "licenses/translate-c-MIT.txt",
+      "licenses/aro-MIT.txt",
+      "licenses/aro-Unicode.txt"
+    ]
+  }
+]

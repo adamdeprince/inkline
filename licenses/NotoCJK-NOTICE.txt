@@ -1,0 +1,10 @@
+Noto Sans Mono CJK SC
+© 2014-2021 Adobe (http://www.adobe.com/).
+
+The copyright above is preserved from the bundled font's name table.
+The unmodified font is distributed under the SIL Open Font License 1.1.
+
+Source revision: f8d157532fbfaeda587e826d4cd5b21a49186f7c
+https://github.com/notofonts/noto-cjk
+File: Sans/Mono/NotoSansMonoCJKsc-Regular.otf
+SHA-256: ec04cc376b34887cedbdf84074e2e226ed2761eeabdcb9173fc1dd7bfd153ef7

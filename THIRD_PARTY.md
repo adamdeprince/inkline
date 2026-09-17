@@ -1,5 +1,10 @@
 # Inkline third-party code
 
+Inkline is distributed under **GPL-3.0-or-later**; see `LICENSE` and `NOTICE`.
+Third-party files retain the licenses below. Settings → About & licenses embeds
+the complete texts listed in `licenses/catalog.json`, so the notices remain
+available offline. The release also includes their original plain-text files.
+
 - **libghostty-vt**, MIT, copyright the Ghostty contributors. Source is pinned to
   `448062571c5edf010b7490d06869b88b5ebf8f80` in `CMakeLists.txt` and fetched from
   <https://github.com/ghostty-org/ghostty>. Its license remains with the source
@@ -24,9 +29,32 @@
 - **Qt 6 Core/Gui/Quick and related modules**, dynamically linked to the stock
   firmware libraries (6.8.2 on the tested tablet). See the Qt license notices
   supplied with the firmware and <https://www.qt.io/licensing/>. Inkline does
-  not bundle or replace Qt libraries.
+  not bundle or replace Qt libraries. `licenses/Qt.txt` describes the modules,
+  source locations and replacement rights; `licenses/LGPL-3.0.txt` and `LICENSE`
+  provide the LGPLv3 and incorporated GPLv3 terms.
 - **libpng**, linked through CMake's PNG package. See the libpng license shipped
   by the build environment; its zlib dependency retains its own license.
+  The target SDK's libpng 1.6.42 and zlib 1.3.1 notices are preserved in
+  `licenses/libpng.txt` and `licenses/zlib.txt`.
+
+- **uucode**, MIT, copyright 2026 Jacob Sandlund, at revision
+  `2826a37a4562284fdacd8fa029d49509cc9bffcd`. Ghostty uses its Unicode tables and
+  character handling. `licenses/uucode-MIT.txt` also refers to Bjoern Hoehrmann's
+  UTF-8 decoder and Unicode data licenses. Those two notices were recovered
+  unchanged from that exact upstream revision at
+  <https://github.com/jacobsandlund/uucode/tree/2826a37a4562284fdacd8fa029d49509cc9bffcd/licenses>
+  because the cached source archive omits its `licenses/` directory; they are
+  included as `uucode-UTF8-MIT.txt` and `uucode-Unicode.txt`.
+- **Wuffs**, copyright 2023 The Wuffs Authors, supplies MIT and Apache 2.0 terms
+  in `licenses/Wuffs.txt`. Ghostty uses revision
+  `7411f488fe2e2c205c3d3b3d28638b7356522930` for image decoding.
+- **Zig runtime**, MIT, copyright Zig contributors; see `licenses/Zig-MIT.txt`.
+  Its musl-derived math routines retain the notice in `licenses/Zig-musl.txt`,
+  copied from the Zig 0.16.0 distribution. This does not bundle a second libc.
+  The source bundle also carries build dependencies translate-c (MIT, Zig
+  contributors) and aro (MIT, copyright 2021 Veikka Tuominen, with Unicode data).
+  Their original license files are copied into `licenses/` for easy access.
+  Ghostty's cached zlib source retains its own notice in `Ghostty-zlib.txt`.
 
 The sixel-derived component is GPL-3.0-or-later. A combined terminal containing it
 must be distributed compatibly with that license, including corresponding source.
@@ -44,7 +72,8 @@ must be distributed compatibly with that license, including corresponding source
   dictionaries in `assets/input-methods/`.
 - **Noto Sans Mono CJK SC**, SIL Open Font License 1.1, from notofonts/noto-cjk.
   The unmodified font, license, exact source revision and SHA-256 are in
-  `assets/fonts/`. It is loaded privately by Inkline.
+  `assets/fonts/`. It is loaded privately by Inkline. The font's embedded
+  copyright, © 2014–2021 Adobe, is also reproduced in `licenses/NotoCJK-NOTICE.txt`.
 - **USB FunctionFS keyboard and mode switching**, adapted from Adam de Prince's
   local Inkline Outpost `usb-modes` code, snapshot 2026-09-16. The original
   descriptors and control handler are retained in `scripts/usb/keyboard.py`;

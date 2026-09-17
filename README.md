@@ -4,14 +4,14 @@ Inkline is a terminal for **reMarkable 2**, built with **libghostty-vt** and the
 stock Qt e-paper backend. It is designed for Type Folio and external USB
 keyboards, with kitty graphics and an initial sixel implementation.
 
-**Version 0.4.2 is a preview.** The main artifact is the repeatable
+**Version 0.4.3 is a preview.** The main artifact is the repeatable
 [installation procedure](docs/install.md), including preflight, launch, recovery
 and uninstall. It targets firmware **3.27**, tested on **3.27.3.0**. Other models
 and firmware lines are not supported by this installer.
 
 ## Install
 
-Download the **[Inkline 0.4.2 preview](https://github.com/adamdeprince/inkline/releases/tag/v0.4.2)**
+Download the **[Inkline 0.4.3 preview](https://github.com/adamdeprince/inkline/releases/tag/v0.4.3)**
 and follow the [installation procedure](docs/install.md). The prebuilt ARM bundle
 includes the installer, launcher, uninstall script, checksums, source archives
 and licenses. No compiler, SDK or third-party package manager is needed to install it.
@@ -274,7 +274,12 @@ select libc for Linux C embedding, bound history and graphics retention, and
 remove images when BusyBox `clear` erases the screen. The core also handles
 the pinned allocator ABI's logarithmic alignment.
 
-Inkline includes GPL-3.0-or-later sixel code derived from Goblin Mosh and is
-provided under that license. See [third-party notices](THIRD_PARTY.md) and
-[LICENSE](LICENSE). Stock Qt and libpng are dynamically linked, not replaced or
-redistributed by the installer.
+Inkline is free software under **GPL-3.0-or-later**, including the sixel code
+derived from Goblin Mosh. See [NOTICE](NOTICE), [third-party notices](THIRD_PARTY.md)
+and the full [LICENSE](LICENSE). Third-party components retain their own licenses.
+**Settings → About & licenses** displays copyright notices, complete license texts,
+the warranty disclaimer and source information offline. Use Previous/Next to
+choose a component; drag, scroll, or press Page Up/Down to read it. This screen
+does not write to storage. Source archives and the same notices accompany every
+release. Stock Qt and libpng are dynamically linked, not replaced or redistributed
+by the installer.

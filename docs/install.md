@@ -29,7 +29,7 @@ a convenience in the development setup, not an installer requirement.
 
 On your computer, download `inkline-rm2.tar.gz` and
 `inkline-rm2.tar.gz.sha256` from the
-[0.4.2 preview release](https://github.com/adamdeprince/inkline/releases/tag/v0.4.2).
+[0.4.3 preview release](https://github.com/adamdeprince/inkline/releases/tag/v0.4.3).
 Use the attached Inkline bundle; GitHub's automatically generated source-code
 archives do not contain the compiled application. The bundle is about 79 MiB
 and includes the installer, uninstall script, source archives and licenses.
@@ -39,12 +39,12 @@ additional tablet package manager.
 Alternatively, download both files from a terminal on your computer:
 
 ```sh
-curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.4.2/inkline-rm2.tar.gz
-curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.4.2/inkline-rm2.tar.gz.sha256
+curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.4.3/inkline-rm2.tar.gz
+curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.4.3/inkline-rm2.tar.gz.sha256
 ```
 
 The same files are mirrored under
-[`inkline.goblinreactor.com/downloads/v0.4.2/`](https://inkline.goblinreactor.com/downloads/v0.4.2/inkline-rm2.tar.gz).
+[`inkline.goblinreactor.com/downloads/v0.4.3/`](https://inkline.goblinreactor.com/downloads/v0.4.3/inkline-rm2.tar.gz).
 To compile the application yourself, see [building from source](#building-from-source).
 
 ## 3. Check, then install
@@ -150,12 +150,18 @@ Useful controls:
   wake. Shells and editor buffers stay in RAM. Network connections may need
   to reconnect. Quit and reopen Inkline after upgrading to activate this behavior.
 
-Inkline 0.4.2 includes right Alt/Option shortcuts, nine terminal slots,
+Inkline 0.4.3 includes right Alt/Option shortcuts, nine terminal slots,
 quit confirmation, a Settings button, and a saved Caps Lock/Control toggle.
 Each new terminal shows a brief guide and a tiny Goblin logo.
 Inkline sets `HOME=/home/root` for tablet sessions, including shells opened by
 the keyboard shortcut, so `cd` without arguments returns home.
 See [keyboard settings](keyboard.md) for the complete controls.
+
+Open **Settings → About & licenses** for Inkline's GPLv3-or-later terms,
+copyright notices, source information and complete third-party licenses.
+They are available offline. Previous/Next chooses a component; Page Up/Down,
+the mouse wheel, or a finger/pen drag scrolls the text. Back returns to Settings.
+The same notice files and corresponding source archives ship in the bundle.
 
 ### Program shortcuts and the manual
 
