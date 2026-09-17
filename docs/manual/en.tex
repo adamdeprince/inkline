@@ -17,7 +17,7 @@ After an update, quit and reopen Inkline once to activate the new power handling
 
 To return to notebooks, tap \key{Quit} or press \key{Ctrl+Shift+Q}, then confirm.
 Typing \code{exit} closes one terminal; closing the last returns to notebooks.
-The bottom bar has Escape, history up/down, Quit and Settings buttons.
+The bottom bar has Escape, battery status, Quit and Settings.
 The startup guide and tiny Goblin logo disappear with \code{clear}.
 
 If a shortcut app owns the screen, \key{Opt+RightAlt+T} returns to Inkline.
@@ -41,10 +41,12 @@ Right Alt/Opt + Left / Right & Previous / next slot \\
 Right Alt/Opt + Tab & Escape \\
 Right Alt/Opt + Up / Down & PageUp / PageDown \\
 Right Alt/Opt + Backspace & Confirm quitting all terminals \\
-Either Alt + Space & Unicode keyboard \\
+Right Alt/Opt + Space & Settings \\
+Left Alt + Space & Unicode keyboard \\
 Right Alt/Opt + C / V & Copy selection / paste \\
-Ctrl+Shift+B & Hide / show bottom bar \\
 \end{keytable}
+
+Ctrl+Shift+B passes through to terminal programs, including Emacs.
 
 On the \key{US Type Folio}, right Alt/Opt+\key{0} types \code{+}.
 Right Alt/Opt with the \key{minus key just left of Backspace} types \code{=}.
@@ -63,8 +65,8 @@ Each terminal has its own shell, directory, input composition, graphics and
 500 lines of scrollback. Display and input-method settings apply to all slots.
 
 \topic{Settings and display}
-Tap \key{Settings}, the fifth bottom button. With the bar hidden, press
-\key{Alt+Space}, then \key{F2} or tap Settings in the Unicode keyboard.
+Tap the rightmost \key{Settings} button or press \key{right Alt/Opt+Space},
+including while the bar is hidden. Use \key{left Alt+Space} for Unicode.
 A filled choice is active; a dashed outline is keyboard focus. Tab moves
 focus; arrows and Enter change choices.
 
@@ -97,8 +99,14 @@ to flash. An unchanged session writes nothing. A crash, forced kill or power
 loss can lose unsaved setting changes.
 \end{notice}
 
+The bottom bar reads battery state once per minute from Linux's read-only
+power-supply interface. Run \code{inkline-battery} for percentage and charging
+state, \code{inkline-battery --percentage} for one compact value, or
+\code{~/inkline battery}. The installer uses the compact value in Inkline's
+no-color Bash prompt without changing prompts outside Inkline.
+
 \topic{Unicode and input methods}
-\key{Alt+Space} opens the Unicode keyboard. Tap a character to insert it;
+\key{Left Alt+Space} opens the Unicode keyboard. Tap a character to insert it;
 the keyboard stays open. Tap \key{Done} or press Escape to close it.
 
 Categories include letters, marks, numbers, punctuation, math/currency,
@@ -168,8 +176,9 @@ Type Folio stays available in every mode. Install the website's Python utility
 for outgoing keyboard mode; no extra Python modules are needed.
 
 Choose Send keyboard, connect USB-C to the receiving computer, select a host
-profile below, then tap \key{Open typewriter}. Focus a document on the computer
-and tap \key{Start} on the tablet. The typewriter always starts paused.
+profile below, then tap \key{Open typewriter}. Live output starts automatically
+when Send keyboard is active. When output is paused, the editor displays
+a black \key{PAUSED · USB OUTPUT OFF} badge; live output has a separate outlined badge.
 \key{Escape} or \key{Stop} pauses and releases keys. Leaving the typewriter,
 switching terminals, losing window focus, opening a native app or sleeping
 also pauses output. Nothing is replayed automatically after reconnection.
@@ -191,7 +200,7 @@ channel: host setup and fonts determine the result. Test a short sample first.
 \key{Input method} uses the same engine as the terminal: Off/direct US,
 Romaji, Pinyin, Zhuyin, Wubi 86 or US-International. Only committed characters
 leave the tablet. Changing the method pauses typing; tap Start again.
-Choose \key{Off} to return to normal US input. \key{Unicode} or Alt+Space
+Choose \key{Off} to return to normal US input. \key{Unicode} or left Alt+Space
 opens the character picker and sends selected characters to the USB host.
 
 Typewriter is a local editor whose document stays in RAM while Inkline runs.

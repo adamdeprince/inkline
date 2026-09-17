@@ -27,5 +27,17 @@ if [ -f /home/root/inkline ] && [ ! -L /home/root/inkline ] &&
     [ "$(sed -n '2p' /home/root/inkline)" = '# Inkline managed launcher' ]; then
     rm /home/root/inkline
 fi
+if [ -L /home/root/.local/bin/inkline-battery ] &&
+    [ "$(readlink /home/root/.local/bin/inkline-battery)" = "$root/current/inkline-battery" ]; then
+    rm /home/root/.local/bin/inkline-battery
+fi
+if [ -f /home/root/.bashrc ]; then
+    prompt_tmp=$(mktemp /tmp/inkline-bashrc.XXXXXX)
+    awk '/^# >>> Inkline battery prompt >>>$/ { managed=1; next }
+         /^# <<< Inkline battery prompt <<<$/{ managed=0; next }
+         !managed { print }' /home/root/.bashrc > "$prompt_tmp"
+    if ! cmp -s "$prompt_tmp" /home/root/.bashrc; then cat "$prompt_tmp" > /home/root/.bashrc; fi
+    rm -f "$prompt_tmp"
+fi
 rm -rf -- "$root"
 echo 'Inkline removed. The notebook interface is running.'

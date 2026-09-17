@@ -29,7 +29,7 @@ a convenience in the development setup, not an installer requirement.
 
 On your computer, download `inkline-rm2.tar.gz` and
 `inkline-rm2.tar.gz.sha256` from the
-[0.4.4 preview release](https://github.com/adamdeprince/inkline/releases/tag/v0.4.4).
+[0.4.5 preview release](https://github.com/adamdeprince/inkline/releases/tag/v0.4.5).
 Use the attached Inkline bundle; GitHub's automatically generated source-code
 archives do not contain the compiled application. The bundle is about 79 MiB
 and includes the installer, uninstall script, source archives and licenses.
@@ -39,12 +39,12 @@ additional tablet package manager.
 Alternatively, download both files from a terminal on your computer:
 
 ```sh
-curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.4.4/inkline-rm2.tar.gz
-curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.4.4/inkline-rm2.tar.gz.sha256
+curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.4.5/inkline-rm2.tar.gz
+curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.4.5/inkline-rm2.tar.gz.sha256
 ```
 
 The same files are mirrored under
-[`inkline.goblinreactor.com/downloads/v0.4.4/`](https://inkline.goblinreactor.com/downloads/v0.4.4/inkline-rm2.tar.gz).
+[`inkline.goblinreactor.com/downloads/v0.4.5/`](https://inkline.goblinreactor.com/downloads/v0.4.5/inkline-rm2.tar.gz).
 To compile the application yourself, see [building from source](#building-from-source).
 
 ## 3. Check, then install
@@ -136,7 +136,7 @@ Useful controls:
 - Tap **Quit** or press **Ctrl+Shift+Q**, then confirm, to return to notebooks.
   Type `exit` to close one terminal; closing the last one also returns to notebooks.
 - Tap **Esc** or use **Ctrl+[** when your Folio has no Escape key.
-- **Shift+PageUp/PageDown**, or the bottom touch buttons, scroll history.
+- **Shift+PageUp/PageDown** or **Shift+right Alt/Option+Up/Down** scroll history.
 - Drag two fingers vertically to scroll the 500-line history; swipe them left
   or right to switch terminals. One finger selects text. The pen reports mouse
   events to applications that request them; hold Shift to select text instead.
@@ -144,13 +144,14 @@ Useful controls:
 - `~/inkline start --font-size 32` overrides the saved text size for this launch (6–48 pixels).
 - Pinching and Settings adjust text size inside the terminal. Pinch in one-pixel
   steps for finer control; keyboard zoom combinations have been removed.
-- Alt+Space opens the Unicode keyboard; tap Settings there to select Asian input methods; Option+C/V uses the RAM clipboard.
+- Left Alt+Space opens the Unicode keyboard; right Alt/Option+Space opens Settings;
+  right Option+C/V uses the RAM clipboard. Ctrl+Shift+B reaches terminal programs unchanged.
 - `~/inkline stop` restores notebooks from another SSH session.
 - Press and release the physical power button to suspend; press it again to
   wake. Shells and editor buffers stay in RAM. Network connections may need
   to reconnect. Quit and reopen Inkline after upgrading to activate this behavior.
 
-Inkline 0.4.4 includes right Alt/Option shortcuts, nine terminal slots,
+Inkline 0.4.5 includes right Alt/Option shortcuts, nine terminal slots,
 quit confirmation, a Settings button, and a saved Caps Lock/Control toggle.
 Each new terminal shows a brief guide and a tiny Goblin logo.
 Inkline sets `HOME=/home/root` for tablet sessions, including shells opened by
@@ -188,7 +189,7 @@ notebook interface with the shortcut available in the background.
 
 ### Display response, contrast, and shell preferences
 
-Open Settings with Alt+Space followed by F2 and drag **Text darkness**, or focus
+Open Settings with right Alt/Option+Space and drag **Text darkness**, or focus
 it with Tab and use Left/Right. 50% is the original rendering; darker values
 strengthen antialiased letter edges. Text colors and graphics retain their
 original values. **Minimum contrast** keeps foreground and background luminance
@@ -209,6 +210,11 @@ character; e-paper waveform time remains and depends on the chosen profile.
 
 Inkline starts interactive Bash so the tablet's `~/.bashrc` is loaded. Optional
 Python/pip cache preferences belong in that file; see [Python setup](python.md).
+The installer adds a marked, Inkline-only prompt block that calls
+`inkline-battery --percentage`; it preserves the rest of `.bashrc` and removes
+the block on uninstall. Run `inkline-battery` or `~/inkline battery` to see the
+percentage and charging state directly. The bottom bar refreshes the same
+read-only kernel value once per minute.
 
 ## Recovery and removal
 

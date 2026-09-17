@@ -17,7 +17,7 @@ a abrir o Inkline para ativar o novo comportamento do botão.
 
 Para voltar aos cadernos, toque em \key{Quit} ou prima \key{Ctrl+Shift+Q} e
 confirme. \code{exit} fecha um terminal; fechar o último devolve os cadernos.
-A barra inferior contém Escape, histórico acima/abaixo, Quit e Settings.
+A barra inferior contém Escape, bateria, Quit e Settings.
 \code{clear} apaga a breve ajuda inicial e o pequeno logótipo Goblin.
 
 Se uma aplicação de atalho ocupar o ecrã, \key{Opt+RightAlt+T} regressa ao Inkline.
@@ -41,10 +41,12 @@ Alt/Opt direita + Left / Right & Posição anterior / seguinte \\
 Alt/Opt direita + Tab & Escape \\
 Alt/Opt direita + Up / Down & PageUp / PageDown \\
 Alt/Opt direita + Backspace & Confirmar o fecho de todos os terminais \\
-Qualquer Alt + Space & Teclado Unicode \\
+Alt/Opt direita + Space & Settings \\
+Alt esquerda + Space & Teclado Unicode \\
 Alt/Opt direita + C / V & Copiar seleção / colar \\
-Ctrl+Shift+B & Ocultar / mostrar a barra inferior \\
 \end{keytable}
+
+Ctrl+Shift+B é enviado sem alterações aos programas, incluindo o Emacs.
 
 No \key{Type Folio americano}, Alt/Opt direita+\key{0} escreve \code{+}.
 Alt/Opt direita com a \key{tecla menos imediatamente à esquerda de Backspace}
@@ -63,8 +65,9 @@ Cada terminal tem a sua shell, diretório, composição de entrada, imagens e
 500 linhas de histórico. As definições de ecrã e de entrada são comuns.
 
 \topic{Definições e ecrã}
-Toque em \key{Settings}, o quinto botão inferior. Com a barra oculta, prima
-\key{Alt+Space}, depois \key{F2}, ou toque em Settings no teclado Unicode.
+Toque em \key{Settings}, à direita da barra, ou prima
+\key{Alt/Opt direita+Space}; funciona mesmo com a barra oculta.
+\key{Alt esquerda+Space} abre o teclado Unicode.
 Uma opção preenchida está ativa; o contorno tracejado indica o foco do teclado.
 Tab move o foco; as setas e Enter alteram a opção.
 
@@ -96,8 +99,13 @@ Uma sessão sem alterações não escreve nada. Uma falha, encerramento forçado
 ou perda de energia pode perder alterações ainda não guardadas.
 \end{notice}
 
+A barra inferior lê a bateria uma vez por minuto pela interface de energia
+Linux só de leitura. \code{inkline-battery} mostra percentagem e carregamento;
+\code{inkline-battery --percentage} ou \code{~/inkline battery} mostra o valor
+curto usado no prompt Bash sem cores do Inkline.
+
 \topic{Unicode e métodos de entrada}
-\key{Alt+Space} abre o teclado Unicode. Toque num caráter para o inserir;
+\key{Alt esquerda+Space} abre o teclado Unicode. Toque num caráter para o inserir;
 o teclado permanece aberto. Toque em \key{Done} ou prima Escape para fechar.
 
 As categorias incluem letras, marcas, números, pontuação, matemática/moedas,
@@ -166,8 +174,10 @@ O Type Folio continua disponível. Instale o utilitário Python do site para
 enviar teclas; não são necessários módulos Python adicionais.
 
 Escolha Send keyboard, ligue USB-C, selecione o perfil e abra
-\key{Open typewriter}. Coloque o foco num documento no computador e toque em
-\key{Start}. Abre sempre em pausa. \key{Escape} ou \key{Stop} interrompe o envio
+\key{Open typewriter}. Com Send keyboard ativo, o envio em direto começa
+automaticamente. Em pausa, o editor mostra claramente
+\key{PAUSED · USB OUTPUT OFF}; o envio ativo tem um indicador distinto.
+\key{Escape} ou \key{Stop} interrompe o envio
 e liberta as teclas. Sair do ecrã, mudar de terminal, perder o foco, abrir uma
 aplicação nativa ou suspender também pausa. Não há reenvio automático ao religar.
 
@@ -188,7 +198,7 @@ a configuração e os tipos de letra do destinatário importam. Teste um texto c
 \key{Input method} oferece Off/US direto, Romaji, Pinyin, Zhuyin, Wubi 86 e
 US-International. Só envia caracteres confirmados. Mudar de método pausa;
 retome com Start. \key{Off} repõe a entrada US normal. \key{Unicode} ou
-Alt+Space abre o seletor de caracteres para a saída USB.
+Alt esquerda+Space abre o seletor de caracteres para a saída USB.
 
 Typewriter é um editor local cujo documento permanece na RAM durante o Inkline.
 A escrita modifica o documento e, com o modo direto ativo, envia cada carácter

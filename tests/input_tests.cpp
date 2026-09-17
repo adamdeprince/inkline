@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
         CHECK(encode(event(QEvent::KeyPress, Qt::Key_Down, 116, Qt::AltModifier)) == "\033[6~");
         (void)encode(event(QEvent::KeyRelease, Qt::Key_Down, 116));
         for (const auto item : {std::pair<int, InputAction>{Qt::Key_Left, InputAction::Previous},
-                               {Qt::Key_Right, InputAction::Next}, {Qt::Key_Space, InputAction::UnicodeKeyboard}, {Qt::Key_Backspace, InputAction::Quit}}) {
+                               {Qt::Key_Right, InputAction::Next}, {Qt::Key_Space, InputAction::Settings}, {Qt::Key_Backspace, InputAction::Quit}}) {
             CHECK(map.map(event(QEvent::KeyPress, item.first, 0, Qt::AltModifier), 0).action == item.second);
             CHECK(map.map(event(QEvent::KeyPress, item.first, 0, Qt::AltModifier, {}, true), 0).action == InputAction::Ignore);
             CHECK(map.map(event(QEvent::KeyRelease, item.first, 0), 0).action == InputAction::Ignore);
@@ -144,6 +144,9 @@ int main(int argc, char **argv) {
         (void)encode(event(QEvent::KeyPress, Qt::Key_Alt, 64, Qt::AltModifier));
         CHECK(map.map(event(QEvent::KeyPress, Qt::Key_Space, 65, Qt::AltModifier), 0).action == InputAction::UnicodeKeyboard);
         CHECK(map.map(event(QEvent::KeyRelease, Qt::Key_Space, 65), 0).action == InputAction::Ignore);
+        const auto ctrl_shift_b = event(QEvent::KeyPress, Qt::Key_B, 56, Qt::ControlModifier | Qt::ShiftModifier, "B");
+        CHECK(encode(ctrl_shift_b) == reference.encode(ctrl_shift_b));
+        (void)encode(event(QEvent::KeyRelease, Qt::Key_B, 56));
         for (const int key : {Qt::Key_T, Qt::Key_Backspace}) {
             const auto emacs = event(QEvent::KeyPress, key, 0, Qt::ControlModifier | Qt::AltModifier);
             CHECK(encode(emacs) == reference.encode(emacs));

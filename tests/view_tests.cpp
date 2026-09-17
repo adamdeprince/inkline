@@ -32,6 +32,11 @@ void alt(rmt::TerminalView &view, int code, quint32 scan) {
     press(view, code, scan, Qt::AltModifier);
     key(view, QEvent::KeyRelease, Qt::Key_AltGr, 108);
 }
+void left_alt(rmt::TerminalView &view, int code, quint32 scan) {
+    key(view, QEvent::KeyPress, Qt::Key_Alt, 64, Qt::AltModifier);
+    press(view, code, scan, Qt::AltModifier);
+    key(view, QEvent::KeyRelease, Qt::Key_Alt, 64);
+}
 void click(rmt::TerminalView &view, qreal x, qreal y) {
     QMouseEvent down(QEvent::MouseButtonPress, QPointF(x, y), QPointF(x, y), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
     QCoreApplication::sendEvent(&view, &down);
@@ -206,9 +211,10 @@ int main(int argc, char **argv) {
             CHECK(view.active_terminal() == 0 && view.terminal_count() == rmt::TerminalView::TERMINALS);
         }
         view.setRotation(0);
-        alt(view, Qt::Key_Space, 65); CHECK(view.unicode_keyboard_open());
+        left_alt(view, Qt::Key_Space, 65); CHECK(view.unicode_keyboard_open());
         if (const char *path = std::getenv("INKLINE_TEST_SNAPSHOTS")) CHECK(view.snapshot().save(QString::fromUtf8(path) + "/terminal-unicode.png"));
-        click(view, 100, 695); CHECK(view.settings_open());
+        press(view, Qt::Key_Escape, 9); CHECK(!view.unicode_keyboard_open());
+        alt(view, Qt::Key_Space, 65); CHECK(view.settings_open());
         if (const char *path = std::getenv("INKLINE_TEST_SNAPSHOTS")) CHECK(view.snapshot().save(QString::fromUtf8(path) + "/terminal-settings.png"));
         press(view, Qt::Key_Space, 65); // Caps Lock row: Control -> Caps Lock.
         CHECK(rmt::Preferences(settings).caps_control()); // still unchanged on disk
@@ -217,11 +223,10 @@ int main(int argc, char **argv) {
         CHECK(!view.bottom_bar() && rmt::Preferences(settings).bottom_bar());
         alt(view, Qt::Key_Tab, 23); CHECK(!view.settings_open());
         // Settings can still open while the entire bottom bar is hidden.
-        alt(view, Qt::Key_Space, 65); CHECK(view.unicode_keyboard_open());
-        click(view, 100, 695); CHECK(view.settings_open());
-        press(view, Qt::Key_Escape, 9); CHECK(!view.settings_open());
-        press(view, Qt::Key_B, 56, Qt::ControlModifier | Qt::ShiftModifier);
+        alt(view, Qt::Key_Space, 65); CHECK(view.settings_open());
+        press(view, Qt::Key_Tab, 23); press(view, Qt::Key_Return, 36);
         CHECK(view.bottom_bar());
+        press(view, Qt::Key_Escape, 9); CHECK(!view.settings_open());
         QMouseEvent click(QEvent::MouseButtonPress, QPointF(950, 720), QPointF(950, 720), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
         QCoreApplication::sendEvent(&view, &click);
         QMouseEvent release(QEvent::MouseButtonRelease, QPointF(950, 720), QPointF(950, 720), Qt::LeftButton, Qt::NoButton, Qt::NoModifier);

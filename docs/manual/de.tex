@@ -17,7 +17,7 @@ Update Inkline einmal schließen und öffnen, damit die neue Tastenbehandlung gi
 
 Zurück zu den Notizbüchern: \key{Quit} antippen oder \key{Strg+Umschalt+Q}
 drücken und bestätigen. \code{exit} schließt ein Terminal; das letzte führt
-zurück zu den Notizbüchern. Unten stehen Escape, Verlauf auf/ab, Quit und Settings.
+zurück zu den Notizbüchern. Unten stehen Escape, Akkustand, Quit und Settings.
 \code{clear} entfernt die kurze Starthilfe und das kleine Goblin-Logo.
 
 Belegt eine per Kürzel gestartete App den Bildschirm, führt \key{Opt+RightAlt+T}
@@ -42,10 +42,12 @@ Rechte Alt/Opt + Links / Rechts & Voriger / nächster Platz \\
 Rechte Alt/Opt + Tab & Escape \\
 Rechte Alt/Opt + Auf / Ab & Bild auf / Bild ab \\
 Rechte Alt/Opt + Backspace & Schließen aller Terminals bestätigen \\
-Beliebige Alt + Leertaste & Unicode-Tastatur \\
+Rechte Alt/Opt + Leertaste & Settings \\
+Linke Alt + Leertaste & Unicode-Tastatur \\
 Rechte Alt/Opt + C / V & Auswahl kopieren / einfügen \\
-Strg+Umschalt+B & Untere Leiste aus- / einblenden \\
 \end{keytable}
+
+Strg+Umschalt+B wird unverändert an Terminalprogramme wie Emacs weitergegeben.
 
 Auf dem \key{US-Type-Folio} erzeugt rechte Alt/Opt+\key{0} ein \code{+}.
 Rechte Alt/Opt mit der \key{Minustaste direkt links von Backspace} erzeugt
@@ -63,8 +65,9 @@ Jedes Terminal hat Shell, Verzeichnis, laufende Eingabe, Bilder und 500
 Verlaufszeilen für sich. Anzeige- und Eingabemethode gelten für alle Plätze.
 
 \topic{Einstellungen und Darstellung}
-Tippen Sie auf \key{Settings}, die fünfte Schaltfläche unten. Bei ausgeblendeter
-Leiste: \key{Alt+Leertaste}, dann \key{F2} oder Settings auf der Unicode-Tastatur.
+Tippen Sie rechts unten auf \key{Settings} oder drücken Sie
+\key{rechte Alt/Opt+Leertaste}; das funktioniert auch bei ausgeblendeter Leiste.
+\key{Linke Alt+Leertaste} öffnet die Unicode-Tastatur.
 Eine gefüllte Auswahl ist aktiv; eine gestrichelte Umrandung zeigt den Tastaturfokus.
 Tab bewegt den Fokus, Pfeile und Enter ändern die Auswahl.
 
@@ -96,8 +99,13 @@ schreiben nicht auf Flash. Unveränderte Sitzungen schreiben nichts. Absturz,
 erzwungenes Beenden oder Stromausfall können ungespeicherte Änderungen verlieren.
 \end{notice}
 
+Die untere Leiste liest den Akkustand einmal pro Minute aus der nur lesbaren
+Linux-Stromversorgungsschnittstelle. \code{inkline-battery} zeigt Ladestand und
+Ladezustand; \code{inkline-battery --percentage} oder \code{~/inkline battery}
+liefert die kurze Anzeige. Der Installer nutzt sie nur in der farblosen Inkline-Bash-Eingabeaufforderung.
+
 \topic{Unicode und Eingabemethoden}
-\key{Alt+Leertaste} öffnet die Unicode-Tastatur. Ein Zeichen antippen, um es
+\key{Linke Alt+Leertaste} öffnet die Unicode-Tastatur. Ein Zeichen antippen, um es
 einzufügen; die Tastatur bleibt offen. \key{Done} oder Escape schließt sie.
 
 Die Kategorien umfassen Buchstaben, kombinierende Zeichen, Zahlen, Satzzeichen,
@@ -166,8 +174,9 @@ Type Folio bleibt nutzbar. Installieren Sie zum Senden das Python-Paket der
 Website. Weitere Python-Module sind nicht erforderlich.
 
 Wählen Sie Send keyboard, verbinden Sie USB-C, wählen Sie das Empfängerprofil
-und öffnen Sie \key{Open typewriter}. Setzen Sie am Computer den Fokus in ein
-Dokument und tippen Sie auf \key{Start}. Der Schreibmodus startet immer pausiert.
+und öffnen Sie \key{Open typewriter}. Ist Send keyboard aktiv, beginnt die
+Live-Ausgabe automatisch. Im Pausezustand zeigt der Editor deutlich
+\key{PAUSED · USB OUTPUT OFF}; die Live-Ausgabe hat eine eigene umrandete Anzeige.
 \key{Escape} oder \key{Stop} hält an und lässt die Tasten los. Verlassen des
 Bildschirms, Terminalwechsel, Fokusverlust, native Apps und Ruhezustand pausieren
 ebenfalls. Nach Wiederverbindung wird nichts automatisch erneut gesendet.
@@ -189,7 +198,7 @@ Schriften des Empfängers entscheiden. Testen Sie zunächst einen kurzen Text.
 \key{Input method} bietet Off/direktes US, Romaji, Pinyin, Zhuyin, Wubi 86 und
 US-International. Nur bestätigte Zeichen werden gesendet. Ein Wechsel pausiert;
 Start setzt fort. \key{Off} stellt normale US-Eingabe wieder her. \key{Unicode}
-oder Alt+Space öffnet die Zeichenauswahl für den USB-Empfänger.
+oder linke Alt+Leertaste öffnet die Zeichenauswahl für den USB-Empfänger.
 
 Typewriter ist ein lokaler Editor; sein Dokument bleibt während Inkline im RAM.
 Normales Tippen bearbeitet das Dokument und sendet bei aktivem Live-Modus jedes

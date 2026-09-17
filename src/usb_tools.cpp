@@ -418,8 +418,21 @@ void UsbTools::paint(QPainter &p, const QRectF &panel) {
         button(p, file_control(10), "Back to editor", false, focus_ == 10);
         return;
     }
-    font(p, 30, true); p.drawText(panel.adjusted(22, 18, -22, -panel.height() + 64), Qt::AlignVCenter,
-        typewriter_ ? QString("Typewriter · Editor · %1").arg(ready_ ? "live" : "paused") : "USB and typewriter · 3/3");
+    font(p, 30, true);
+    if (typewriter_) {
+        p.drawText(QRectF(panel.left() + 22, panel.top() + 18, panel.width() - 390, 46), Qt::AlignVCenter, "Typewriter · Editor");
+        const QRectF state(panel.right() - 352, panel.top() + 18, 330, 46);
+        const bool paused = !ready_ && !live_requested_;
+        p.fillRect(state, paused ? Qt::black : Qt::white);
+        p.setPen(QPen(Qt::black, 2)); p.drawRect(state);
+        p.setPen(paused ? Qt::white : Qt::black); font(p, 18, true);
+        const QString state_text = bulk_ ? "SENDING DOCUMENT" : ready_ ? "LIVE · USB OUTPUT ON"
+            : live_requested_ ? "CONNECTING…" : "PAUSED · USB OUTPUT OFF";
+        p.drawText(state.adjusted(8, 0, -8, 0), Qt::AlignCenter, state_text);
+        p.setPen(Qt::black);
+    } else {
+        p.drawText(panel.adjusted(22, 18, -22, -panel.height() + 64), Qt::AlignVCenter, "USB and typewriter · 3/3");
+    }
     if (typewriter_) {
         const QString name = file_path_.isEmpty() ? "Untitled (hidden recovery name on exit)" : display_path(file_path_);
         font(p, 18); p.drawText(QRectF(panel.left() + 22, panel.top() + 66, panel.width() - 44, 36), Qt::AlignVCenter,

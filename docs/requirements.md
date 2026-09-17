@@ -89,11 +89,12 @@ when implementing those modes and their queries.
 - Preserve ordinary terminal input and support the negotiated
   [kitty keyboard protocol](https://sw.kovidgoyal.net/kitty/keyboard-protocol/).
 - Verify USB host operation on the actual device and adapter.
-- Right Alt/Option + 1–0 produces F1–F10; Tab produces Escape; Up/Down produces
-  PageUp/PageDown; Backspace asks to quit; Space opens Settings; Left/Right
-  switches across six terminal slots.
-- Add a fifth Settings button with a persistent Caps Lock/Control toggle.
-  Ctrl+Shift+B hides or shows the bottom bar, including with a wired USB keyboard.
+- Separate Opt + 1–0 produces F1–F10. Right Alt/Option + Tab produces Escape;
+  Up/Down produces PageUp/PageDown; Backspace asks to quit; Space opens Settings;
+  Left/Right switches across nine terminal slots. Left Alt+Space opens Unicode.
+- Provide a persistent Caps Lock/Control toggle. The bottom bar shows Escape,
+  battery state, Quit and Settings; Settings can hide it. Ctrl+Shift+B passes
+  through unchanged for terminal programs such as Emacs.
 - Keep each terminal's shell, scrollback and graphics independent. Preserve
   press/repeat/release identity across shortcut and session changes.
 

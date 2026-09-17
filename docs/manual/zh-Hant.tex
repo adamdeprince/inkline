@@ -13,7 +13,7 @@ Inkline 在 reMarkable 2 上運行本機 shell。使用 Type Folio 或 USB 鍵�
 
 要返回筆記，點選 \key{Quit} 或按 \key{Ctrl+Shift+Q}，然後確認。
 輸入 \code{exit} 只關閉當前終端；關閉最後一個終端後返回筆記。
-底欄包含 Escape、歷史記錄上／下、Quit 和 Settings 按鈕。
+底欄包含 Escape、電池狀態、Quit 和 Settings。
 啟動時的簡短說明和小 Goblin 標誌可用 \code{clear} 清除。
 
 如果快捷鍵啟動的應用佔用了屏幕，按 \key{Opt+RightAlt+T} 返回 Inkline。
@@ -37,10 +37,12 @@ Type Folio 在 Ctrl 與 Alt 之間有一個獨立的 \key{Opt} 鍵，另有一�
 右 Alt/Opt + Tab & Escape \\
 右 Alt/Opt + Up / Down & PageUp / PageDown \\
 右 Alt/Opt + Backspace & 確認退出所有終端 \\
-任一 Alt + Space & Unicode 鍵盤 \\
+右 Alt/Opt + Space & Settings \\
+左 Alt + Space & Unicode 鍵盤 \\
 右 Alt/Opt + C / V & 複製選區／貼上 \\
-Ctrl+Shift+B & 隱藏／顯示底欄 \\
 \end{keytable}
+
+Ctrl+Shift+B 會原樣傳給終端程式，包括 Emacs。
 
 在\key{美式 Type Folio} 上，右 Alt/Opt+\key{0} 輸入 \code{+}；
 右 Alt/Opt+\key{緊挨 Backspace 左側的減號鍵}輸入 \code{=}。
@@ -57,8 +59,8 @@ USB 鍵盤可直接使用普通功能鍵。獨立 Opt 的快捷操作在提供 M
 顯示設定和輸入法設定對所有槽位生效。
 
 \topic{設定與顯示}
-點選底欄第五個按鈕 \key{Settings}。如果底欄隱藏，按 \key{Alt+Space}，再按
-\key{F2} 或點選 Unicode 鍵盤中的 Settings。實心選項表示當前狀態，虛線邊框表示鍵盤焦點。
+點選底欄最右側的 \key{Settings}，或按 \key{右 Alt/Opt+Space}；底欄隱藏時也可使用。
+\key{左 Alt+Space} 開啟 Unicode 鍵盤。實心選項表示當前狀態，虛線邊框表示鍵盤焦點。
 Tab 移動焦點，方向鍵和 Enter 更改選擇。
 
 \key{Caps Lock：}可選擇 Control（預設）或 Caps Lock。
@@ -86,8 +88,12 @@ Saver 會減少刷新請求，省電效果尚未測量。升級會保留明確�
 崩潰、強制終止或斷電可能丟失尚未儲存的設定更改。
 \end{notice}
 
+底欄每分鐘從唯讀的 Linux 電源介面讀取一次電池狀態。\code{inkline-battery}
+顯示電量和充電狀態；\code{inkline-battery --percentage} 或
+\code{~/inkline battery} 顯示 Inkline 無色 Bash 提示符所用的簡短數值。
+
 \topic{Unicode 與輸入法}
-按 \key{Alt+Space} 打開 Unicode 鍵盤。點選字元即可輸入，鍵盤保持打開，方便連續輸入。
+按 \key{左 Alt+Space} 打開 Unicode 鍵盤。點選字元即可輸入，鍵盤保持打開，方便連續輸入。
 點選 \key{Done} 或按 Escape 關閉。
 
 分類包括字母、組合標記、數字、標點、數學／貨幣、符號、空格、格式字元和私用區。
@@ -143,8 +149,9 @@ OSC 52 無法刪除編輯器里的文字。
 輸出鍵盤模式需要先安裝網站提供的 Python 工具，無需額外的 Python 模組。
 
 選擇 Send keyboard，以 USB-C 連接電腦，設定下列接收端配置，然後開啟
-\key{Open typewriter}。在電腦上選取文件輸入位置，再點平板上的\key{Start}。
-打字機始終以暫停狀態開啟。\key{Escape} 或\key{Stop} 暫停並釋放按鍵。
+\key{Open typewriter}。Send keyboard 已啟用時會自動開始即時傳送。
+暫停時編輯器以黑底清楚顯示 \key{PAUSED · USB OUTPUT OFF}；即時傳送使用另一種狀態標誌。
+\key{Escape} 或\key{Stop} 暫停並釋放按鍵。
 離開打字機、切換終端機、視窗失焦、開啟原生應用程式或休眠時也會暫停。
 斷線重連後不會自動重送。
 
@@ -162,7 +169,7 @@ HID 沒有通用的 Unicode 文字通道；結果取決於接收端設定與字�
 
 \key{Input method} 與終端機共用輸入引擎：Off／直接美式、Romaji、Pinyin、Zhuyin、
 Wubi 86 和 US-International。只有已確認字元才會送出。更換輸入法後需點 Start 繼續。
-選擇\key{Off} 返回普通美式輸入。\key{Unicode} 或 Alt+Space 開啟的字元面板也向 USB 接收端輸入。
+選擇\key{Off} 返回普通美式輸入。\key{Unicode} 或左 Alt+Space 開啟的字元面板也向 USB 接收端輸入。
 
 Typewriter 是本機編輯器，Inkline 執行期間文件只保存在 RAM。一般輸入會編輯本機文件；
 開啟即時傳送後，每個已確認字元也會傳送到連線的電腦。複製、剪下、貼上、選取和雙指捲動

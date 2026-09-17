@@ -17,7 +17,7 @@ quittez puis rouvrez Inkline pour activer la nouvelle gestion de ce bouton.
 
 Pour revenir aux carnets, touchez \key{Quit} ou appuyez sur \key{Ctrl+Shift+Q},
 puis confirmez. \code{exit} ferme un terminal ; fermer le dernier rend la main
-aux carnets. La barre du bas propose Escape, historique haut/bas, Quit et Settings.
+aux carnets. La barre du bas propose Escape, batterie, Quit et Settings.
 \code{clear} efface le petit guide de démarrage et le logo Goblin.
 
 Si une application de raccourci occupe l'écran, \key{Opt+RightAlt+T} revient à Inkline.
@@ -41,10 +41,12 @@ Alt/Opt droite + Left / Right & Emplacement précédent / suivant \\
 Alt/Opt droite + Tab & Escape \\
 Alt/Opt droite + Up / Down & PageUp / PageDown \\
 Alt/Opt droite + Backspace & Confirmer la fermeture de tous les terminaux \\
-L'une des touches Alt + Space & Clavier Unicode \\
+Alt/Opt droite + Space & Settings \\
+Alt gauche + Space & Clavier Unicode \\
 Alt/Opt droite + C / V & Copier la sélection / coller \\
-Ctrl+Shift+B & Masquer / afficher la barre du bas \\
 \end{keytable}
+
+Ctrl+Shift+B est transmis sans modification aux programmes, dont Emacs.
 
 Sur le \key{Type Folio américain}, Alt/Opt droite+\key{0} saisit \code{+}.
 Alt/Opt droite avec la \key{touche moins juste à gauche de Backspace} saisit
@@ -63,8 +65,9 @@ Chaque terminal a son shell, son répertoire, sa composition en cours, ses image
 et 500 lignes d'historique. Les réglages d'affichage et de saisie sont communs.
 
 \topic{Réglages et affichage}
-Touchez \key{Settings}, le cinquième bouton du bas. Si la barre est masquée,
-faites \key{Alt+Space}, puis \key{F2}, ou touchez Settings dans le clavier Unicode.
+Touchez \key{Settings}, à droite de la barre, ou faites
+\key{Alt/Opt droite+Space}, même si la barre est masquée.
+\key{Alt gauche+Space} ouvre le clavier Unicode.
 Un choix rempli indique l'état actif ; un contour pointillé indique le focus.
 Tab déplace le focus ; les flèches et Entrée modifient le choix.
 
@@ -96,8 +99,13 @@ pas sur la flash. Sans modification, aucune écriture. Un plantage, un arrêt
 forcé ou une coupure peut perdre les changements non enregistrés.
 \end{notice}
 
+La barre du bas lit la batterie une fois par minute depuis l'interface
+d'alimentation Linux en lecture seule. \code{inkline-battery} affiche le
+pourcentage et la charge ; \code{inkline-battery --percentage} ou
+\code{~/inkline battery} donne la valeur courte de l'invite Bash sans couleur d'Inkline.
+
 \topic{Unicode et méthodes de saisie}
-\key{Alt+Space} ouvre le clavier Unicode. Touchez un caractère pour l'insérer ;
+\key{Alt gauche+Space} ouvre le clavier Unicode. Touchez un caractère pour l'insérer ;
 le clavier reste ouvert. Touchez \key{Done} ou appuyez sur Escape pour fermer.
 
 Les catégories regroupent lettres, marques, nombres, ponctuation, mathématiques/
@@ -167,8 +175,9 @@ Le Type Folio reste disponible. Installez l'utilitaire Python du site pour
 l'envoi au clavier ; aucun module Python supplémentaire n'est nécessaire.
 
 Choisissez Send keyboard, branchez l'USB-C, réglez le profil ci-dessous puis
-ouvrez \key{Open typewriter}. Placez le curseur dans le document sur l'ordinateur
-et touchez \key{Start}. L'ouverture se fait toujours en pause.
+ouvrez \key{Open typewriter}. Si Send keyboard est actif, l'envoi direct démarre
+automatiquement. En pause, l'éditeur affiche clairement
+\key{PAUSED · USB OUTPUT OFF} ; l'envoi actif a un indicateur distinct.
 \key{Escape} ou \key{Stop} arrête l'envoi et relâche les touches. Quitter cet écran,
 changer de terminal, perdre le focus, ouvrir une application native ou mettre
 en veille suspend aussi l'envoi. Aucune reprise automatique après reconnexion.
@@ -189,7 +198,7 @@ la configuration et les polices du destinataire comptent. Essayez un court texte
 \key{Input method} reprend Off/US direct, Romaji, Pinyin, Zhuyin, Wubi 86 et
 US-International. Seuls les caractères validés sont envoyés. Changer de méthode
 met en pause ; reprenez avec Start. \key{Off} rétablit la saisie US ordinaire.
-\key{Unicode} ou Alt+Space ouvre le sélecteur de caractères pour la sortie USB.
+\key{Unicode} ou Alt gauche+Space ouvre le sélecteur de caractères pour la sortie USB.
 
 Typewriter est un éditeur local dont le document reste en RAM pendant Inkline.
 La frappe modifie ce document et, en mode direct, envoie chaque caractère validé

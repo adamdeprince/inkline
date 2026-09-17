@@ -1,5 +1,6 @@
 #include "rmt/view.hpp"
 #include "rmt/caps_leds.hpp"
+#include "rmt/battery.hpp"
 #include "rmt/clipboard.hpp"
 #include "rmt/input_method.hpp"
 #include "rmt/input.hpp"
@@ -139,15 +140,15 @@ public:
             "\033[%1GOpt + 1-0: F1-F10\r\n"
             "Hold right Alt/Opt:\r\n"
             "  Tab: Esc   Up/Down: PgUp/PgDn\r\n"
-            "  Left/Right or 1-9: terminals   Space: Unicode keyboard\r\n"
+            "  Left/Right or 1-9: terminals   Space: Settings\r\n"
             "  Backspace: quit (confirm)   C/V: copy/paste\r\n"
             "Pinch: text size   Drag finger/pen: select\r\n"
             "US Folio: right Alt/Opt + 0: +; minus: =; Shift+6: ^.\r\n"
             "Two fingers: up/down scroll, sideways switch terminals.\r\n"
             "Scrollback: 500 lines, kept in RAM.\r\n"
-            "Alt+Space: Unicode; F2 there: Settings and input methods.\r\n"
+            "Left Alt+Space: Unicode keyboard.\r\n"
             "Opt+RightAlt+T: return; hold Opt+RightAlt+Backspace: emergency restart.\r\n"
-            "Ctrl+Shift+B: bottom bar   Caps Lock: %5\r\n"
+            "Settings: bottom bar, input methods, display   Caps Lock: %5\r\n"
             "exit closes this terminal.\r\n\r\n")
             .arg(column).arg(QCoreApplication::applicationVersion()).arg(number).arg(open_terminals)
             .arg(caps_control ? "Control" : "Caps Lock").toUtf8();
@@ -362,7 +363,8 @@ public:
     QString unicode_hex;
     bool demo;
     std::vector<std::string> shell;
-    QTimer repaint, toast, autoscroll, maintenance;
+    QTimer repaint, toast, autoscroll, maintenance, battery_poll;
+    BatteryInfo battery;
     int slider_drag = -1, press_slider = 0;
     QString notice;
     bool pointer_down = false, dragging = false, text_drag = false, usb_drag = false, pen_down = false;
@@ -386,6 +388,7 @@ public:
         : view(v), epaper(v), prefs(path), shortcuts(v, clipboard), usb(v, prefs, clipboard, [&v] { v.update(); }), pixels(p > 0 ? std::clamp(p, Preferences::MIN_FONT, Preferences::MAX_FONT) : prefs.font_pixels()), initial_pixels(pixels), darkness(prefs.text_darkness()),
           contrast(prefs.minimum_contrast()), update_policy(prefs.update_profile()), demo(demonstration), shell(std::move(command)) {
         input.set_caps_control(prefs.caps_control());
+        battery = read_battery();
         repaint.setSingleShot(true);
         QObject::connect(&repaint, &QTimer::timeout, &view, [this] { guarded([this] { refresh(); }); });
         epaper.set_mode(update_policies[update_policy].screen_mode);
@@ -399,6 +402,14 @@ public:
             if (pressure) schedule();
         }); });
         maintenance.start();
+        battery_poll.setInterval(60000);
+        QObject::connect(&battery_poll, &QTimer::timeout, &view, [this] {
+            const auto next = read_battery();
+            if (next.percent == battery.percent && next.status == battery.status) return;
+            battery = next;
+            if (prefs.bottom_bar()) view.update(QRectF(0, view.height() - footer, view.width(), footer).toRect());
+        });
+        battery_poll.start();
         QObject::connect(&autoscroll, &QTimer::timeout, &view, [this] { guarded([this] {
             if (!pointer_down || !text_drag || !dragging || !sessions[active]) return;
             const auto area = text_area();
@@ -754,12 +765,12 @@ public:
                 overlay = Overlay::Error; view.update();
             }
             break;
+        case InputAction::Settings: settings(); break;
         case InputAction::UnicodeKeyboard: unicode_keyboard(); break;
         case InputAction::Quit: quit(); break;
         case InputAction::Previous: choose(active + TERMINALS - 1); break;
         case InputAction::Next: choose(active + 1); break;
         case InputAction::SelectTerminal: choose(mapped.target_terminal); break;
-        case InputAction::ToggleBar: toggle_bar(); break;
         case InputAction::HistoryUp: if (sessions[active] && overlay == Overlay::None) sessions[active]->scroll(-1); break;
         case InputAction::HistoryDown: if (sessions[active] && overlay == Overlay::None) sessions[active]->scroll(1); break;
         case InputAction::Send:
@@ -833,12 +844,12 @@ public:
         if (prefs.bottom_bar()) {
             const auto top = view.height() - footer;
             p.setPen(Qt::black); p.drawLine(QPointF(0, top), QPointF(view.width(), top));
-            const QString labels[] = {"Esc", "Page up", "Page down", "Quit", "Settings"};
+            const QString labels[] = {"Esc", battery.compact(), "Quit", "Settings"};
             font(p, 23);
-            for (int i = 0; i < 5; ++i) {
-                QRectF box(view.width() * i / 5, top, view.width() / 5, footer);
+            for (int i = 0; i < 4; ++i) {
+                QRectF box(view.width() * i / 4, top, view.width() / 4, footer);
                 if (i) p.drawLine(box.topLeft(), box.bottomLeft());
-                if (i < 4) p.drawText(box, Qt::AlignCenter, labels[i]);
+                if (i < 3) p.drawText(box, Qt::AlignCenter, labels[i]);
                 else {
                     p.drawText(box.adjusted(0, 2, 0, -20), Qt::AlignCenter, labels[i]);
                     font(p, 14); p.drawText(box.adjusted(0, 34, 0, 0), Qt::AlignCenter, terminal_label());
@@ -1004,14 +1015,12 @@ public:
         } else if (overlay == Overlay::Error) {
             if (close_button().contains(point)) { overlay = Overlay::None; view.update(); }
         } else if (prefs.bottom_bar() && point.y() >= view.height() - footer) {
-            const int index = std::clamp(int(5 * point.x() / view.width()), 0, 4);
-            if (index == 4) settings();
-            else if (index == 3) quit();
-            else if (sessions[active]) {
-                if (index == 0) {
+            const int index = std::clamp(int(4 * point.x() / view.width()), 0, 3);
+            if (index == 3) settings();
+            else if (index == 2) quit();
+            else if (index == 0 && sessions[active]) {
                     MappedInput escape; escape.key = Qt::Key_Escape;
                     sessions[active]->key(escape); escape.type = QEvent::KeyRelease; sessions[active]->key(escape); schedule(true); view.update();
-                } else sessions[active]->scroll(index == 1 ? -1 : 1);
             }
         } else if (ime_height() && sessions[active]) {
             for (int i = 0; i < sessions[active]->ime.candidates().size(); ++i)

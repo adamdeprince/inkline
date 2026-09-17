@@ -22,13 +22,13 @@ Hold the **right Alt/Option** key for these other shortcuts:
 | Tab | Escape |
 | Up / Down | PageUp / PageDown, sent to the program |
 | Left / Right | Previous / next terminal |
-| Space | Open or close the Unicode keyboard (either Alt key) |
+| Space | Open or close Settings |
 | 1–9 | Select terminal slot 1–9 |
 | Backspace | Ask to quit Inkline |
 | C / V | Copy selection / paste clipboard |
 | X | Copy selection and explain how to cut in the editor |
 
-The number shortcuts use the physical top number row. USB numeric keypads keep
+**Left Alt+Space** opens or closes the Unicode keyboard. The number shortcuts use the physical top number row. USB numeric keypads keep
 their usual behavior. Left Alt remains available for ordinary terminal input,
 including Emacs Meta commands, except for Alt+Space. Ctrl, Shift, and Alt can combine with Opt's
 function keys.
@@ -63,9 +63,9 @@ closes. **Right Alt+Backspace**, **Ctrl+Shift+Q**, and the **Quit** button ask
 before closing all terminals. The prompt starts on **Cancel**. Press Escape to
 cancel, or select Quit with Tab/Right and press Enter to confirm.
 
-## Caps Lock and the bottom bar
+## Caps Lock, battery, and the bottom bar
 
-Tap the fifth button, **Settings**, or press **Alt+Space**, then **F2** in the Unicode keyboard. Tab or Up/Down
+Tap the rightmost **Settings** button or press **right Alt/Option+Space**. Tab or Up/Down
 moves keyboard focus; Left/Right changes a value, and Enter or Space activates it.
 A **solid black fill and filled circle** mark the active choice. A **dashed outline**
 marks keyboard focus, independently of the chosen value. Escape closes Settings. Touch also
@@ -74,9 +74,16 @@ works throughout the panel.
 - **Caps Lock key:** choose Control (the default) or Caps Lock. In Control mode,
   hold Caps Lock while pressing a letter, such as Caps Lock+C for Ctrl+C. This
   applies inside Inkline; the choice does not change notebook keyboard settings.
-- **Bottom bar:** choose Shown or Hidden. **Ctrl+Shift+B** toggles it directly.
-  Hiding the bar gives its rows back to the terminal. Right Alt+Space remains
-  available while it is hidden.
+- **Bottom bar:** choose Shown or Hidden. Its four sections are Esc, battery
+  status, Quit, and Settings. Hiding it gives its rows back to the terminal;
+  right Alt/Option+Space still opens Settings. Ctrl+Shift+B is passed to the
+  terminal unchanged for programs such as Emacs.
+
+Inkline reads battery state from Linux's read-only power-supply interface once
+per minute and does not write it to storage. Run `inkline-battery` for percentage
+and charging state, `inkline-battery --percentage` for a single compact value,
+or `~/inkline battery`. The installer adds that compact value to Inkline's
+no-color Bash prompt while leaving shells outside Inkline alone.
 
 Keyboard, input-method, font-size, and bottom-bar preferences are stored in
 `~/.config/inkline/settings.ini` and survive restarts. Display tuning stays in RAM.
@@ -84,8 +91,7 @@ Font changes remain in RAM and are saved when Inkline exits normally.
 Only a changed preference writes this file; typing, graphics and switching
 terminals do not save it. Ordinary Caps Lock's on/off state starts off each time.
 
-The touch Page up/Page down buttons scroll terminal history. On a keyboard,
-use **Shift+PageUp/PageDown** or **Shift+Right Alt+Up/Down** for history.
+Use **Shift+PageUp/PageDown** or **Shift+Right Alt+Up/Down** to scroll history.
 Right Alt+Up/Down without Shift sends page keys to the current application.
 
 Drag **two fingers down** to reveal older output or **up** to return toward the
@@ -138,7 +144,7 @@ to Inkline. OSC 52 itself does not request deletion.
 
 ## Asian and accented input
 
-Open **Alt+Space → Settings → Input method**. Tap a method or select it with Up/Down and
+Open **right Alt/Option+Space → Input method**. Tap a method or select it with Up/Down and
 Enter. **Off** restores direct keyboard input. The selection is saved for all
 terminals; each terminal keeps its own unfinished composition.
 
@@ -239,7 +245,7 @@ about 554 ms. The physical e-paper update follows that application render.
 
 ## Text darkness and minimum contrast
 
-In Settings (Alt+Space, then F2), drag **Text darkness** with a finger, pen
+In Settings (right Alt/Option+Space), drag **Text darkness** with a finger, pen
 or mouse. Keyboard users can focus the slider with Tab or Up/Down and adjust
 with Left/Right; Home/End selects the endpoints. 50% preserves the original
 rendering. Normal text is already black; higher values darken its smoothed
@@ -269,7 +275,7 @@ retains its previous sleep inhibitor until it exits.
 
 ## Unicode keyboard and pen mouse
 
-**Either Alt+Space** opens a category-based Unicode keyboard. Tap a character
+**Left Alt+Space** opens a category-based Unicode keyboard. Tap a character
 to type it; drag vertically or use the wheel, arrows and page keys to browse.
 Tab changes category. Typing a hexadecimal codepoint followed by Enter inserts
 that character. F2 opens Settings; Escape or Done closes the keyboard.

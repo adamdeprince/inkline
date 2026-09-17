@@ -21,7 +21,7 @@ for required in /usr/lib/plugins/platforms/libepaper.so /usr/lib/plugins/scenegr
     /usr/lib/plugins/platforms/libqoffscreen.so /usr/share/fonts/ttf/noto/NotoMono-Regular.ttf; do
     test -r "$required" || fail "Missing firmware dependency: $required"
 done
-for command in systemctl systemd-inhibit sha256sum mktemp tar flock; do command -v "$command" >/dev/null || fail "Missing command: $command"; done
+for command in systemctl systemd-inhibit sha256sum mktemp tar flock awk cmp; do command -v "$command" >/dev/null || fail "Missing command: $command"; done
 test -x /bin/bash || fail 'Bash is required to load ~/.bashrc for interactive shells.'
 test -w /etc/systemd/system || fail '/etc/systemd/system must be writable to install the keyboard launcher.'
 exec 9>/run/inkline-manage.lock
@@ -32,6 +32,11 @@ if [ -e "$root" ]; then
 fi
 if [ -e /home/root/inkline ] || [ -L /home/root/inkline ]; then
     test ! -L /home/root/inkline && test "$(sed -n '2p' /home/root/inkline)" = '# Inkline managed launcher' || fail 'An unrelated /home/root/inkline already exists.'
+fi
+battery_command=/home/root/.local/bin/inkline-battery
+if [ -e "$battery_command" ] || [ -L "$battery_command" ]; then
+    test -L "$battery_command" && test "$(readlink "$battery_command")" = "$root/current/inkline-battery" || \
+        fail "An unrelated $battery_command already exists."
 fi
 cd "$payload"
 sha256sum -c SHA256SUMS >/dev/null || fail 'Bundle checksum verification failed.'
@@ -70,9 +75,28 @@ else
 fi
 ln -s "releases/$release" "$root/.current.$$"
 mv -Tf "$root/.current.$$" "$root/current"
+mkdir -p /home/root/.local/bin
+if [ ! -L "$battery_command" ]; then ln -s "$root/current/inkline-battery" "$battery_command"; fi
 cp "$root/current/inkline-launcher" /home/root/.inkline-launcher.new
 chmod 700 /home/root/.inkline-launcher.new
 mv -f /home/root/.inkline-launcher.new /home/root/inkline
+prompt_file=/home/root/.bashrc
+prompt_tmp=$(mktemp /tmp/inkline-bashrc.XXXXXX)
+if [ -f "$prompt_file" ]; then
+    awk '/^# >>> Inkline battery prompt >>>$/ { managed=1; next }
+         /^# <<< Inkline battery prompt <<<$/{ managed=0; next }
+         !managed { print }' "$prompt_file" > "$prompt_tmp"
+fi
+cat >> "$prompt_tmp" <<'INKLINE_PROMPT'
+# >>> Inkline battery prompt >>>
+# Inkline shells show useful device state instead of the fixed hostname.
+if [ "${TERM_PROGRAM:-}" = inkline ]; then
+    PS1='$(inkline-battery --percentage 2>/dev/null) \w \$ '
+fi
+# <<< Inkline battery prompt <<<
+INKLINE_PROMPT
+if [ ! -f "$prompt_file" ] || ! cmp -s "$prompt_tmp" "$prompt_file"; then cat "$prompt_tmp" > "$prompt_file"; fi
+rm -f "$prompt_tmp"
 if systemctl is-active --quiet inkline-hotkey.service; then systemctl stop inkline-hotkey.service; fi
 sh "$root/current/hotkey-service.sh" install
 sh "$root/current/usb/install.sh" install

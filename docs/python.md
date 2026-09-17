@@ -18,7 +18,8 @@ Apply them to the current Bash shell with `source ~/.bashrc`. Inkline 0.3.5
 starts interactive `/bin/bash`, which reads that file for each new terminal.
 After updating Inkline, quit and reopen it to use the new shell launcher.
 Existing shells and Python processes keep their existing environments.
-These are personal settings; the package installer does not edit your `.bashrc`.
+These are personal settings; the installer does not add or remove them. It only
+manages its clearly marked, `TERM_PROGRAM=inkline` battery-prompt block in `.bashrc`.
 
 - [`PYTHONDONTWRITEBYTECODE=1`](https://docs.python.org/3.15/using/cmdline.html#envvar-PYTHONDONTWRITEBYTECODE)
   stops automatic `.pyc`/`__pycache__` writes when Python imports modules.

@@ -107,8 +107,13 @@ MappedInput InputMapper::map(const QKeyEvent &e, int terminal) {
             !(e.modifiers() & (Qt::ControlModifier | Qt::ShiftModifier)) && global_shortcut(e, shortcut_keys_))
             held.input.action = InputAction::Ignore;
         else if (caps(e)) held.input.key = caps_control_ ? Qt::Key_Control : Qt::Key_CapsLock;
-        else if (!(mods & (Qt::ControlModifier | Qt::MetaModifier)) && physical_key(e) == Qt::Key_Space &&
-                 (right_alt_ || left_alt_ || (mods & Qt::AltModifier))) {
+        else if (!(mods & (Qt::ControlModifier | Qt::MetaModifier | Qt::ShiftModifier)) &&
+                 physical_key(e) == Qt::Key_Space && right_alt_ && !left_alt_) {
+            held.input.action = InputAction::Settings;
+            held.consumes_alt = true;
+        }
+        else if (!(mods & (Qt::ControlModifier | Qt::MetaModifier | Qt::ShiftModifier)) &&
+                 physical_key(e) == Qt::Key_Space && (left_alt_ || (mods & Qt::AltModifier))) {
             held.input.action = InputAction::UnicodeKeyboard;
             held.consumes_alt = true;
         }
@@ -128,7 +133,7 @@ MappedInput InputMapper::map(const QKeyEvent &e, int terminal) {
             case Qt::Key_Up: held.input.key = Qt::Key_PageUp; break;
             case Qt::Key_Down: held.input.key = Qt::Key_PageDown; break;
             case Qt::Key_Backspace: held.input.action = InputAction::Quit; break;
-            case Qt::Key_Space: held.input.action = InputAction::UnicodeKeyboard; break;
+            case Qt::Key_Space: held.input.action = InputAction::Settings; break;
             case Qt::Key_Left: held.input.action = InputAction::Previous; break;
             case Qt::Key_Right: held.input.action = InputAction::Next; break;
             case Qt::Key_C: held.input.action = InputAction::Copy; break;
@@ -146,7 +151,6 @@ MappedInput InputMapper::map(const QKeyEvent &e, int terminal) {
         }
         if (held.input.action == InputAction::Send) {
             if ((mods & Qt::ControlModifier) && (mods & Qt::ShiftModifier)) {
-                if (e.key() == Qt::Key_B) held.input.action = InputAction::ToggleBar;
                 if (e.key() == Qt::Key_Q) held.input.action = InputAction::Quit;
             }
             if ((mods & Qt::ShiftModifier) && held.input.key == Qt::Key_PageUp) held.input.action = InputAction::HistoryUp;

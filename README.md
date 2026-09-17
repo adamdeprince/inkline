@@ -4,14 +4,14 @@ Inkline is a terminal for **reMarkable 2**, built with **libghostty-vt** and the
 stock Qt e-paper backend. It is designed for Type Folio and external USB
 keyboards, with kitty graphics and an initial sixel implementation.
 
-**Version 0.4.4 is a preview.** The main artifact is the repeatable
+**Version 0.4.5 is a preview.** The main artifact is the repeatable
 [installation procedure](docs/install.md), including preflight, launch, recovery
 and uninstall. It targets firmware **3.27**, tested on **3.27.3.0**. Other models
 and firmware lines are not supported by this installer.
 
 ## Install
 
-Download the **[Inkline 0.4.4 preview](https://github.com/adamdeprince/inkline/releases/tag/v0.4.4)**
+Download the **[Inkline 0.4.5 preview](https://github.com/adamdeprince/inkline/releases/tag/v0.4.5)**
 and follow the [installation procedure](docs/install.md). The prebuilt ARM bundle
 includes the installer, launcher, uninstall script, checksums, source archives
 and licenses. No compiler, SDK or third-party package manager is needed to install it.
@@ -69,13 +69,15 @@ Hold the **right Alt/Option** key for the other Folio and USB keyboard shortcuts
 | Tab | Escape |
 | Up / Down | PageUp / PageDown |
 | Left / Right | Previous / next terminal, across nine slots |
-| Space | Open or close the Unicode keyboard (either Alt key) |
+| Space | Open or close Settings |
 | 1–9 | Select terminal slot 1–9 |
 | Backspace | Confirm quitting all terminals |
 | C / V | Copy selected text / paste the RAM clipboard |
 
-**Ctrl+Shift+B** hides or shows the bottom bar. Its fifth button opens
-**Settings**, where Caps Lock can act as **Control** (the default) or normal
+**Left Alt+Space** opens the Unicode keyboard. Ctrl+Shift+B passes through to
+terminal programs, including Emacs. The four-part bottom bar shows **Esc**, the
+current battery level, **Quit**, and **Settings**. Settings can hide or restore
+the bar and lets Caps Lock act as **Control** (the default) or normal
 **Caps Lock**. Active choices have a solid fill; keyboard focus has a dashed outline.
 **Settings → Command shortcuts (page 2)** assigns commands to
 **Opt+RightAlt+letter**, with explicit Save and Remove buttons. T is permanently
@@ -91,7 +93,10 @@ Unchanged sessions write nothing; finger lifts, closing Settings and suspend
 do not write preferences to flash.
 Pinch with two fingers to change font size (6–48 px), with slower movement and
 one-pixel steps for finer control. Settings also has minus and plus buttons.
-The size is saved when Inkline exits. Each terminal has its own
+The size is saved when Inkline exits. `inkline-battery` reports the charge and
+charging state from the kernel; `inkline-battery --percentage` prints the compact
+value used by Inkline's no-color shell prompt. The footer polls once per minute
+and writes nothing to storage. Each terminal has its own
 shell and scrollback; switching to an unused slot opens a shell there.
 Drag two fingers down to reveal older output, or up to return toward the prompt.
 Swipe two fingers left for the next terminal, or right for the previous one.
@@ -126,7 +131,7 @@ See [keyboard and session instructions](docs/keyboard.md) for details.
   alternate-screen terminal state supplied by libghostty.
 - Qt keyboard events encoded through libghostty, including Ctrl/Alt combinations,
   cursor modes and negotiated kitty key events. Touch controls provide Escape,
-  history scrolling, Quit and Settings. Input uses Qt device discovery, not a fixed event
+  battery status, Quit and Settings. Input uses Qt device discovery, not a fixed event
   number. On-device launch and typing are confirmed with Type Folio. Additional
   keyboard layouts and external USB hotplug still need user testing.
 - Kitty inline/chunked and shared-memory images, PNG decoding, normal placement,
@@ -196,7 +201,8 @@ to the connected computer. **Files & send** loads or saves any UTF-8 filename,
 selects 5–80 characters/second, sends the whole document, and stops an active
 send. The editor writes its document only when Save is pressed or Inkline exits;
 an untitled document uses the hidden `~/.inkline-typewriter-draft` recovery name
-on exit. **Exit typewriter** returns to USB Settings. Leaving Inkline restores
+on exit. A black **PAUSED · USB OUTPUT OFF** badge makes it clear when live
+keystrokes are not being sent. **Exit typewriter** returns to USB Settings. Leaving Inkline restores
 networking, including after a crash.
 
 Install the Python utility for outgoing keyboard mode. `inkline-usb` controls

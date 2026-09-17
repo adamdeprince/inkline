@@ -60,6 +60,7 @@ def main():
         stage.mkdir()
         shutil.copy2(binary, stage / "inkline")
         shutil.copy2(ROOT / "build/tablet/inkline-hotkey", stage / "inkline-hotkey")
+        shutil.copy2(ROOT / "build/tablet/inkline-battery", stage / "inkline-battery")
         copy_repository_tree("assets", stage / "assets", tracked_files)
         for name in ["install-device.sh", "uninstall-device.sh", "install-manual.sh", "run-session.sh", "inkline-launcher", "inkline.service", "inkline-hotkey.service", "hotkey-service.sh", "shortcut-launch.sh", "shortcut-epaper.sh", "shortcut-restore.sh", "power-control.sh"]:
             shutil.copy2(ROOT / "scripts" / name, stage / name)
@@ -113,7 +114,7 @@ def main():
             source.add(ghostty, arcname="ghostty-source", filter=upstream_filter)
         for path in stage.rglob("*"):
             if path.is_file():
-                path.chmod(0o700 if path.name in ("inkline", "inkline-hotkey", "inkline-launcher", "inkline-usb", "inkline-type", "keyboard-send", "inkline-usb-daemon") or path.suffix == ".sh" else 0o600)
+                path.chmod(0o700 if path.name in ("inkline", "inkline-hotkey", "inkline-battery", "inkline-launcher", "inkline-usb", "inkline-type", "keyboard-send", "inkline-usb-daemon") or path.suffix == ".sh" else 0o600)
         files = sorted(p for p in stage.rglob("*") if p.is_file())
         (stage / "SHA256SUMS").write_text("".join(f"{digest(p)}  {p.relative_to(stage)}\n" for p in files))
         archive = dist / "inkline-rm2.tar.gz"

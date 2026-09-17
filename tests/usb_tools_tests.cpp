@@ -61,6 +61,8 @@ int main(int argc, char **argv) {
     usb.key(event(Qt::Key_A, "", Qt::ControlModifier));
     usb.clipboard(rmt::InputAction::Copy); CHECK(clipboard.text() == QByteArray("か你好"));
     usb.key(event(Qt::Key_Escape)); pump(); CHECK(!usb.transmitting());
+    paint();
+    if (!screenshots.isEmpty()) CHECK(image.save(screenshots + "/typewriter-paused.png"));
     const auto sent = read(temp.filePath("traffic"));
     usb.insert(" stays in RAM"); pump();
     CHECK(usb.document().endsWith(" stays in RAM"));
