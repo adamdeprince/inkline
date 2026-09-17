@@ -4,14 +4,14 @@ Inkline is a terminal for **reMarkable 2**, built with **libghostty-vt** and the
 stock Qt e-paper backend. It is designed for Type Folio and external USB
 keyboards, with kitty graphics and an initial sixel implementation.
 
-**Version 0.4.3 is a preview.** The main artifact is the repeatable
+**Version 0.4.4 is a preview.** The main artifact is the repeatable
 [installation procedure](docs/install.md), including preflight, launch, recovery
 and uninstall. It targets firmware **3.27**, tested on **3.27.3.0**. Other models
 and firmware lines are not supported by this installer.
 
 ## Install
 
-Download the **[Inkline 0.4.3 preview](https://github.com/adamdeprince/inkline/releases/tag/v0.4.3)**
+Download the **[Inkline 0.4.4 preview](https://github.com/adamdeprince/inkline/releases/tag/v0.4.4)**
 and follow the [installation procedure](docs/install.md). The prebuilt ARM bundle
 includes the installer, launcher, uninstall script, checksums, source archives
 and licenses. No compiler, SDK or third-party package manager is needed to install it.
@@ -103,8 +103,10 @@ need to reconnect. Quit and reopen Inkline after updating to enable this behavio
 New terminals print a short guide with a tiny Goblin logo and the current
 Caps Lock setting. The logo is displayed through inline kitty graphics in RAM.
 Settings also selects **Romaji, Pinyin, Zhuyin, Wubi**, or **US-International**
-input. A candidate strip supports typing or tapping a choice. A bundled CJK
-font makes Chinese and Japanese text readable on the stock firmware.
+input. A candidate strip supports typing or tapping a choice. Bundled OFL fonts
+cover CJK, symbols, the Unicode BMP, and many supplementary scripts without
+installing fonts or building a font cache. A few rare characters can still lack
+a glyph because no practical single font covers all of Unicode.
 
 On the US Type Folio, **right Alt/Option + 0** types `+`, and **right Alt/Option +
 the minus key immediately left of Backspace** types `=`. Keyboard zoom
@@ -188,16 +190,21 @@ supplies the account's home directory when HOME is missing or empty.
 ## USB keyboard and typewriter
 
 Settings → USB (page 3) switches between USB Ethernet, outgoing keyboard and
-USB host mode. Typewriter sends Folio input to a connected computer, including
-committed text from the existing Japanese, Chinese and international input
-methods. Choose US/ASCII, Mac, Linux or Windows (WinCompose) output. Escape or
-Stop pauses; leaving Inkline restores networking, including after a crash.
+USB host mode. Typewriter is a RAM-backed text editor: Folio input edits the
+local document and, while live typing is on, also sends each committed character
+to the connected computer. **Files & send** loads or saves any UTF-8 filename,
+selects 5–80 characters/second, sends the whole document, and stops an active
+send. The editor writes its document only when Save is pressed or Inkline exits;
+an untitled document uses the hidden `~/.inkline-typewriter-draft` recovery name
+on exit. **Exit typewriter** returns to USB Settings. Leaving Inkline restores
+networking, including after a crash.
 
 Install the Python utility for outgoing keyboard mode. `inkline-usb` controls
-the port; `inkline-type --file notes.txt --profile windows` types a UTF-8 file.
+the port; `keyboard-send --file notes.txt --profile windows` types a UTF-8 file.
 The sender streams files without a fixed size limit, spool files or bytecode
-caches. The [PDF manual](docs/Inkline%20Manual.pdf), built from LaTeX and included
-in installation, covers host setup, recovery and the `~/inkline usb/type` commands.
+caches. `~/inkline type` and `inkline-type` remain compatibility aliases. The
+[PDF manual](docs/Inkline%20Manual.pdf), built from LaTeX and included in
+installation, covers editor use, host setup, recovery, and command-line sending.
 
 ## Validation
 

@@ -29,7 +29,7 @@ a convenience in the development setup, not an installer requirement.
 
 On your computer, download `inkline-rm2.tar.gz` and
 `inkline-rm2.tar.gz.sha256` from the
-[0.4.3 preview release](https://github.com/adamdeprince/inkline/releases/tag/v0.4.3).
+[0.4.4 preview release](https://github.com/adamdeprince/inkline/releases/tag/v0.4.4).
 Use the attached Inkline bundle; GitHub's automatically generated source-code
 archives do not contain the compiled application. The bundle is about 79 MiB
 and includes the installer, uninstall script, source archives and licenses.
@@ -39,12 +39,12 @@ additional tablet package manager.
 Alternatively, download both files from a terminal on your computer:
 
 ```sh
-curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.4.3/inkline-rm2.tar.gz
-curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.4.3/inkline-rm2.tar.gz.sha256
+curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.4.4/inkline-rm2.tar.gz
+curl -fLO https://github.com/adamdeprince/inkline/releases/download/v0.4.4/inkline-rm2.tar.gz.sha256
 ```
 
 The same files are mirrored under
-[`inkline.goblinreactor.com/downloads/v0.4.3/`](https://inkline.goblinreactor.com/downloads/v0.4.3/inkline-rm2.tar.gz).
+[`inkline.goblinreactor.com/downloads/v0.4.4/`](https://inkline.goblinreactor.com/downloads/v0.4.4/inkline-rm2.tar.gz).
 To compile the application yourself, see [building from source](#building-from-source).
 
 ## 3. Check, then install
@@ -150,7 +150,7 @@ Useful controls:
   wake. Shells and editor buffers stay in RAM. Network connections may need
   to reconnect. Quit and reopen Inkline after upgrading to activate this behavior.
 
-Inkline 0.4.3 includes right Alt/Option shortcuts, nine terminal slots,
+Inkline 0.4.4 includes right Alt/Option shortcuts, nine terminal slots,
 quit confirmation, a Settings button, and a saved Caps Lock/Control toggle.
 Each new terminal shows a brief guide and a tiny Goblin logo.
 Inkline sets `HOME=/home/root` for tablet sessions, including shells opened by
@@ -281,13 +281,16 @@ and reopen Inkline to load the new input handling and Settings page.
 
 ## USB tools and typewriter
 
-The terminal bundle installs `inkline-usb` and `inkline-type` in `~/.local/bin`,
-also available as `~/inkline usb …` and `~/inkline type …`. Install the Python
+The terminal bundle installs `inkline-usb` and `keyboard-send` in `~/.local/bin`.
+`~/inkline usb …`, `~/inkline type …`, and `inkline-type` remain compatible.
+Install the Python
 utility from the website before using outgoing keyboard mode. The stock
 network/host controls need no Python; no additional Python modules are needed.
 
 Choose Settings → USB (page 3). Select the receiving-computer profile before
-opening Typewriter. Windows Unicode requires WinCompose on the Windows PC;
+opening Typewriter. The editor keeps changes in RAM, saves only on Save or
+normal Inkline exit, and can send its complete document at 5–80 characters per
+second. **Exit typewriter** returns to USB Settings. Windows Unicode requires WinCompose on the Windows PC;
 Mac and Linux use their documented host input methods. The [PDF manual](Inkline%20Manual.pdf)
 contains the complete setup and file-sending commands in all nine languages.
 It is built from LaTeX and bundled with every installation for import into My files.

@@ -7,7 +7,7 @@ if systemctl is-active --quiet inkline.service; then
     "$bundle/inkline" --pause-usb >/dev/null 2>&1 || :
 fi
 if [ -f /run/inkline-usb/type.lock ]; then
-    "$bundle/usb/inkline-type" --stop >/dev/null 2>&1 || :
+    "$bundle/usb/keyboard-send" --stop >/dev/null 2>&1 || :
 fi
 # Pause the full cgroup so child programs cannot keep painting behind the app.
 # ExecStopPost always resumes it, including after a crash or forced termination.

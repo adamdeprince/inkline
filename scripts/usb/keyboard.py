@@ -430,7 +430,7 @@ def main():
     except KeyboardInterrupt:
         return 130
     except (ValueError, RuntimeError, OSError, TimeoutError) as exc:
-        print(f'inkline-type: {exc}', file=sys.stderr)
+        print(f'keyboard-send: {exc}', file=sys.stderr)
         return 1
     return 0
 

@@ -22,7 +22,7 @@ if ! systemctl is-active --quiet inkline-shortcut-app.service; then
     "$bundle/inkline" --pause-usb >/dev/null 2>&1 || :
 fi
 if [ -f /run/inkline-usb/type.lock ]; then
-    "$bundle/usb/inkline-type" --stop >/dev/null 2>&1 || :
+    "$bundle/usb/keyboard-send" --stop >/dev/null 2>&1 || :
 fi
 # Respect other programs' sleep inhibitors. Our session inhibits idle and
 # logind's key handling, but deliberately permits explicit system suspend.

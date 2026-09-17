@@ -110,8 +110,10 @@ Type a hexadecimal Unicode value, such as \code{03bb}, then Enter to insert
 λ. Backspace edits the value. Combining marks show a dotted circle as a
 visual aid; only the mark is inserted. Spaces and format characters have labels.
 The catalog uses Qt's Unicode tables, excluding controls, unassigned values,
-surrogates and noncharacters. Some characters need fonts that are not installed;
-private-use values require a matching font.
+surrogates and noncharacters. Inkline bundles OFL-licensed Noto CJK and Symbols
+fonts, plus GNU Unifont and Unifont Upper as broad last-resort fallbacks. No
+practical single font covers every Unicode glyph, and private-use values still
+require the font that defines them.
 
 Press \key{F2} in the picker or tap \key{Settings}, then choose \key{Input method}:
 
@@ -192,27 +194,26 @@ leave the tablet. Changing the method pauses typing; tap Start again.
 Choose \key{Off} to return to normal US input. \key{Unicode} or Alt+Space
 opens the character picker and sends selected characters to the USB host.
 
-The recent-text preview stays in RAM; it is not a saved document or a copy of
-the receiving editor. Arrow keys and editing shortcuts act on that editor.
-Right Alt/Opt+C copies the preview; V sends Inkline's clipboard. Cut belongs
-in the receiving editor. A USB acknowledgement cannot confirm the editor's
-actual contents.
+Typewriter is a local editor whose document stays in RAM while Inkline runs.
+Ordinary typing changes that document and, while live typing is on, sends each
+committed character to the receiving computer. Copy, cut, paste, cursor movement,
+touch selection and two-finger scrolling act on the local editor.
+
+\key{Files \& send} accepts any UTF-8 filename; Load and Save do not require a
+particular extension. Select 5, 10, 20, 40 or 80 characters per second, then
+send the entire editor. \key{Stop sending document} cancels a bulk send.
+Editing does not write the document to storage. Save writes it explicitly;
+normal Inkline exit writes the current named file or uses the hidden
+\path{~/.inkline-typewriter-draft} recovery name for an untitled document.
+\key{Exit typewriter} returns to USB Settings.
 
 \topic{Send a file; restore networking}
-The installer adds \code{inkline-usb} and \code{inkline-type} to
-\path{~/.local/bin}. Stock SSH sessions can use \code{~/inkline usb} and
-\code{~/inkline type} instead. The separate Outpost tools remain installed.
+The installer adds \code{inkline-usb} and \code{keyboard-send} to
+\path{~/.local/bin}. \code{~/inkline usb}, \code{~/inkline type}, and
+\code{inkline-type} remain compatibility aliases. The separate Outpost tools
+remain installed.
 
-\begin{shell}
-inkline-usb status
-inkline-usb send-keyboard
-inkline-type --file notes.txt --profile windows --dry-run
-inkline-type --file notes.txt --profile windows --start-delay 3
-inkline-type --stdin --profile linux < notes.txt
-inkline-type --key ctrl+a --key backspace
-inkline-type --stop
-inkline-usb network
-\end{shell}
+\UsbExamples
 
 UTF-8 files have \key{no fixed size limit}. The sender reads small chunks,
 without storing the document in RAM or creating a spool file. Ordinary,

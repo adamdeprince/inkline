@@ -23,7 +23,7 @@ Usage: inkline-usb network          Restore USB Ethernet and USB SSH
        inkline-usb recover-after SECONDS  Schedule Ethernet recovery (10..3600)
 Use the tablet screen or Wi-Fi SSH when changing away from network mode.
 Modes are temporary; reboot returns to stock USB Ethernet.
-Use inkline-type --help to send a UTF-8 file. No modem operations are included.
+Use keyboard-send --help to send a UTF-8 file. No modem operations are included.
 HELP
 }
 role() { cat "$ROLE"; }
@@ -156,5 +156,5 @@ trap 'exit 143' HUP TERM
 case "$action" in
     network) network; echo 'USB Ethernet and USB SSH restored (10.11.99.1).';;
     receive-keyboard) host; echo 'USB host mode. Attach a keyboard through a powered OTG adapter.';;
-    send-keyboard) keyboard; echo 'USB keyboard ready. Connect to a computer; use Typewriter or inkline-type.';;
+    send-keyboard) keyboard; echo 'USB keyboard ready. Connect to a computer; use Typewriter or keyboard-send.';;
 esac

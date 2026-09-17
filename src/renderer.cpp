@@ -14,8 +14,12 @@ QColor gray(GhosttyColorRgb c) { const int g = qGray(c.r, c.g, c.b); return QCol
 }
 Renderer::Renderer(RmtCore &core, int pixels, size_t sixel_budget) : core_(core), terminal_(rmt_core_terminal(&core)), sixel_budget_(sixel_budget) {
     static const int cjk_font = QFontDatabase::addApplicationFont(QCoreApplication::applicationDirPath() + "/assets/fonts/NotoSansMonoCJKsc-Regular.otf");
-    if (cjk_font < 0) throw std::runtime_error("Inkline CJK font is missing; reinstall the complete bundle");
-    font_.setFamilies({"Noto Mono", "Noto Sans Mono CJK SC"});
+    static const int symbol_font = QFontDatabase::addApplicationFont(QCoreApplication::applicationDirPath() + "/assets/fonts/NotoSansSymbols2-Regular.otf");
+    static const int unifont = QFontDatabase::addApplicationFont(QCoreApplication::applicationDirPath() + "/assets/fonts/Unifont-18.0.01.otf");
+    static const int unifont_upper = QFontDatabase::addApplicationFont(QCoreApplication::applicationDirPath() + "/assets/fonts/UnifontUpper-18.0.01.otf");
+    if (cjk_font < 0 || symbol_font < 0 || unifont < 0 || unifont_upper < 0)
+        throw std::runtime_error("Inkline Unicode fonts are missing; reinstall the complete bundle");
+    font_.setFamilies({"Noto Mono", "Noto Sans Mono CJK SC", "Noto Sans Symbols 2", "Unifont", "Unifont Upper"});
     font_.setStyleHint(QFont::Monospace);
     set_font_size(pixels);
     const auto *allocator = rmt_core_allocator(&core);

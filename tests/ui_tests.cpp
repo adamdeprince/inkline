@@ -4,6 +4,8 @@
 #include "rmt/stream.hpp"
 #include "rmt/unicode_keyboard.hpp"
 #include <QGuiApplication>
+#include <QFontDatabase>
+#include <QRawFont>
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
@@ -122,6 +124,12 @@ int main(int argc, char **argv) {
         CHECK(mouse.encode(rmt::Mouse::Action::Motion, {35, 45}) == "\033[<35;4;3M");
     }
     rmt_core_free(core);
+    const auto families = QFontDatabase::families();
+    CHECK(families.contains("Noto Sans Symbols 2"));
+    CHECK(families.contains("Unifont"));
+    CHECK(families.contains("Unifont Upper"));
+    CHECK(QRawFont::fromFont(QFont("Unifont")).supportsCharacter(QChar(0x20b9))); // Indian rupee sign
+    CHECK(QRawFont::fromFont(QFont("Unifont Upper")).supportsCharacter(char32_t(0x10300))); // Old Italic
     core = rmt_core_new(80, 24, nullptr); CHECK(core);
     {
         rmt::Renderer renderer(*core, 6, 1024 * 1024);

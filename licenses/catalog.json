@@ -98,6 +98,13 @@
     ]
   },
   {
+    "title": "Unicode fallback fonts — OFL 1.1",
+    "files": [
+      "licenses/UnicodeFonts-NOTICE.txt",
+      "assets/fonts/NotoCJK-OFL.txt"
+    ]
+  },
+  {
     "title": "Build tools — translate-c and aro",
     "files": [
       "licenses/translate-c-MIT.txt",

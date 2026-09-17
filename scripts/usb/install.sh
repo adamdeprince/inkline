@@ -14,6 +14,9 @@ check() {
             [ -L "$BIN/$name" ] && [ "$(readlink "$BIN/$name")" = "$ROOT/current/usb/$name" ] || fail "Unrelated command: $BIN/$name"
         fi
     done
+    # keyboard-send predates Inkline and may belong to the user's USB tools.
+    # Fresh installs receive Inkline's command; upgrades never replace another
+    # executable or symlink with the same public name.
 }
 check
 case "${1:-check}" in
@@ -30,12 +33,15 @@ case "${1:-check}" in
         for name in inkline-usb inkline-type; do
             [ -L "$BIN/$name" ] || ln -s "$ROOT/current/usb/$name" "$BIN/$name"
         done
+        if [ ! -e "$BIN/keyboard-send" ] && [ ! -L "$BIN/keyboard-send" ]; then
+            ln -s "$ROOT/current/usb/keyboard-send" "$BIN/keyboard-send"
+        fi
         ;;
     remove)
         "$ROOT/current/usb/inkline-usb" network
         rm -f "$UNIT"
-        for name in inkline-usb inkline-type; do
-            if [ -L "$BIN/$name" ]; then rm "$BIN/$name"; fi
+        for name in inkline-usb inkline-type keyboard-send; do
+            if [ -L "$BIN/$name" ] && [ "$(readlink "$BIN/$name")" = "$ROOT/current/usb/$name" ]; then rm "$BIN/$name"; fi
         done
         ;;
     *) fail 'Expected check, install or remove';;

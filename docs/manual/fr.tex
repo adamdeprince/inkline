@@ -191,14 +191,19 @@ US-International. Seuls les caractères validés sont envoyés. Changer de méth
 met en pause ; reprenez avec Start. \key{Off} rétablit la saisie US ordinaire.
 \key{Unicode} ou Alt+Space ouvre le sélecteur de caractères pour la sortie USB.
 
-L'aperçu récent reste en RAM ; ce n'est ni un document enregistré ni une copie
-de l'éditeur distant. Les flèches et raccourcis agissent sur cet éditeur.
-Alt/Opt droit+C copie l'aperçu, V envoie le presse-papiers Inkline. Coupez dans
-l'éditeur destinataire. Un accusé USB ne confirme pas le contenu affiché.
+Typewriter est un éditeur local dont le document reste en RAM pendant Inkline.
+La frappe modifie ce document et, en mode direct, envoie chaque caractère validé
+à l'ordinateur. Copier, couper, coller, sélectionner et défiler agissent dans
+l'éditeur local. \key{Files \& send} charge ou enregistre l'UTF-8 sous tout nom,
+choisit 5--80 caractères par seconde, envoie tout le document et arrête l'envoi.
+Seuls Save et la fermeture normale écrivent le document. Sans nom, le fichier
+caché \path{~/.inkline-typewriter-draft} sert à la récupération lors de la sortie.
+\key{Exit typewriter} revient aux réglages USB.
 
 \topic{Envoyer un fichier, rétablir le réseau}
-Les commandes sont dans \path{~/.local/bin}. En SSH standard, utilisez aussi
-\code{~/inkline usb} et \code{~/inkline type}. Les outils Outpost restent intacts.
+Les commandes \code{inkline-usb} et \code{keyboard-send} sont dans
+\path{~/.local/bin}. \code{~/inkline usb}, \code{~/inkline type} et
+\code{inkline-type} restent des alias compatibles. Les outils Outpost restent intacts.
 \UsbExamples
 Les fichiers UTF-8 n'ont \key{aucune taille maximale fixe}. La lecture se fait
 par petits blocs, sans copie complète en RAM ni fichier temporaire. Les fichiers

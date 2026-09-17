@@ -164,13 +164,17 @@ HID 沒有通用的 Unicode 文字通道；結果取決於接收端設定與字�
 Wubi 86 和 US-International。只有已確認字元才會送出。更換輸入法後需點 Start 繼續。
 選擇\key{Off} 返回普通美式輸入。\key{Unicode} 或 Alt+Space 開啟的字元面板也向 USB 接收端輸入。
 
-最近輸入的預覽僅存在 RAM 中，並非儲存的文件或接收編輯器的副本。
-方向鍵和編輯快捷鍵操作接收端。右 Alt/Opt+C 複製預覽，V 傳送 Inkline 剪貼簿。
-剪下應在接收編輯器中完成。USB 確認不能證明編輯器實際顯示了哪些內容。
+Typewriter 是本機編輯器，Inkline 執行期間文件只保存在 RAM。一般輸入會編輯本機文件；
+開啟即時傳送後，每個已確認字元也會傳送到連線的電腦。複製、剪下、貼上、選取和雙指捲動
+都作用於本機編輯器。\key{Files \& send} 可用任何檔名載入或儲存 UTF-8，
+以每秒 5--80 個字元傳送全文，並可停止傳送。編輯時不會寫入儲存空間；只有 Save 或
+Inkline 正常結束時才會寫入。無標題文件在結束時使用隱藏復原名
+\path{~/.inkline-typewriter-draft}。\key{Exit typewriter} 返回 USB 設定。
 
 \topic{傳送檔案與恢復網路}
-安裝器將命令放入 \path{~/.local/bin}。一般 SSH 中也可使用
-\code{~/inkline usb} 和 \code{~/inkline type}。Outpost 的獨立工具保持原樣。
+安裝器把 \code{inkline-usb} 和 \code{keyboard-send} 放入
+\path{~/.local/bin}。\code{~/inkline usb}、\code{~/inkline type} 和
+\code{inkline-type} 保留為相容別名。Outpost 的獨立工具保持原樣。
 \UsbExamples
 UTF-8 檔案\key{沒有固定大小上限}。傳送器分塊讀取，不在 RAM 中儲存整份文件，
 也不建立中轉檔案。可回讀的一般檔案會先完整驗證再重新讀取傳送；傳送時不要修改來源檔案。

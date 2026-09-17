@@ -1,0 +1,20 @@
+Unicode fallback fonts bundled with Inkline
+
+Noto Sans Symbols 2 Regular 2.008
+Copyright 2022 The Noto Project Authors
+https://github.com/notofonts/symbols
+Release commit: 25b00f0d3f40873a005287514ba2a48558655314
+SHA-256: cc4939dfaa7cf72a22bfff9ae3197ef58bf7d5b19e0a8049d86808878c5e8457
+
+GNU Unifont 18.0.01 and Unifont Upper 18.0.01
+Copyright © 1998-2026 Roman Czyborra, Paul Hardy, Qianqian Fang,
+Andrew Miller, Johnnie Weaver, David Corbett, Ælla Chiana Moskopp,
+Rebecca Bettencourt, Ho-Seok Ee, et al.
+https://unifoundry.com/unifont/
+SHA-256 (Unifont): 88d0a14d4aa9a96419720b39ba5da921a59560d76d4ec7d523acc06ed85cd3c2
+SHA-256 (Unifont Upper): 472201e45a050bff4c7658208b8c73e34ebce3764b287a5a46c7774038ef9391
+
+All three unmodified files are distributed here under the SIL Open Font
+License 1.1. GNU Unifont is also available under GPL-2.0-or-later with the
+GNU Font Embedding Exception; Inkline uses its OFL option. The full OFL 1.1
+text is included in assets/fonts/NotoCJK-OFL.txt.

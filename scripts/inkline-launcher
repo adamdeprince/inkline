@@ -56,7 +56,7 @@ case "${1:-help}" in
         ;;
     type)
         shift
-        exec "$bundle/current/usb/inkline-type" "$@"
+        exec "$bundle/current/usb/keyboard-send" "$@"
         ;;
     run)
         shift
@@ -80,7 +80,8 @@ case "${1:-help}" in
         echo '       ~/inkline cleanup UTILITY [--check]'
         echo '       ~/inkline shortcut register|deregister|list|help'
         echo '       ~/inkline usb network|send-keyboard|receive-keyboard|status'
-        echo '       ~/inkline type --file FILE --profile us|mac|linux|windows'
+        echo '       keyboard-send --file FILE --profile us|mac|linux|windows'
+        echo '       ~/inkline type ... remains a compatibility alias'
         ;;
     *) echo 'Run ~/inkline --help for usage.' >&2; exit 2 ;;
 esac

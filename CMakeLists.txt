@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(inkline VERSION 0.4.3 LANGUAGES C CXX)
+project(inkline VERSION 0.4.4 LANGUAGES C CXX)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)

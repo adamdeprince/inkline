@@ -113,7 +113,7 @@ def main():
             source.add(ghostty, arcname="ghostty-source", filter=upstream_filter)
         for path in stage.rglob("*"):
             if path.is_file():
-                path.chmod(0o700 if path.name in ("inkline", "inkline-hotkey", "inkline-launcher", "inkline-usb", "inkline-type", "inkline-usb-daemon") or path.suffix == ".sh" else 0o600)
+                path.chmod(0o700 if path.name in ("inkline", "inkline-hotkey", "inkline-launcher", "inkline-usb", "inkline-type", "keyboard-send", "inkline-usb-daemon") or path.suffix == ".sh" else 0o600)
         files = sorted(p for p in stage.rglob("*") if p.is_file())
         (stage / "SHA256SUMS").write_text("".join(f"{digest(p)}  {p.relative_to(stage)}\n" for p in files))
         archive = dist / "inkline-rm2.tar.gz"

@@ -191,14 +191,20 @@ US-International. Nur bestätigte Zeichen werden gesendet. Ein Wechsel pausiert;
 Start setzt fort. \key{Off} stellt normale US-Eingabe wieder her. \key{Unicode}
 oder Alt+Space öffnet die Zeichenauswahl für den USB-Empfänger.
 
-Die jüngste Vorschau bleibt im RAM. Sie ist kein gespeichertes Dokument und kein
-Abbild des Ziel-Editors. Pfeile und Bearbeitungsbefehle wirken dort.
-Rechtes Alt/Opt+C kopiert die Vorschau, V sendet die Inkline-Zwischenablage.
-Ausschneiden erfolgt im Ziel-Editor. Eine USB-Bestätigung belegt nicht dessen Inhalt.
+Typewriter ist ein lokaler Editor; sein Dokument bleibt während Inkline im RAM.
+Normales Tippen bearbeitet das Dokument und sendet bei aktivem Live-Modus jedes
+bestätigte Zeichen an den Rechner. Kopieren, Ausschneiden, Einfügen, Auswahl und
+Scrollen wirken im lokalen Editor. \key{Files \& send} lädt und speichert UTF-8
+unter beliebigen Dateinamen, wählt 5--80 Zeichen pro Sekunde, sendet das ganze
+Dokument und kann die Übertragung stoppen. Erst Save oder das normale Beenden
+schreibt das Dokument. Ohne Dateinamen dient beim Beenden die verborgene Datei
+\path{~/.inkline-typewriter-draft} zur Wiederherstellung. \key{Exit typewriter}
+kehrt zu den USB-Einstellungen zurück.
 
 \topic{Dateien senden und Netzwerk wiederherstellen}
-Die Befehle liegen in \path{~/.local/bin}. Über gewöhnliches SSH funktionieren
-auch \code{~/inkline usb} und \code{~/inkline type}. Outpost-Werkzeuge bleiben erhalten.
+Die Befehle \code{inkline-usb} und \code{keyboard-send} liegen in
+\path{~/.local/bin}. \code{~/inkline usb}, \code{~/inkline type} und
+\code{inkline-type} bleiben kompatible Aliase. Outpost-Werkzeuge bleiben erhalten.
 \UsbExamples
 UTF-8-Dateien haben \key{keine feste Größenobergrenze}. Kleine Leseblöcke vermeiden
 eine vollständige Kopie im RAM und temporäre Dateien. Rückspulbare Dateien werden

@@ -104,6 +104,7 @@ elif command=='systemctl':
         units=self.root/'etc/systemd/system'; units.mkdir(parents=True)
         unit=units/'inkline-usb-keyboard.service'
         (bundle/unit.name).write_bytes((ROOT/'scripts/usb'/unit.name).read_bytes())
+        (bundle/'inkline-usb').write_text('#!/bin/sh\nexit 0\n'); (bundle/'inkline-usb').chmod(0o700)
         install=(ROOT/'scripts/usb/install.sh').read_text().replace('/home/root', str(home)).replace('/etc/systemd/system', str(units))
         script=self.root/'install.sh'; script.write_text(install)
         def run(action):return subprocess.run(['sh',str(script),action],capture_output=True)
@@ -114,5 +115,11 @@ elif command=='systemctl':
         modified=unit.stat().st_mtime_ns
         self.assertEqual(run('install').returncode,0); self.assertEqual(unit.stat().st_mtime_ns,modified)
         self.assertEqual(os.readlink(home/'.local/bin/inkline-usb'),str(bundle/'inkline-usb'))
+        public=home/'.local/bin/keyboard-send'
+        self.assertEqual(os.readlink(public),str(bundle/'keyboard-send'))
+        public.unlink(); public.write_text('#!/bin/sh\necho existing\n')
+        self.assertEqual(run('check').returncode,0); self.assertEqual(run('install').returncode,0)
+        self.assertEqual(public.read_text(),'#!/bin/sh\necho existing\n')
+        self.assertEqual(run('remove').returncode,0); self.assertTrue(public.exists())
 
 if __name__ == '__main__':unittest.main()

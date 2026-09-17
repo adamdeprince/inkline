@@ -365,7 +365,7 @@ public:
     QTimer repaint, toast, autoscroll, maintenance;
     int slider_drag = -1, press_slider = 0;
     QString notice;
-    bool pointer_down = false, dragging = false, text_drag = false, pen_down = false;
+    bool pointer_down = false, dragging = false, text_drag = false, usb_drag = false, pen_down = false;
     int pen_session = -1;
     QPointF pen_position;
     Qt::KeyboardModifiers pen_modifiers;
@@ -420,6 +420,8 @@ public:
         return label;
     }
     ~Private() {
+        try { usb.persist(); }
+        catch (const std::exception &e) { std::fprintf(stderr, "Inkline typewriter: %s\n", e.what()); }
         try {
             if (pixels != initial_pixels) prefs.set_font_pixels(pixels);
             prefs.persist();
@@ -883,7 +885,7 @@ public:
                 const int index = first + slot;
                 const auto cell = unicode_cell(slot);
                 p.setPen(QPen(Qt::black, index == unicode_selected ? 3 : 1)); p.drawRect(cell);
-                QFont character_font; character_font.setFamilies({"Noto Sans Mono CJK SC", "Noto Sans", "Noto Mono"});
+                QFont character_font; character_font.setFamilies({"Noto Sans Mono CJK SC", "Noto Sans", "Noto Mono", "Noto Sans Symbols 2", "Unifont", "Unifont Upper"});
                 character_font.setPixelSize(std::clamp(int(cell.height() * 0.45), 22, 38)); p.setFont(character_font);
                 p.drawText(cell.adjusted(3, 2, -3, -20), Qt::AlignCenter, UnicodeKeyboard::preview(characters[size_t(index)]));
                 font(p, 11); p.drawText(cell.adjusted(2, cell.height() - 23, -2, -2), Qt::AlignCenter,
@@ -1030,6 +1032,7 @@ public:
         }
         text_drag = overlay == Overlay::None && text_area().contains(point) && bool(sessions[active]);
         if (text_drag) sessions[active]->select(point - QPointF(margin, margin), true);
+        usb_drag = overlay == Overlay::Usb && usb.begin_drag(point);
     }
     void pointer_move(const QPointF &point) {
         if (!pointer_down) return;
@@ -1047,6 +1050,7 @@ public:
             if (!text_area().contains(point)) { if (!autoscroll.isActive()) autoscroll.start(); }
             else autoscroll.stop();
         }
+        if (usb_drag) usb.drag(point);
     }
     void pointer_release(const QPointF &point) {
         if (!pointer_down) return;
@@ -1058,8 +1062,9 @@ public:
         const bool tap = !dragging && press_overlay == overlay;
         pointer_down = false; autoscroll.stop();
         if (text_drag && sessions[active]) sessions[active]->selection_end(!dragging);
-        if (tap && !text_drag) click(point);
-        text_drag = false;
+        if (usb_drag) usb.end_drag(point);
+        if (tap && !text_drag && !usb_drag) click(point);
+        text_drag = usb_drag = false;
     }
     void cancel_pointer() {
         cancel_pen();
@@ -1068,7 +1073,8 @@ public:
             slider_drag = -1;
         }
         if (pointer_down && text_drag && sessions[active]) sessions[active]->selection_end(true);
-        pointer_down = dragging = text_drag = false; autoscroll.stop();
+        if (pointer_down && usb_drag) usb.end_drag(last_point);
+        pointer_down = dragging = text_drag = usb_drag = false; autoscroll.stop();
     }
     void cancel_pen() {
         const int target = pen_session;
@@ -1113,7 +1119,8 @@ public:
             pinch_distance = QLineF(a, b).length();
             gesture_start = gesture_last = (a + b) / 2;
             scroll_remainder = 0;
-            can_scroll = overlay == Overlay::None && sessions[active] && text_area().contains(a) && text_area().contains(b);
+            can_scroll = (overlay == Overlay::None && sessions[active] && text_area().contains(a) && text_area().contains(b)) ||
+                         (overlay == Overlay::Usb && usb.editor_page());
         }
         if (gesture != Gesture::None) {
             const QEventPoint *a = nullptr, *b = nullptr;
@@ -1130,7 +1137,7 @@ public:
                     // in finger spacing during a scroll must not resize text.
                     if (pinch_distance >= 20 && stretch >= std::max(qreal(12), pinch_distance * 0.06) && stretch > 2 * std::max(travel, std::abs(sideways))) {
                         gesture = Gesture::Pinch;
-                    } else if (can_scroll && std::abs(sideways) >= 60 && std::abs(sideways) > 1.5 * travel) {
+                    } else if (can_scroll && overlay == Overlay::None && std::abs(sideways) >= 60 && std::abs(sideways) > 1.5 * travel) {
                         gesture = Gesture::Swipe;
                         choose(active + (sideways < 0 ? 1 : -1));
                     } else if (can_scroll && travel >= 12 && travel >= std::abs(sideways)) gesture = Gesture::Scroll;
@@ -1141,7 +1148,10 @@ public:
                     const auto scale = std::sqrt(std::clamp(distance / pinch_distance, qreal(0.0625), qreal(16)));
                     zoom(int(std::lround(pinch_pixels * scale)));
                 }
-                if (gesture == Gesture::Scroll && sessions[active]) {
+                if (gesture == Gesture::Scroll && overlay == Overlay::Usb) {
+                    usb.scroll(-(center.y() - gesture_last.y()));
+                    gesture_last = center;
+                } else if (gesture == Gesture::Scroll && sessions[active]) {
                     scroll_remainder -= center.y() - gesture_last.y();
                     const int height = sessions[active]->cell_height();
                     const int lines = int(scroll_remainder / height);
@@ -1167,6 +1177,10 @@ public:
     void wheel(QWheelEvent &event) {
         if (overlay == Overlay::Licenses) {
             licenses.scroll(event.pixelDelta().y() ? -event.pixelDelta().y() : -event.angleDelta().y());
+            view.update(); return;
+        }
+        if (overlay == Overlay::Usb && usb.editor_page()) {
+            usb.scroll(event.pixelDelta().y() ? -event.pixelDelta().y() : -event.angleDelta().y() / 2.0);
             view.update(); return;
         }
         if (overlay != Overlay::Unicode) return;

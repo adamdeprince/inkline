@@ -74,6 +74,12 @@ must be distributed compatibly with that license, including corresponding source
   The unmodified font, license, exact source revision and SHA-256 are in
   `assets/fonts/`. It is loaded privately by Inkline. The font's embedded
   copyright, © 2014–2021 Adobe, is also reproduced in `licenses/NotoCJK-NOTICE.txt`.
+- **Noto Sans Symbols 2 and GNU Unifont**, SIL Open Font License 1.1. Inkline
+  bundles the unmodified Noto Symbols 2.008 face and GNU Unifont/Unifont Upper
+  18.0.01 as ordered fallbacks. This preserves the existing text and CJK faces
+  while covering the BMP, many supplementary scripts, and common monochrome
+  symbols. Exact sources, hashes and copyright holders are in
+  `licenses/UnicodeFonts-NOTICE.txt`; the OFL text is in `assets/fonts/`.
 - **USB FunctionFS keyboard and mode switching**, adapted from Adam de Prince's
   local Inkline Outpost `usb-modes` code, snapshot 2026-09-16. The original
   descriptors and control handler are retained in `scripts/usb/keyboard.py`;

@@ -159,7 +159,47 @@ commands still reach the running program. Switch to Off for literal ASCII entry.
 
 The engine and dictionaries are adapted from GoblinView. The dictionaries load
 on demand in RAM; there is no typing history, learned dictionary, or input cache.
-Inkline includes a private Noto CJK font, without changing system fonts.
+Inkline privately loads OFL-licensed Noto CJK, Noto Symbols 2, GNU Unifont and
+Unifont Upper without changing system fonts or creating a font cache. Noto
+keeps ordinary text and common symbols readable; Unifont supplies broad
+last-resort BMP and supplementary-plane coverage. Some rare glyphs can still
+be absent because no practical single font covers all Unicode characters.
+
+## Typewriter editor
+
+Open **Settings → USB**, select **Send keyboard** and a receiving-computer
+profile, then choose **Open typewriter**. The large area is a local text editor.
+Physical and Unicode-keyboard input edits its document; while **live** is on,
+each committed character also goes to the connected computer. **Pause live**
+stops USB output while editing continues. Copy, cut, paste, cursor keys,
+finger/pen selection, and two-finger scrolling operate on the local document.
+
+**Files & send** opens the document screen:
+
+- The Path field accepts any filename. Load and Save read or write UTF-8 and
+  do not require a `.txt` extension.
+- Choose 5, 10, 20, 40, or 80 characters per second, then tap **Send entire
+  document**. The same button becomes **Stop sending document** during output.
+- **New** clears the RAM editor and gives it no persistent name.
+- **Back to editor** resumes normal editing. **Exit typewriter** on the editor
+  returns to USB Settings; it is the normal way out of Typewriter.
+
+Ordinary editing, selection, scrolling, acknowledgements, and opening or
+closing these screens do not write the document to flash. **Save** writes it
+explicitly. On a normal Inkline exit, a changed named document is written back;
+an untitled document uses `~/.inkline-typewriter-draft` as a hidden recovery
+name. A forced kill or power loss can lose changes made since the last save.
+
+The command-line sender is `keyboard-send`:
+
+```sh
+inkline-usb send-keyboard
+keyboard-send --file notes.txt --profile windows --cps 20
+keyboard-send --stop
+inkline-usb network
+```
+
+`~/inkline type` and `inkline-type` remain compatibility aliases.
 
 ## Wired USB keyboards
 
